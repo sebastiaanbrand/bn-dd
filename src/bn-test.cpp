@@ -29,6 +29,25 @@ Bdd Cnf2Bdd(Cnf f)
     return res;
 }
 
+void small_example()
+{
+    // hardcoded example from 2016, Dal, p.5-6
+    enum {blank, a1, a2, w1, b1, b2, b3, w2, w3};
+
+    Cnf f = {{a1, a2}, {-a1, -a2}, 
+             {b1, b2, b3}, {-b1, -b2}, {-b1, -b3}, {-b2, -b3},
+             {-a1, w1}, {-a2, w2},
+             {-a1, -b1, w2}, {-a1, -b2, w2}, {-a1, -b1, w2},
+             {-a1, -b2, w2}, {-a1, -b3, w3}, {-a2, -b3, w3}};
+
+    Bdd b = Cnf2Bdd(f);
+
+    FILE *fp = fopen("small_example.dot", "w");
+    b.PrintDot(fp);
+    fclose(fp);
+
+}
+
 int main() {
     std::cout << "Hello there!" << std::endl;
 
@@ -44,6 +63,8 @@ int main() {
     Cnf f = {{1, 2, 3}, {1, 2, -3}, {1, -2, -3}};
     Bdd b = Cnf2Bdd(f);
     std::cout << "satcount: " << b.SatCount(3) << std::endl;
+
+    small_example();
 
     sylvan_quit();
     lace_stop();
