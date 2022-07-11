@@ -1,0 +1,47 @@
+os:
+  - linux
+  - osx
+sudo: false
+dist: bionic
+osx_image: xcode10.1
+
+env:
+  matrix:
+    - BUILD_TYPE="Release" SYLVAN_STATS="ON"
+    - BUILD_TYPE="Release" SYLVAN_STATS="OFF"
+    - BUILD_TYPE="Debug" SYLVAN_STATS="ON"
+    - BUILD_TYPE="Debug" SYLVAN_STATS="OFF"
+
+language: c
+compiler:
+- gcc
+- clang
+
+addons:
+  apt:
+    packages:
+      - libgmp-dev
+      - cmake
+      - cmake-data
+      - build-essential
+
+install:
+- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+    export HOMEBREW_NO_INSTALL_CLEANUP=1;
+    brew update;
+    brew install argp-standalone;
+  fi
+   
+script:
+- cmake . -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSYLVAN_STATS=${SYLVAN_STATS} -DSYLVAN_BUILD_EXAMPLES=ON
+- make -j 4
+- make test
+- examples/simple
+- examples/bddmc models/schedule_world.2.bdd -w 2 | tee /dev/fd/2 | grep -q "1,570,340"
+- examples/lddmc models/blocks.2.ldd -w 2 | tee /dev/fd/2 | grep -q "7,057 states"
+
+notifications:
+  email: false
+
+branches:
+  only: master
