@@ -3,8 +3,8 @@
 #include <set>
 #include <stdlib.h>
 
-#include <sylvan.h>
-#include <sylvan_obj.hpp>
+#include "sylvan.h"
+#include "sylvan_obj.hpp"
 
 typedef std::set<std::set<int>> Cnf;
 

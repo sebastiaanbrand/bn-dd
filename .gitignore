@@ -1,3 +1,5 @@
+# C/C++
+build/
 
-*/build/
-
+# python
+.venv/

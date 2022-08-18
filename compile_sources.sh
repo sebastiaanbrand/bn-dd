@@ -10,21 +10,20 @@ while getopts "r" opt; do
 done
 
 # (re)compile Sylvan
-cd sylvan-1.6.1
+cd lib/sylvan-1.6.1
 if [[ $recompile ]]; then rm -r -f build; fi
 mkdir -p build
 cd build
 cmake ..
 make
-cd ..
-cd ..
+cd ../../..
 
 # (re)compile BN code
-cd src
+cd dd_inference
 if [[ $recompile ]]; then rm -r -f build; fi
 mkdir -p build
 cd build
 cmake ..
 make
-cd ..
-cd ..
+cd ../..
+
