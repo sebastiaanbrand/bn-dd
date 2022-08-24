@@ -1,4 +1,3 @@
-from ast import Raise
 from typing import Iterable
 from itertools import product
 
@@ -13,9 +12,9 @@ from pgmpy.readwrite import XMLBIFReader, XMLBIFWriter
 verbose = True
 
 
-def info(*values):
+def info(*args, **kwargs):
     if (verbose):
-        print(*values)
+        print(*args, **kwargs)
 
 
 class RandomVariable:
@@ -84,29 +83,27 @@ def add_clause(variables: Iterable, assignment : Iterable, prob : float,
 
     # TODO: Add this cube + implication to some list or file
     # TODO: Use CNF instead of cubes + implications? Does it matter?
-    info(f'Pr({variables} = {assignment}) = {prob}')
-    info(f'{literals} ==> {prob_vars[prob]} ({prob})')
+    info(f"Pr({','.join(variables)} = {assignment}) = {prob}", end='')
+    info(f"\t{literals} ==> {prob_vars[prob]} ({prob})")
 
 
 def cpd_to_cnf(cpd : TabularCPD, rvs : dict, prob_vars : dict):
     """
     Convert a single CPD table to a Boolean formula (maybe CNF).
     """
-    # 1. Get the actual table (and reshape to n-D table)
+    # 1. Get the actual table
     evidence = cpd.get_evidence()
-    table    = cpd.get_values()
-    cards    = tuple(cpd.cardinality)
-    table    = np.reshape(table, cards, order='F') # the 2D CPT is unworkable
+    table    = cpd.values # this is an n-d array (get_values() is not)
 
     # 2. Collect all vars (table var + evidence vars) and values they can take
     all_vars = [ cpd.variable ]
     all_vals = [ rvs[cpd.variable].values ]
-    for e in evidence:
+    for e in reversed(evidence):
         all_vals.append(rvs[e].values)
         all_vars.append(e)
 
     # 3. Iterate over all table entries (i.e. all assignments to the RVs)
-    info(f"Pr({cpd.variable} | {evidence})")
+    info(f"Pr({cpd.variable} | {','.join(evidence)})")
     for assignment in product(*all_vals):
         add_clause(all_vars, assignment, table[assignment], rvs, prob_vars)
     info()
