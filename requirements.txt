@@ -1,0 +1,7 @@
+# package
+matplotlib
+networkx
+numpy
+pgmpy
+pygraphviz
+python-sat

@@ -1,9 +1,12 @@
+import os
+import sys
 from typing import Iterable
 from itertools import product
 
 import numpy as np
 import pylab as plt
 import networkx as nx
+from pysat.formula import CNF # python-sat package
 from pgmpy.models import BayesianNetwork
 from pgmpy.factors.discrete import TabularCPD
 from pgmpy.readwrite import XMLBIFReader, XMLBIFWriter
@@ -44,111 +47,149 @@ class RandomVariable:
         return end
 
 
-def visualize(bn : BayesianNetwork):
-    """ Write a simple visualization of the BN to a file. """
-    graph = nx.DiGraph(bn.edges())
-    pos = nx.nx_agraph.graphviz_layout(graph)
-    nx.draw(graph, pos=pos, with_labels=True)
-    plt.savefig('bn.png')
-
-
-def add_clause(variables: Iterable, assignment : Iterable, prob : float, 
-               rvs : dict,  prob_vars : dict):
+class BayesianNetworkEncoder:
     """
-    Adds a Boolean expression which encodes Pr(variables = assignment) = prob.
-
-    Args:
-        variables: Iterable of RV names (str)
-        assignment: Iterable of assignments to these RVs (ints)
-        prob: the corresponding probability
-        rvs: map from  RV name (str) -> RV (RandomVariable)
-        prob_vars: map from prob (float) -> Boolean var (int)
+    Class to keep the encoding functions in. This way we can keep some of the
+    data in fields instead of global variables. (Also we have a fetish for OOP).
+    and we have a fetisch for object oriented programming.
     """
 
-    # Turn the assignment into a cube of literals
-    literals = []
-    for i in range(len(variables)):
-        # turn the assignment (an integer) into a bitstring of lenght nbits
-        rv = rvs[variables[i]]
-        assignment_bits = format(assignment[i], f'0{rv.nbits}b')
-
-        # turn the assignment bits into Boolean literals
-        for j in range(rv.nbits):
-            if assignment_bits[j] == '0':
-                literals.append(-rv.boolean_vars[j])
-            elif assignment_bits[j] == '1':
-                literals.append(rv.boolean_vars[j])
-            else:
-                raise ValueError(f'unexpected value {assignment_bits[j]} in bitstring')
-
-    # TODO: Add this cube + implication to some list or file
-    # TODO: Use CNF instead of cubes + implications? Does it matter?
-    info(f"Pr({','.join(variables)} = {assignment}) = {prob}", end='')
-    info(f"\t{literals} ==> {prob_vars[prob]} ({prob})")
+    def __init__(self, bn : BayesianNetwork):
+        self.bn = bn
+        self.rvs = {}        # name -> RV
+        self.prob_vars = {}  # probs -> int (Boolean var)
+        self.cnf = CNF()     # CNF formula
 
 
-def cpd_to_cnf(cpd : TabularCPD, rvs : dict, prob_vars : dict):
-    """
-    Convert a single CPD table to a Boolean formula (maybe CNF).
-    """
-    # 1. Get the actual table
-    evidence = cpd.get_evidence()
-    table    = cpd.values # this is an n-d array (get_values() is not)
-
-    # 2. Collect all vars (table var + evidence vars) and values they can take
-    all_vars = [ cpd.variable ]
-    all_vals = [ rvs[cpd.variable].values ]
-    for e in reversed(evidence):
-        all_vals.append(rvs[e].values)
-        all_vars.append(e)
-
-    # 3. Iterate over all table entries (i.e. all assignments to the RVs)
-    info(f"Pr({cpd.variable} | {','.join(evidence)})")
-    for assignment in product(*all_vals):
-        add_clause(all_vars, assignment, table[assignment], rvs, prob_vars)
-    info()
+    def visualize_bn(self):
+        """
+        Write a simple visualization of the BN to a file.
+        """
+        graph = nx.DiGraph(self.bn.edges())
+        pos = nx.nx_agraph.graphviz_layout(graph)
+        nx.draw(graph, pos=pos, with_labels=True)
+        plt.savefig('bn.png')
 
 
-def bn_to_cnf(bn : BayesianNetwork):
-    """
-    Convert the given BN to a Boolean formula (maybe CNF).
-    """
-    rvs = {}        # name -> RV
-    probs = set()   # unique probs
-    prob_vars = {}  # probs -> int (Boolean var)
+    def _add_clause(self, variables: Iterable, assignment : Iterable, prob : float):
+        """
+        Adds a Boolean expression which encodes Pr(variables = assignment) = prob.
 
-    # 1. get all variables + cardinalities + unique probs
-    nodes = bn.nodes()
-    for node in nodes:
-        cpd = bn.get_cpds(node) # get the CPD of this node
-        cards = cpd.cardinality
-        rvs[node] = RandomVariable(name=node, cardinality=cards[0])
-        for value in np.nditer(cpd.get_values()):
-            probs.add(float(value))
-        info("Node:", node)
-        info(cpd, '\n')
+        Args:
+            variables: Iterable of RV names (str)
+            assignment: Iterable of assignments to these RVs (ints)
+            prob: the corresponding probability
+        """
 
-    # 2. Assign Boolean vars to the RVs + assign vars to probs
-    x = 1
-    for rv in rvs.values():
-        x = rv.assign_boolean_vars(x)
-    for p in probs:
-        prob_vars[p] = x
-        x += 1
+        # Turn the assignment into a cube of literals
+        literals = []
+        for i in range(len(variables)):
+            # turn the assignment (an integer) into a bitstring of lenght nbits
+            rv = self.rvs[variables[i]]
+            assignment_bits = format(assignment[i], f'0{rv.nbits}b')
 
-    # 3. encode CPDs into implications: a ^ b ^ ... ==> w
-    for node in nodes:
-        cpd = bn.get_cpds(node)
-        cpd_to_cnf(cpd, rvs, prob_vars)
+            # turn the assignment bits into Boolean literals
+            for j in range(rv.nbits):
+                if assignment_bits[j] == '0':
+                    literals.append(-rv.boolean_vars[j])
+                elif assignment_bits[j] == '1':
+                    literals.append(rv.boolean_vars[j])
+                else:
+                    raise ValueError(f'unexpected value {assignment_bits[j]} in bitstring')
+
+        # TODO: Add this cube + implication to some list or file
+        # TODO: Use CNF instead of cubes + implications? Does it matter?
+        info(f"Pr({','.join(variables)} = {assignment}) = {prob}", end='')
+        info(f"\tencoded as {literals} ==> {self.prob_vars[prob]} ({prob})")
+
+        # Turn cube + implication into CNF clause:
+        # (x1 ^ x2 ^ x3 ^ ... ==> w1) = (~x1 v ~x2 v ~x3 v ... v ~w1)
+        print(literals)
+        clause = [-lit for lit in literals]
+        clause.append(self.prob_vars[prob])
+        print(clause)
+        self.cnf.append(clause)
+
+
+    def _cpd_to_cnf(self, cpd):
+        """
+        Convert a single CPD table to a Boolean formula (maybe CNF).
+        """
+        # 1. Get the actual table
+        evidence = cpd.get_evidence()
+        table    = cpd.values # this is an n-d array (get_values() is not)
+
+        # 2. Collect all vars (table var + evidence vars) and values they can take
+        all_vars = [ cpd.variable ]
+        all_vals = [ self.rvs[cpd.variable].values ]
+        for e in reversed(evidence):
+            all_vals.append(self.rvs[e].values)
+            all_vars.append(e)
+
+        # 3. Iterate over all table entries (i.e. all assignments to the RVs)
+        info(f"Pr({cpd.variable} | {','.join(evidence)})")
+        for assignment in product(*all_vals):
+            self._add_clause(all_vars, assignment, table[assignment])
+        info()
+
+
+    def bn_to_cnf(self, bn : BayesianNetwork) -> CNF:
+        """
+        Convert the given BN to a Boolean formula (maybe CNF).
+        """
+
+        # 1. get all variables + cardinalities + unique probs
+        probs = set()
+        nodes = bn.nodes()
+        for node in nodes:
+            cpd = bn.get_cpds(node) # get the CPD of this node
+            cards = cpd.cardinality
+            self.rvs[node] = RandomVariable(name=node, cardinality=cards[0])
+            for value in np.nditer(cpd.get_values()):
+                probs.add(float(value))
+            info("Node:", node)
+            info(cpd, '\n')
+
+        # 2. Assign Boolean vars to the RVs + assign vars to probs
+        x = 1
+        for rv in self.rvs.values():
+            x = rv.assign_boolean_vars(x)
+        for p in probs:
+            self.prob_vars[p] = x
+            x += 1
+
+        # 3. encode CPDs into implications: a ^ b ^ ... ==> w
+        for node in nodes:
+            cpd = bn.get_cpds(node)
+            self._cpd_to_cnf(cpd)
+
+        return self.cnf
+
+
+def parse_args():
+    if len(sys.argv) < 2:
+        print("Please specify a filepath to a .xmlbif BN file.")
+        exit()
+    model_path = sys.argv[1]
+    return model_path
 
 
 if __name__ == '__main__':
 
-    # read BN and turn into CNF
-    reader = XMLBIFReader("models/student.xmlbif")
+    model_path = parse_args()
+
+    # read BN
+    reader = XMLBIFReader(model_path)
     model = reader.get_model()
-    visualize(model)
-    bn_to_cnf(model)
+
+    # encode as cnf
+    bn_encoder = BayesianNetworkEncoder(model)
+    bn_encoder.visualize_bn()
+    cnf = bn_encoder.bn_to_cnf(model)
+
+    # write to file
+    output_file = os.path.splitext(model_path)[0]+'.cnf'
+    cnf.to_file(output_file)
 
     #model = toy_network_1()
     #model = toy_network_2()
