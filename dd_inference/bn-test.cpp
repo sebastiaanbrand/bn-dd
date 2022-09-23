@@ -1,14 +1,77 @@
 #include <iostream>
+#include <fstream>
+#include <bits/stdc++.h>
 #include <iterator>
 #include <set>
 #include <stdlib.h>
 
-#include "sylvan.h"
-#include "sylvan_obj.hpp"
+#include <sylvan.h>
+#include <sylvan_obj.hpp>
 
-typedef std::set<std::set<int>> Cnf;
+typedef std::set<int> Clause;
+typedef std::set<Clause> Cnf;
 
 using namespace sylvan;
+
+void printClause(Clause clause)
+{
+    int var_prev = 0;
+    std::cout << "(";
+    for (int var : clause) {
+        if (var_prev > 0) {
+            std::cout << "x" << var_prev << " v ";
+        } else if (var_prev < 0) {
+            std::cout << "~x" << std::abs(var_prev) << " v ";
+        }
+        var_prev = var;
+    }
+    std::cout << "x" << var_prev << ")";
+}
+
+void printCnf(Cnf cnf)
+{
+    Clause clause_prev;
+    for (Clause clause : cnf) {
+        if (clause_prev.size() != 0) {
+            printClause(clause_prev);
+            std::cout << " ^ ";
+        }
+        clause_prev = clause;
+    }
+    printClause(clause_prev);
+    std::cout << std::endl;
+}
+
+Cnf CnfFromFile(std::string filepath)
+{
+    Cnf res;
+
+    std::string line;
+    std::string token;
+    std::ifstream inFile(filepath);
+    if (inFile.is_open()) {
+        std::cout << "loading CNF from " << filepath << std::endl;
+        while (getline(inFile, line)) {
+            Clause clause;
+            std::istringstream ss(line);
+            while (ss >> token) {
+                if (token == "p" || token == "cnf") {
+                    break;
+                }
+                int var = std::stoi(token);
+                clause.insert(var);
+            }
+            if (clause.size() > 0) {
+                res.insert(clause);
+            }
+        }
+        inFile.close();
+    } else {
+        std::cout << "unable to open " << filepath << std::endl;
+    }
+
+    return res;
+}
 
 Bdd Cnf2Bdd(Cnf f)
 {
@@ -48,8 +111,7 @@ void small_example()
 
 }
 
-int main() {
-    std::cout << "Hello there!" << std::endl;
+int main(int argc, char** argv) {
 
     // Standard Lace initialization with 1 worker
     lace_start(1, 0);
@@ -60,11 +122,19 @@ int main() {
     sylvan_init_bdd();
 
 
-    Cnf f = {{1, 2, 3}, {1, 2, -3}, {1, -2, -3}};
-    Bdd b = Cnf2Bdd(f);
-    std::cout << "satcount: " << b.SatCount(3) << std::endl;
+    //Cnf f = {{1, 2, 3}, {1, 2, -3}, {1, -2, -3}};
+    //Bdd b = Cnf2Bdd(f);
+    //std::cout << "satcount: " << b.SatCount(3) << std::endl;
+    //small_example();
+    std::string path;
+    if (argc == 2) {
+        path = argv[1];
+    } else {
+        std::cout << "Please specify an input .cnf file" << std::endl;
+    }
 
-    small_example();
+    Cnf f = CnfFromFile(path);
+    printCnf(f);
 
     sylvan_quit();
     lace_stop();
