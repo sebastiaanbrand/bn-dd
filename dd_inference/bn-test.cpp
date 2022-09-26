@@ -135,6 +135,7 @@ int main(int argc, char** argv) {
 
     Cnf f = CnfFromFile(path);
     printCnf(f);
+    Bdd b = Cnf2Bdd(f);
 
     sylvan_quit();
     lace_stop();

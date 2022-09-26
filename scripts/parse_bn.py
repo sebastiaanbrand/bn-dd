@@ -165,6 +165,11 @@ class BayesianNetworkEncoder:
 
         return self.cnf
 
+    def write_probs(self, outputfile):
+        with open(outputfile, 'w') as f:
+            for (prob, var) in self.prob_vars.items():
+                f.write(f"{var} {prob}\n")
+
 
 def parse_args():
     if len(sys.argv) < 2:
@@ -188,8 +193,9 @@ if __name__ == '__main__':
     cnf = bn_encoder.bn_to_cnf(model)
 
     # write to file
-    output_file = os.path.splitext(model_path)[0]+'.cnf'
-    cnf.to_file(output_file)
+    out_template = os.path.splitext(model_path)[0]
+    cnf.to_file(out_template + '.cnf')
+    bn_encoder.write_probs(out_template + '.cnf_probs')
 
     #model = toy_network_1()
     #model = toy_network_2()
