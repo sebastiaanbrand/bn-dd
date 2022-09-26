@@ -49,8 +49,7 @@ TASK_1(double, wpbdd_modelcount, WPBDD, dd)
         // current var corresponds to a weight / prob
         double current = pm[var];
         hack.d = current * prob_high;
-        // assert prob_high = 0 ?
-
+        assert (prob_low == 0);
     } else {
         // current var corresponds to an RV assignment
         hack.d = prob_low + prob_high;
@@ -160,9 +159,11 @@ sylvan::Bdd Cnf2Bdd(Cnf f)
         sylvan::Bdd c = sylvan::Bdd::bddZero();
 
         for (int lit : clause) {
-            sylvan::Bdd l = sylvan::Bdd::bddVar(abs(lit));
-            if (lit < 0) l = !l;
-            c = c | l;
+            if (lit != 0) {
+                sylvan::Bdd l = sylvan::Bdd::bddVar(abs(lit));
+                if (lit < 0) l = !l;
+                c = c | l;
+            }
         }
 
         res = res & c;
