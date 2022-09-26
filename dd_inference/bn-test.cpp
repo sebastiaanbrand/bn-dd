@@ -3,6 +3,7 @@
 #include <bits/stdc++.h>
 #include <iterator>
 #include <set>
+#include <map>
 #include <stdlib.h>
 
 #include <sylvan.h>
@@ -10,6 +11,7 @@
 
 typedef std::set<int> Clause;
 typedef std::set<Clause> Cnf;
+typedef std::map<int,double> ProbMap;
 
 using namespace sylvan;
 
@@ -26,6 +28,14 @@ void printClause(Clause clause)
         var_prev = var;
     }
     std::cout << "x" << var_prev << ")";
+}
+
+void printProbMap(ProbMap pm)
+{
+    for (auto it = pm.begin(); it != pm.end(); it++) {
+        std::cout << "(" << it->first << ", " << it->second << ") ";
+    }
+    std::cout << std::endl;
 }
 
 void printCnf(Cnf cnf)
@@ -73,11 +83,33 @@ Cnf CnfFromFile(std::string filepath)
     return res;
 }
 
+ProbMap probsFromFile(std::string filepath)
+{
+    ProbMap res;
+
+    std::string line;
+    std::string token;
+    std::ifstream inFile(filepath);
+    if (inFile.is_open()) {
+        std::cout << "loading probs from " << filepath << std::endl;
+        while (getline(inFile, line)) {
+            std::istringstream ss(line);
+            ss >> token;
+            int var = std::stoi(token);
+            ss >> token;
+            double prob = atof(token.c_str());
+            res[var] = prob;
+        }
+    }
+
+    return res;
+}
+
 Bdd Cnf2Bdd(Cnf f)
 {
     Bdd res = Bdd::bddOne();
 
-    for (auto clause : f){
+    for (Clause clause : f){
         Bdd c = Bdd::bddZero();
 
         for (int lit : clause) {
@@ -130,12 +162,15 @@ int main(int argc, char** argv) {
     if (argc == 2) {
         path = argv[1];
     } else {
-        std::cout << "Please specify an input .cnf file" << std::endl;
+        std::cout << "Please specify an input file (without .cnf)" << std::endl;
     }
 
-    Cnf f = CnfFromFile(path);
+    Cnf f = CnfFromFile(path + ".cnf");
     printCnf(f);
     Bdd b = Cnf2Bdd(f);
+    
+    ProbMap probs = probsFromFile(path + ".cnf_probs");
+    printProbMap(probs);
 
     sylvan_quit();
     lace_stop();
