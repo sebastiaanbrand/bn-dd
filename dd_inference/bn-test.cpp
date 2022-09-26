@@ -8,12 +8,59 @@
 
 #include <sylvan.h>
 #include <sylvan_obj.hpp>
+#include <sylvan_int.h>
+
+
+//using namespace ::sylvan;
 
 typedef std::set<int> Clause;
 typedef std::set<Clause> Cnf;
 typedef std::map<int,double> ProbMap;
+typedef sylvan::BDD WPBDD;
 
-using namespace sylvan;
+ProbMap pm; // use global var for now
+
+static const uint64_t CACHE_WPBDD_MODELCOUNT      = (200LL<<40);
+
+#define wpbdd_modelcount(dd) RUN(wpbdd_modelcount, dd)
+TASK_1(double, wpbdd_modelcount, WPBDD, dd)
+{
+    // TODO: deal with skipped vars
+    // TODO: add restriction (i.e. compute marginal/conditional probabilities)
+    if (dd == sylvan::sylvan_true) return 1.0;
+    if (dd == sylvan::sylvan_false) return 0.0;
+
+
+    /* Consult cache */
+    union { double d; uint64_t s; } hack;
+    if (sylvan::cache_get3(CACHE_WPBDD_MODELCOUNT, dd, 0, 0, &hack.s)) {
+        return hack.d;
+    }
+
+    sylvan::mtbddnode_t node = sylvan::MTBDD_GETNODE(dd);
+    uint32_t var = sylvan::mtbddnode_getvariable(node);
+    WPBDD low    = sylvan::mtbddnode_getlow(node);
+    WPBDD high   = sylvan::mtbddnode_gethigh(node);
+
+    double prob_low  = CALL(wpbdd_modelcount, low);
+    double prob_high = CALL(wpbdd_modelcount, high);
+
+    if (pm.count(var)) {
+        // current var corresponds to a weight / prob
+        double current = pm[var];
+        hack.d = current * prob_high;
+        // assert prob_high = 0 ?
+
+    } else {
+        // current var corresponds to an RV assignment
+        hack.d = prob_low + prob_high;
+    }
+
+    /* Put in cache */
+    sylvan::cache_put3(CACHE_WPBDD_MODELCOUNT, dd, 0, 0, hack.s);
+
+    return hack.d;
+}
 
 void printClause(Clause clause)
 {
@@ -105,15 +152,15 @@ ProbMap probsFromFile(std::string filepath)
     return res;
 }
 
-Bdd Cnf2Bdd(Cnf f)
+sylvan::Bdd Cnf2Bdd(Cnf f)
 {
-    Bdd res = Bdd::bddOne();
+    sylvan::Bdd res = sylvan::Bdd::bddOne();
 
     for (Clause clause : f){
-        Bdd c = Bdd::bddZero();
+        sylvan::Bdd c = sylvan::Bdd::bddZero();
 
         for (int lit : clause) {
-            Bdd l = Bdd::bddVar(abs(lit));
+            sylvan::Bdd l = sylvan::Bdd::bddVar(abs(lit));
             if (lit < 0) l = !l;
             c = c | l;
         }
@@ -135,7 +182,7 @@ void small_example()
              {-a1, -b1, w2}, {-a1, -b2, w2}, {-a1, -b1, w2},
              {-a1, -b2, w2}, {-a1, -b3, w3}, {-a2, -b3, w3}};
 
-    Bdd b = Cnf2Bdd(f);
+    sylvan::Bdd b = Cnf2Bdd(f);
 
     FILE *fp = fopen("small_example.dot", "w");
     b.PrintDot(fp);
@@ -149,9 +196,12 @@ int main(int argc, char** argv) {
     lace_start(1, 0);
 
     // Simple Sylvan initialization, also initialize BDD support
-    sylvan_set_sizes(1LL<<16, 1LL<<16, 1LL<<16, 1LL<<16);
-    sylvan_init_package();
-    sylvan_init_bdd();
+    sylvan::sylvan_set_sizes(1LL<<16, 1LL<<16, 1LL<<16, 1LL<<16);
+    sylvan::sylvan_init_package();
+    sylvan::sylvan_init_bdd();
+
+    // TODO: maybe it's simpler to just use the C interface of Sylvan?
+    // (still in C++ file to make the rest of the programming a bit easier)
 
 
     //Cnf f = {{1, 2, 3}, {1, 2, -3}, {1, -2, -3}};
@@ -167,12 +217,19 @@ int main(int argc, char** argv) {
 
     Cnf f = CnfFromFile(path + ".cnf");
     printCnf(f);
-    Bdd b = Cnf2Bdd(f);
+    sylvan::Bdd dd = Cnf2Bdd(f);
     
-    ProbMap probs = probsFromFile(path + ".cnf_probs");
-    printProbMap(probs);
+    pm = probsFromFile(path + ".cnf_probs");
+    printProbMap(pm);
 
-    sylvan_quit();
+    FILE *fp = fopen("wpbdd.dot", "w");
+    dd.PrintDot(fp);
+    fclose(fp);
+
+    double count = wpbdd_modelcount(dd.GetBDD());
+    std::cout << "model count: " << count << std::endl;
+
+    sylvan::sylvan_quit();
     lace_stop();
 
     return 0;
