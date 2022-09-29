@@ -18,12 +18,23 @@ typedef std::set<Clause> Cnf;
 typedef std::map<int,double> ProbMap;
 typedef sylvan::BDD WPBDD;
 
+enum var_meta {
+    no_rv_var,     // vars not in domain or a prob_var
+    marg_out,
+    marg_0,
+    marg_1,
+    cond_0,
+    cond_1
+};
+
+
 ProbMap pm; // use global var for now
 
 static const uint64_t CACHE_WPBDD_MODELCOUNT      = (200LL<<40);
 
-#define wpbdd_modelcount(dd) RUN(wpbdd_modelcount, dd)
-TASK_1(double, wpbdd_modelcount, WPBDD, dd)
+//#define wpbdd_modelcount(dd) RUN(wpbdd_modelcount, dd, NULL)
+#define wpbdd_marginals(dd, meta) RUN(wpbdd_modelcount, dd, meta)
+TASK_2(double, wpbdd_modelcount, WPBDD, dd, int *, meta)
 {
     // TODO: deal with skipped vars
     // TODO: add restriction (i.e. compute marginal/conditional probabilities)
@@ -42,17 +53,29 @@ TASK_1(double, wpbdd_modelcount, WPBDD, dd)
     WPBDD low    = sylvan::mtbddnode_getlow(node);
     WPBDD high   = sylvan::mtbddnode_gethigh(node);
 
-    double prob_low  = CALL(wpbdd_modelcount, low);
-    double prob_high = CALL(wpbdd_modelcount, high);
+    double prob_low  = CALL(wpbdd_modelcount, low, meta);
+    double prob_high = CALL(wpbdd_modelcount, high, meta);
 
-    if (pm.count(var)) {
-        // current var corresponds to a weight / prob
-        double current = pm[var];
-        hack.d = current * prob_high;
+    switch (meta[var])
+    {
+    case no_rv_var:
+        // current var should correspond to a weight / prob
+        assert(pm.count(var));
         assert (prob_low == 0);
-    } else {
-        // current var corresponds to an RV assignment
-        hack.d = prob_low + prob_high;
+        hack.d = pm[var] * prob_high;
+        break;
+    case marg_0:
+        // compute prob for var = 0
+        hack.d = prob_low;
+        break;
+    case marg_1:
+        // compute prob for var = 1
+        hack.d = prob_high;
+        break;
+    default:
+        std::cerr << "Unknown meta value '" << meta[var] << "'" << std::endl;
+        exit(1);
+        break;
     }
 
     /* Put in cache */
@@ -191,6 +214,54 @@ void small_example()
 
 }
 
+void printMeta(int *meta, int n)
+{
+    std::cout << "Pr( "; fflush(stdout);
+    for (int i = 0; i < n; i++) {
+        if (meta[i] == marg_0) {
+            std::cout << "x" << i << "=" << 0 << " "; fflush(stdout);
+        }
+        else if (meta[i] == marg_1) {
+            std::cout << "x" << i << "=" << 1 << " "; fflush(stdout);
+        }
+    }
+    std::cout << ")"; fflush(stdout);
+}
+
+void _computeAllProbsRec(sylvan::Bdd dd, std::vector<int> rv_vars, int n, int *meta, int i)
+{
+    if (i == n) {
+        // call modelcount here
+        double count = wpbdd_marginals(dd.GetBDD(), meta);
+        sylvan::cache_clear(); // temp, since  meta is not part of the cache key
+        printMeta(meta, n);
+        std::cout << " = " << count << std::endl;
+        return;
+    }
+
+    if ( std::find(rv_vars.begin(), rv_vars.end(), i) != rv_vars.end() ){
+        meta[i] = marg_0;
+        _computeAllProbsRec(dd, rv_vars, n, meta, i + 1);
+    
+        meta[i] = marg_1;
+        _computeAllProbsRec(dd, rv_vars, n, meta, i + 1);
+    }
+    else {
+        meta[i] = 0;
+        _computeAllProbsRec(dd, rv_vars, n, meta, i + 1);
+    }
+    
+}
+
+
+void computeAllProbs(sylvan::Bdd dd, std::vector<int> rv_vars)
+{
+    int n = 10;  // TODO: don't hardcode this
+    int meta[n];
+
+    _computeAllProbsRec(dd, rv_vars, n, meta, 0);
+}
+
 int main(int argc, char** argv) {
 
     // Standard Lace initialization with 1 worker
@@ -214,6 +285,7 @@ int main(int argc, char** argv) {
         path = argv[1];
     } else {
         std::cout << "Please specify an input file (without .cnf)" << std::endl;
+        exit(1);
     }
 
     Cnf f = CnfFromFile(path + ".cnf");
@@ -227,8 +299,8 @@ int main(int argc, char** argv) {
     dd.PrintDot(fp);
     fclose(fp);
 
-    double count = wpbdd_modelcount(dd.GetBDD());
-    std::cout << "model count: " << count << std::endl;
+    std::vector<int> rv_vars{1, 2, 3};
+    computeAllProbs(dd, rv_vars);
 
     sylvan::sylvan_quit();
     lace_stop();
