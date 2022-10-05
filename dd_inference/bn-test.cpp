@@ -16,6 +16,7 @@
 typedef std::set<int> Clause;
 typedef std::set<Clause> Cnf;
 typedef std::map<int,double> ProbMap;
+typedef std::map<int, int> VarConstraint; // var -> var_meta
 typedef sylvan::BDD WPBDD;
 
 enum var_meta {
@@ -25,15 +26,42 @@ enum var_meta {
     marg_1,
     cond_0,
     cond_1
+    // TODO: probably we can just add do_0 and do_1 here
 };
 
 
 ProbMap pm; // use global var for now
+int max_var;
 
 static const uint64_t CACHE_WPBDD_MODELCOUNT      = (200LL<<40);
 
+
+void printMeta(int *meta, int n)
+{
+    std::cout << "Pr( "; fflush(stdout);
+    for (int i = 0; i < n; i++) {
+        if (meta[i] == marg_0) {
+            std::cout << "x" << i << "=" << 0 << " "; fflush(stdout);
+        }
+        else if (meta[i] == marg_1) {
+            std::cout << "x" << i << "=" << 1 << " "; fflush(stdout);
+        }
+    }
+    std::cout << "| "; fflush(stdout);
+    for (int i = 0; i < n; i ++) {
+        if (meta[i] == cond_0) {
+            std::cout << "x" << i << "=" << 0 << " "; fflush(stdout);
+        }
+        else if (meta[i] == cond_1) {
+            std::cout << "x" << i << "=" << 1 << " "; fflush(stdout);
+        }
+    }
+    std::cout << ")"; fflush(stdout);
+}
+
+
 //#define wpbdd_modelcount(dd) RUN(wpbdd_modelcount, dd, NULL)
-#define wpbdd_marginals(dd, meta) RUN(wpbdd_modelcount, dd, meta)
+#define _wpbdd_marginals(dd, meta) RUN(wpbdd_modelcount, dd, meta)
 TASK_2(double, wpbdd_modelcount, WPBDD, dd, int *, meta)
 {
     // TODO: deal with skipped vars
@@ -53,6 +81,7 @@ TASK_2(double, wpbdd_modelcount, WPBDD, dd, int *, meta)
     WPBDD low    = sylvan::mtbddnode_getlow(node);
     WPBDD high   = sylvan::mtbddnode_gethigh(node);
 
+    // TODO: we could optimize this by only calling both when we need them
     double prob_low  = CALL(wpbdd_modelcount, low, meta);
     double prob_high = CALL(wpbdd_modelcount, high, meta);
 
@@ -64,6 +93,10 @@ TASK_2(double, wpbdd_modelcount, WPBDD, dd, int *, meta)
         assert (prob_low == 0);
         hack.d = pm[var] * prob_high;
         break;
+    case marg_out:
+        // current var should be marginalized out
+        hack.d = prob_low + prob_high;
+        break;
     case marg_0:
         // compute prob for var = 0
         hack.d = prob_low;
@@ -71,6 +104,16 @@ TASK_2(double, wpbdd_modelcount, WPBDD, dd, int *, meta)
     case marg_1:
         // compute prob for var = 1
         hack.d = prob_high;
+        break;
+    case cond_0:
+        // TODO: We need Pr(var = 0) here. 
+        // for now: let's just use wpbdd_modelcount() to compute this prob,
+        // and assume the operation cache to catch any redundant computations
+        std::cerr << "cond_0 (" << cond_0 << ") not yet handled" << std::endl;
+        break;
+    case cond_1:
+        // TODO
+        std::cerr << "cond_1 (" << cond_1 << ") not yet handled" << std::endl;
         break;
     default:
         std::cerr << "Unknown meta value '" << meta[var] << "'" << std::endl;
@@ -82,6 +125,27 @@ TASK_2(double, wpbdd_modelcount, WPBDD, dd, int *, meta)
     sylvan::cache_put3(CACHE_WPBDD_MODELCOUNT, dd, 0, 0, hack.s);
 
     return hack.d;
+}
+
+double wpbdd_marginals(sylvan::Bdd dd, VarConstraint part_constraint, int nvars)
+{
+    int meta[nvars] = {marg_out}; // by default marginalize vars out
+
+
+    // mark probability vars as no_rv_vars
+    for (auto const& v : pm) {
+        meta[v.first] = no_rv_var;
+    }
+
+    // add the given (partial) constraint
+    for (auto const& a : part_constraint) {
+        meta[a.first] = a.second;
+    }
+
+    printMeta(meta, nvars);
+    std::cout << std::endl;
+
+    return _wpbdd_marginals(dd.GetBDD(), meta);
 }
 
 void printClause(Clause clause)
@@ -124,6 +188,7 @@ void printCnf(Cnf cnf)
 Cnf CnfFromFile(std::string filepath)
 {
     Cnf res;
+    max_var = 0;
 
     std::string line;
     std::string token;
@@ -139,6 +204,7 @@ Cnf CnfFromFile(std::string filepath)
                 }
                 int var = std::stoi(token);
                 clause.insert(var);
+                max_var = std::max(max_var, std::abs(var));
             }
             if (clause.size() > 0) {
                 res.insert(clause);
@@ -214,25 +280,12 @@ void small_example()
 
 }
 
-void printMeta(int *meta, int n)
-{
-    std::cout << "Pr( "; fflush(stdout);
-    for (int i = 0; i < n; i++) {
-        if (meta[i] == marg_0) {
-            std::cout << "x" << i << "=" << 0 << " "; fflush(stdout);
-        }
-        else if (meta[i] == marg_1) {
-            std::cout << "x" << i << "=" << 1 << " "; fflush(stdout);
-        }
-    }
-    std::cout << ")"; fflush(stdout);
-}
 
 void _computeAllProbsRec(sylvan::Bdd dd, std::vector<int> rv_vars, int n, int *meta, int i)
 {
     if (i == n) {
         // call modelcount here
-        double count = wpbdd_marginals(dd.GetBDD(), meta);
+        double count = _wpbdd_marginals(dd.GetBDD(), meta);
         sylvan::cache_clear(); // temp, since  meta is not part of the cache key
         printMeta(meta, n);
         std::cout << " = " << count << std::endl;
@@ -301,6 +354,9 @@ int main(int argc, char** argv) {
 
     std::vector<int> rv_vars{1, 2, 3};
     computeAllProbs(dd, rv_vars);
+    VarConstraint a{{1, marg_0}, {2, marg_1}, {3, marg_1}};
+    int nvars = 10; // dd vars
+    wpbdd_marginals(dd, a, nvars);
 
     sylvan::sylvan_quit();
     lace_stop();
