@@ -3,38 +3,18 @@
 #include <bits/stdc++.h>
 #include <iterator>
 #include <set>
-#include <map>
 #include <stdlib.h>
 
-#include <sylvan.h>
-#include <sylvan_obj.hpp>
-#include <sylvan_int.h>
+#include <wpbdd_inference.hpp>
 
-
-//using namespace ::sylvan;
 
 typedef std::set<int> Clause;
 typedef std::set<Clause> Cnf;
-typedef std::map<int,double> ProbMap;
 typedef std::map<int, int> VarConstraint; // var -> var_meta
-typedef sylvan::BDD WPBDD;
 
-enum var_meta {
-    no_rv_var,     // vars not in domain or a prob_var
-    marg_out,
-    marg_0,
-    marg_1,
-    cond_0,
-    cond_1
-    // TODO: probably we can just add do_0 and do_1 here
-};
+static ProbMap pm; // use global var for now
 
-
-ProbMap pm; // use global var for now
 int max_var;
-
-static const uint64_t CACHE_WPBDD_MODELCOUNT      = (200LL<<40);
-
 
 void printMeta(int *meta, int n)
 {
@@ -60,77 +40,9 @@ void printMeta(int *meta, int n)
 }
 
 
-//#define wpbdd_modelcount(dd) RUN(wpbdd_modelcount, dd, NULL)
-#define _wpbdd_marginals(dd, meta) RUN(wpbdd_modelcount, dd, meta)
-TASK_2(double, wpbdd_modelcount, WPBDD, dd, int *, meta)
-{
-    // TODO: deal with skipped vars
-    // TODO: add restriction (i.e. compute marginal/conditional probabilities)
-    if (dd == sylvan::sylvan_true) return 1.0;
-    if (dd == sylvan::sylvan_false) return 0.0;
-
-
-    /* Consult cache */
-    union { double d; uint64_t s; } hack;
-    if (sylvan::cache_get3(CACHE_WPBDD_MODELCOUNT, dd, 0, 0, &hack.s)) {
-        return hack.d;
-    }
-
-    sylvan::mtbddnode_t node = sylvan::MTBDD_GETNODE(dd);
-    uint32_t var = sylvan::mtbddnode_getvariable(node);
-    WPBDD low    = sylvan::mtbddnode_getlow(node);
-    WPBDD high   = sylvan::mtbddnode_gethigh(node);
-
-    // TODO: we could optimize this by only calling both when we need them
-    double prob_low  = CALL(wpbdd_modelcount, low, meta);
-    double prob_high = CALL(wpbdd_modelcount, high, meta);
-
-    switch (meta[var])
-    {
-    case no_rv_var:
-        // current var should correspond to a weight / prob
-        assert(pm.count(var));
-        assert (prob_low == 0);
-        hack.d = pm[var] * prob_high;
-        break;
-    case marg_out:
-        // current var should be marginalized out
-        hack.d = prob_low + prob_high;
-        break;
-    case marg_0:
-        // compute prob for var = 0
-        hack.d = prob_low;
-        break;
-    case marg_1:
-        // compute prob for var = 1
-        hack.d = prob_high;
-        break;
-    case cond_0:
-        // TODO: We need Pr(var = 0) here. 
-        // for now: let's just use wpbdd_modelcount() to compute this prob,
-        // and assume the operation cache to catch any redundant computations
-        std::cerr << "cond_0 (" << cond_0 << ") not yet handled" << std::endl;
-        break;
-    case cond_1:
-        // TODO
-        std::cerr << "cond_1 (" << cond_1 << ") not yet handled" << std::endl;
-        break;
-    default:
-        std::cerr << "Unknown meta value '" << meta[var] << "'" << std::endl;
-        exit(1);
-        break;
-    }
-
-    /* Put in cache */
-    sylvan::cache_put3(CACHE_WPBDD_MODELCOUNT, dd, 0, 0, hack.s);
-
-    return hack.d;
-}
-
 double wpbdd_marginals(sylvan::Bdd dd, VarConstraint part_constraint, int nvars)
 {
     int meta[nvars] = {marg_out}; // by default marginalize vars out
-
 
     // mark probability vars as no_rv_vars
     for (auto const& v : pm) {
@@ -145,7 +57,7 @@ double wpbdd_marginals(sylvan::Bdd dd, VarConstraint part_constraint, int nvars)
     printMeta(meta, nvars);
     std::cout << std::endl;
 
-    return _wpbdd_marginals(dd.GetBDD(), meta);
+    return wpbdd_modelcount(dd.GetBDD(), meta, &pm);
 }
 
 void printClause(Clause clause)
@@ -285,7 +197,7 @@ void _computeAllProbsRec(sylvan::Bdd dd, std::vector<int> rv_vars, int n, int *m
 {
     if (i == n) {
         // call modelcount here
-        double count = _wpbdd_marginals(dd.GetBDD(), meta);
+        double count = wpbdd_modelcount(dd.GetBDD(), meta, &pm);
         sylvan::cache_clear(); // temp, since  meta is not part of the cache key
         printMeta(meta, n);
         std::cout << " = " << count << std::endl;
