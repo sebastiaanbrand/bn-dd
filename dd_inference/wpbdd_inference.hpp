@@ -6,8 +6,15 @@
 
 /***************************<Some type definitions>****************************/
 
-typedef sylvan::BDD WPBDD;
 typedef std::map<int,double> ProbMap;
+
+// container for WPBDD info (dd + prob info + rv info)
+struct WpBdd {
+    sylvan::Bdd dd;
+    ProbMap pm;
+    std::vector<int> rv_vars;
+    int nvars; // number of dd vars
+};
 
 enum var_meta {
     no_rv_var,     // vars not in domain or a prob_var
@@ -29,8 +36,13 @@ enum var_meta {
 
 static const uint64_t CACHE_WPBDD_MODELCOUNT = (200LL<<40);
 
-TASK_DECL_3(double, wpbdd_modelcount, WPBDD, int *, ProbMap *);
+TASK_DECL_3(double, wpbdd_modelcount, sylvan::BDD, int *, ProbMap *);
 #define wpbdd_modelcount(dd, meta, pm) RUN(wpbdd_modelcount, dd, meta, pm)
+
+// TODO: utility functions which construct a meta (from simple arguments) and
+// call wpbdd_modelcount
+
+double wpbdd_marinalize(WpBdd wpbdd, int var, bool val);
 
 /*********************</Weighted model counting>*******************************/
 

@@ -5,7 +5,7 @@
 
 /**********************<Weighted model counting>*******************************/
 
-TASK_IMPL_3(double, wpbdd_modelcount, WPBDD, dd, int *, meta, ProbMap *, pm)
+TASK_IMPL_3(double, wpbdd_modelcount, sylvan::BDD, dd, int *, meta, ProbMap *, pm)
 {
     // TODO: deal with skipped vars
     // TODO: add restriction (i.e. compute marginal/conditional probabilities)
@@ -14,15 +14,16 @@ TASK_IMPL_3(double, wpbdd_modelcount, WPBDD, dd, int *, meta, ProbMap *, pm)
 
 
     /* Consult cache */
+    // TODO: encode meta in e.g. LDD and add to cache key?
     union { double d; uint64_t s; } hack;
     if (sylvan::cache_get3(CACHE_WPBDD_MODELCOUNT, dd, 0, 0, &hack.s)) {
         return hack.d;
     }
 
     sylvan::mtbddnode_t node = sylvan::MTBDD_GETNODE(dd);
-    uint32_t var = sylvan::mtbddnode_getvariable(node);
-    WPBDD low    = sylvan::mtbddnode_getlow(node);
-    WPBDD high   = sylvan::mtbddnode_gethigh(node);
+    uint32_t var     = sylvan::mtbddnode_getvariable(node);
+    sylvan::BDD low  = sylvan::mtbddnode_getlow(node);
+    sylvan::BDD high = sylvan::mtbddnode_gethigh(node);
     double prob_low  = 0;
     double prob_high = 0;
 
@@ -72,6 +73,16 @@ TASK_IMPL_3(double, wpbdd_modelcount, WPBDD, dd, int *, meta, ProbMap *, pm)
     sylvan::cache_put3(CACHE_WPBDD_MODELCOUNT, dd, 0, 0, hack.s);
 
     return hack.d;
+}
+
+double
+wpbdd_marinalize(WpBdd wpbdd, int var, bool val)
+{
+    int meta[wpbdd.nvars] = {0};
+    meta[var] = val ? marg_1 : marg_0;
+    //sylvan::cache_clear(); // new meta, reset cache
+    //return wpbdd_modelcount(dd, meta, pm);
+    return 0;
 }
 
 /*********************</Weighted model counting>*******************************/

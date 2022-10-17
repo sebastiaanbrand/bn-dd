@@ -12,8 +12,6 @@ typedef std::set<int> Clause;
 typedef std::set<Clause> Cnf;
 typedef std::map<int, int> VarConstraint; // var -> var_meta
 
-static ProbMap pm; // use global var for now
-
 int max_var;
 
 void printMeta(int *meta, int n)
@@ -40,12 +38,12 @@ void printMeta(int *meta, int n)
 }
 
 
-double wpbdd_marginals(sylvan::Bdd dd, VarConstraint part_constraint, int nvars)
+double wpbdd_marginals(WpBdd wpbdd, VarConstraint part_constraint)
 {
-    int meta[nvars] = {marg_out}; // by default marginalize vars out
+    int meta[wpbdd.nvars] = {marg_out}; // by default marginalize vars out
 
     // mark probability vars as no_rv_vars
-    for (auto const& v : pm) {
+    for (auto const& v : wpbdd.pm) {
         meta[v.first] = no_rv_var;
     }
 
@@ -54,10 +52,10 @@ double wpbdd_marginals(sylvan::Bdd dd, VarConstraint part_constraint, int nvars)
         meta[a.first] = a.second;
     }
 
-    printMeta(meta, nvars);
+    printMeta(meta, wpbdd.nvars);
     std::cout << std::endl;
 
-    return wpbdd_modelcount(dd.GetBDD(), meta, &pm);
+    return wpbdd_modelcount(wpbdd.dd.GetBDD(), meta, &(wpbdd.pm));
 }
 
 void printClause(Clause clause)
@@ -193,38 +191,48 @@ void small_example()
 }
 
 
-void _computeAllProbsRec(sylvan::Bdd dd, std::vector<int> rv_vars, int n, int *meta, int i)
+void _computeAllProbsRec(WpBdd wpbdd, int *meta, int i)
 {
-    if (i == n) {
+    if (i == wpbdd.nvars) {
         // call modelcount here
-        double count = wpbdd_modelcount(dd.GetBDD(), meta, &pm);
+        double count = wpbdd_modelcount(wpbdd.dd.GetBDD(), meta, &(wpbdd.pm));
         sylvan::cache_clear(); // temp, since  meta is not part of the cache key
-        printMeta(meta, n);
+        printMeta(meta, wpbdd.nvars);
         std::cout << " = " << count << std::endl;
         return;
     }
 
-    if ( std::find(rv_vars.begin(), rv_vars.end(), i) != rv_vars.end() ){
+    if ( std::find(wpbdd.rv_vars.begin(), wpbdd.rv_vars.end(), i) != wpbdd.rv_vars.end() ){
         meta[i] = marg_0;
-        _computeAllProbsRec(dd, rv_vars, n, meta, i + 1);
+        _computeAllProbsRec(wpbdd, meta, i + 1);
     
         meta[i] = marg_1;
-        _computeAllProbsRec(dd, rv_vars, n, meta, i + 1);
+        _computeAllProbsRec(wpbdd, meta, i + 1);
     }
     else {
         meta[i] = 0;
-        _computeAllProbsRec(dd, rv_vars, n, meta, i + 1);
+        _computeAllProbsRec(wpbdd, meta, i + 1);
     }
     
 }
 
 
-void computeAllProbs(sylvan::Bdd dd, std::vector<int> rv_vars)
+void computeAllProbs(WpBdd wpbdd)
 {
-    int n = 10;  // TODO: don't hardcode this
-    int meta[n];
+    int meta[wpbdd.nvars];
+    _computeAllProbsRec(wpbdd, meta, 0);
+}
 
-    _computeAllProbsRec(dd, rv_vars, n, meta, 0);
+void marinalizeIndividual(WpBdd wpbdd)
+{
+    double prob0, prob1;
+    for (int var : wpbdd.rv_vars) {
+        prob0 = wpbdd_marinalize(wpbdd, var, 0);
+        prob1 = wpbdd_marinalize(wpbdd, var, 1);
+        std::cout << "Pr( x" << var << "=0 ) = " << prob0 << std::endl;
+        //std::cout << "Pr( x" << var << "=1 ) = " << prob1 << std::endl;
+        break;
+    }
 }
 
 int main(int argc, char** argv) {
@@ -253,22 +261,27 @@ int main(int argc, char** argv) {
         exit(1);
     }
 
+    WpBdd wpbdd;
+
     Cnf f = CnfFromFile(path + ".cnf");
     printCnf(f);
-    sylvan::Bdd dd = Cnf2Bdd(f);
-    
-    pm = probsFromFile(path + ".cnf_probs");
-    printProbMap(pm);
+    wpbdd.dd = Cnf2Bdd(f);
+
+    wpbdd.pm = probsFromFile(path + ".cnf_probs");
+    printProbMap(wpbdd.pm);
 
     FILE *fp = fopen("wpbdd.dot", "w");
-    dd.PrintDot(fp);
+    wpbdd.dd.PrintDot(fp);
     fclose(fp);
 
+    wpbdd.rv_vars = {1,2,3}; // TODO: don't hardcode this
+    wpbdd.nvars = max_var + 1;
+
     std::vector<int> rv_vars{1, 2, 3};
-    computeAllProbs(dd, rv_vars);
+    computeAllProbs(wpbdd);
     VarConstraint a{{1, marg_0}, {2, marg_1}, {3, marg_1}};
-    int nvars = 10; // dd vars
-    wpbdd_marginals(dd, a, nvars);
+    wpbdd_marginals(wpbdd, a);
+    marinalizeIndividual(wpbdd);
 
     sylvan::sylvan_quit();
     lace_stop();
