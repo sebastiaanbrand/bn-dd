@@ -78,11 +78,16 @@ TASK_IMPL_3(double, wpbdd_modelcount, sylvan::BDD, dd, int *, meta, ProbMap *, p
 double
 wpbdd_marinalize(WpBdd wpbdd, int var, bool val)
 {
+    // Construct meta which encodes computing Pr(var = val) by modelcounting
     int meta[wpbdd.nvars] = {0};
+    for (int i : wpbdd.rv_vars) {
+        meta[i] = marg_out; // marginalize all (rv) vars out
+    }
     meta[var] = val ? marg_1 : marg_0;
-    //sylvan::cache_clear(); // new meta, reset cache
-    //return wpbdd_modelcount(dd, meta, pm);
-    return 0;
+
+    // Compute using model counting
+    sylvan::cache_clear(); // new meta, need to reset cache
+    return wpbdd_modelcount(wpbdd.dd.GetBDD(), meta, &(wpbdd.pm));
 }
 
 /*********************</Weighted model counting>*******************************/
