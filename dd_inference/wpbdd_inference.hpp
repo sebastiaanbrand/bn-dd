@@ -21,9 +21,8 @@ enum var_meta {
     marg_out,
     marg_0,
     marg_1,
-    cond_0,
-    cond_1
-    // TODO: probably we can just add do_0 and do_1 here
+    cond_0, // think we don't need cond_x, since we can compute conditionals
+    cond_1  // form multiple marginals, i.e. Pr(a|b) = Pr(a^b) / Pr(b)
 };
 
 /**************************</Some type definitions>****************************/
@@ -39,10 +38,10 @@ static const uint64_t CACHE_WPBDD_MODELCOUNT = (200LL<<40);
 TASK_DECL_3(double, wpbdd_modelcount, sylvan::BDD, int *, ProbMap *);
 #define wpbdd_modelcount(dd, meta, pm) RUN(wpbdd_modelcount, dd, meta, pm)
 
-// TODO: utility functions which construct a meta (from simple arguments) and
+// WIP: utility functions which construct a meta (from simple arguments) and
 // call wpbdd_modelcount
 
-double wpbdd_marinalize(WpBdd wpbdd, int var, bool val);
+double wpbdd_marginalize(WpBdd wpbdd, std::vector<std::pair<int, bool>> constraints);
 
 /*********************</Weighted model counting>*******************************/
 

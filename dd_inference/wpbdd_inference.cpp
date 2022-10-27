@@ -75,15 +75,17 @@ TASK_IMPL_3(double, wpbdd_modelcount, sylvan::BDD, dd, int *, meta, ProbMap *, p
     return hack.d;
 }
 
-double
-wpbdd_marinalize(WpBdd wpbdd, int var, bool val)
+double wpbdd_marginalize(WpBdd wpbdd, std::vector<std::pair<int, bool>> constraints)
 {
-    // Construct meta which encodes computing Pr(var = val) by modelcounting
+    // Construct meta which encodes computing Pr(var1=val1 ^ var2=val2 ^ ... )
     int meta[wpbdd.nvars] = {0};
     for (int i : wpbdd.rv_vars) {
-        meta[i] = marg_out; // marginalize all (rv) vars out
+        meta[i] = marg_out; // initially marginalize all (rv) vars out
     }
-    meta[var] = val ? marg_1 : marg_0;
+    for (std::pair<int,bool> constraint : constraints) {
+        // constrain var_i = val_i
+        meta[constraint.first] = constraint.second ? marg_1 : marg_0;
+    }
 
     // Compute using model counting
     sylvan::cache_clear(); // new meta, need to reset cache

@@ -227,8 +227,8 @@ void marinalizeIndividual(WpBdd wpbdd)
 {
     double prob0, prob1;
     for (int var : wpbdd.rv_vars) {
-        prob0 = wpbdd_marinalize(wpbdd, var, 0);
-        prob1 = wpbdd_marinalize(wpbdd, var, 1);
+        prob0 = wpbdd_marginalize(wpbdd, {{var, 0}});
+        prob1 = wpbdd_marginalize(wpbdd, {{var, 1}});
         std::cout << "Pr( x" << var << "=0 ) = " << prob0 << std::endl;
         std::cout << "Pr( x" << var << "=1 ) = " << prob1 << std::endl;
     }
