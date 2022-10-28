@@ -53,16 +53,6 @@ TASK_IMPL_3(double, wpbdd_modelcount, sylvan::BDD, dd, int *, meta, ProbMap *, p
         prob_high = CALL(wpbdd_modelcount, high, meta, pm);
         hack.d = prob_high;
         break;
-    case cond_0:
-        // TODO: We need Pr(var = 0) here. 
-        // for now: let's just use wpbdd_modelcount() to compute this prob,
-        // and assume the operation cache to catch any redundant computations
-        std::cerr << "cond_0 (" << cond_0 << ") not yet handled" << std::endl;
-        break;
-    case cond_1:
-        // TODO
-        std::cerr << "cond_1 (" << cond_1 << ") not yet handled" << std::endl;
-        break;
     default:
         std::cerr << "Unknown meta value '" << meta[var] << "'" << std::endl;
         exit(1);

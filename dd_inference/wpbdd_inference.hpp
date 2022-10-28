@@ -22,9 +22,7 @@ enum var_meta {
     no_rv_var,     // vars not in domain or a prob_var
     marg_out,
     marg_0,
-    marg_1,
-    cond_0, // think we don't need cond_x, since we can compute conditionals
-    cond_1  // form multiple marginals, i.e. Pr(a|b) = Pr(a^b) / Pr(b)
+    marg_1
 };
 
 /**************************</Some type definitions>****************************/

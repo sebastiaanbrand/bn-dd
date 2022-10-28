@@ -25,15 +25,6 @@ void printMeta(int *meta, int n)
             std::cout << "x" << i << "=" << 1 << " "; fflush(stdout);
         }
     }
-    std::cout << "| "; fflush(stdout);
-    for (int i = 0; i < n; i ++) {
-        if (meta[i] == cond_0) {
-            std::cout << "x" << i << "=" << 0 << " "; fflush(stdout);
-        }
-        else if (meta[i] == cond_1) {
-            std::cout << "x" << i << "=" << 1 << " "; fflush(stdout);
-        }
-    }
     std::cout << ")"; fflush(stdout);
 }
 
