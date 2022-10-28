@@ -234,6 +234,25 @@ void marinalizeIndividual(WpBdd wpbdd)
     }
 }
 
+void conditionPairs(WpBdd wpbdd)
+{
+    double prob00, prob01, prob10, prob11;
+    for (int x : wpbdd.rv_vars) {
+        for (int y : wpbdd.rv_vars) {
+            if (x != y) {
+                prob00 = wpbdd_condition(wpbdd, {{x, 0}}, {{y, 0}});
+                prob01 = wpbdd_condition(wpbdd, {{x, 0}}, {{y, 1}});
+                prob10 = wpbdd_condition(wpbdd, {{x, 1}}, {{y, 0}});
+                prob11 = wpbdd_condition(wpbdd, {{x, 1}}, {{y, 1}});
+                std::cout << "Pr( x" << x << "=0 | x" << y << "=0 ) = " << prob00 << std::endl;
+                std::cout << "Pr( x" << x << "=0 | x" << y << "=1 ) = " << prob01 << std::endl;
+                std::cout << "Pr( x" << x << "=1 | x" << y << "=0 ) = " << prob10 << std::endl;
+                std::cout << "Pr( x" << x << "=1 | x" << y << "=1 ) = " << prob11 << std::endl;
+            }
+        }
+    }
+}
+
 int main(int argc, char** argv) {
 
     // Standard Lace initialization with 1 worker
@@ -281,6 +300,7 @@ int main(int argc, char** argv) {
     VarConstraint a{{1, marg_0}, {2, marg_1}, {3, marg_1}};
     wpbdd_marginals(wpbdd, a);
     marinalizeIndividual(wpbdd);
+    conditionPairs(wpbdd);
 
     sylvan::sylvan_quit();
     lace_stop();

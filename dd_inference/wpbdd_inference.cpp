@@ -75,21 +75,49 @@ TASK_IMPL_3(double, wpbdd_modelcount, sylvan::BDD, dd, int *, meta, ProbMap *, p
     return hack.d;
 }
 
-double wpbdd_marginalize(WpBdd wpbdd, std::vector<std::pair<int, bool>> constraints)
+double wpbdd_marginalize(WpBdd wpbdd, Constraint x)
 {
     // Construct meta which encodes computing Pr(var1=val1 ^ var2=val2 ^ ... )
     int meta[wpbdd.nvars] = {0};
     for (int i : wpbdd.rv_vars) {
         meta[i] = marg_out; // initially marginalize all (rv) vars out
     }
-    for (std::pair<int,bool> constraint : constraints) {
+    for (std::pair<int,bool> x_i : x) {
         // constrain var_i = val_i
-        meta[constraint.first] = constraint.second ? marg_1 : marg_0;
+        meta[x_i.first] = x_i.second ? marg_1 : marg_0;
     }
 
     // Compute using model counting
     sylvan::cache_clear(); // new meta, need to reset cache
     return wpbdd_modelcount(wpbdd.dd.GetBDD(), meta, &(wpbdd.pm));
+}
+
+double wpbdd_condition(WpBdd wpbdd, Constraint x, Constraint y)
+{
+    // Pr( X=x | Y=y ) = Pr( X=x ^ Y=y ) / Pr( Y=y )
+    Constraint x_and_y(x);
+    x_and_y.insert(y.begin(), y.end());
+    double num = wpbdd_marginalize(wpbdd, x_and_y); // Pr( X=x ^ Y=y )
+    double denom = wpbdd_marginalize(wpbdd, y);     // Pr( Y=y )
+    return num / denom;
+}
+
+double wpbdd_do(WpBdd wpbdd, Constraint x, Constraint t, std::set<int> pt)
+{
+    // Pr( X=x| do(T=t) ) = Pr( X=x ^ T=t ) / Pr( pa(T)_{|X=x} | T=t )
+    Constraint x_and_t(x);
+    x_and_t.insert(t.begin(), t.end());
+    double num = wpbdd_marginalize(wpbdd, x_and_t); // Pr( X=x ^ T=t )
+
+    Constraint ptx;
+    for (std::pair<int,bool> x_i : x) {
+        if (pt.find(x_i.first) != pt.end()) { // if x \in pt
+            ptx.insert(x_i);
+        }
+    }
+    double denom = wpbdd_condition(wpbdd, ptx, t);  // Pr( pa(T)_{X=x} | T=t) )
+
+    return num/denom;
 }
 
 /*********************</Weighted model counting>*******************************/
