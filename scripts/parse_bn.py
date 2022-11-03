@@ -8,8 +8,7 @@ import pylab as plt
 import networkx as nx
 from pysat.formula import CNF # python-sat package
 from pgmpy.models import BayesianNetwork
-from pgmpy.factors.discrete import TabularCPD
-from pgmpy.readwrite import XMLBIFReader, XMLBIFWriter
+from pgmpy.readwrite import XMLBIFReader
 
 
 verbose = True
@@ -56,10 +55,11 @@ class BayesianNetworkEncoder:
 
     def __init__(self, bn : BayesianNetwork):
         self.bn = bn
-        self.rvs = {}        # name -> RV
-        self.prob_vars = {}  # probs -> int (Boolean var)
-        self.cnf = CNF()     # CNF formula
-
+        self.rvs = {}           # name -> RV
+        self.prob_vars = {}     # int (Boolean var) -> prob (float)
+        self.pr_zero_var = None # unique var corresponding to Pr(..) = 0
+        self.cnf = CNF()        # CNF formula
+        self._last_var = 0
 
     def visualize_bn(self):
         """
@@ -70,6 +70,17 @@ class BayesianNetworkEncoder:
         nx.draw(graph, pos=pos, with_labels=True)
         plt.savefig('bn.png')
 
+    def _get_next_var(self) -> int:
+        """
+        Returns the next unused variable (_last_var contains the last used var).
+        """
+        self._last_var += 1
+        return self._last_var
+    
+    def _get_pr_zero_var(self) -> int:
+        if self.pr_zero_var is None:
+            self.pr_zero_var = self._get_next_var()
+        return self.pr_zero_var
 
     def _add_clause(self, variables: Iterable, assignment : Iterable, prob : float):
         """
@@ -97,14 +108,24 @@ class BayesianNetworkEncoder:
                 else:
                     raise ValueError(f'unexpected value {assignment_bits[j]} in bitstring')
 
+        # NOTE: For now, we are using a new unique variable for each weight,
+        # even if weights are the same. (I think using the same var for the 
+        # same prob in different places in the BN might give issues.)
+        # (Except for 0, there having a single var for 0 should be fine.)
+        # TODO: Option for unique prob vars (and handle this in BN)
+        if prob == 0:
+            w = self._get_pr_zero_var()
+        else:
+            w = self._get_next_var()
+        self.prob_vars[w] = prob
         info(f"Pr({','.join(variables)} = {assignment}) = {prob}", end='')
-        info(f"\tencoded as {literals} ==> {self.prob_vars[prob]} ({prob})")
+        info(f"\tencoded as {literals} ==> {w} ({prob})")
 
         # Turn cube + implication into CNF clause:
-        # (x1 ^ x2 ^ x3 ^ ... ==> w1) = (~x1 v ~x2 v ~x3 v ... v ~w1)
+        # (x1 ^ x2 ^ x3 ^ ... ==> w) = (~x1 v ~x2 v ~x3 v ... v w)
         print(literals)
         clause = [-lit for lit in literals]
-        clause.append(self.prob_vars[prob])
+        clause.append(w)
         print(clause)
         self.cnf.append(clause)
 
@@ -148,13 +169,12 @@ class BayesianNetworkEncoder:
             info("Node:", node)
             info(cpd, '\n')
 
-        # 2. Assign Boolean vars to the RVs + assign vars to probs
+        # 2. Assign Boolean vars to the RVs 
+        #   (prob vars are assigned in _cpd_to_cnf())
         x = 1
         for rv in self.rvs.values():
             x = rv.assign_boolean_vars(x)
-        for p in probs:
-            self.prob_vars[p] = x
-            x += 1
+        self._last_var = x - 1
 
         # 3. encode CPDs into implications: a ^ b ^ ... ==> w
         for node in nodes:
@@ -165,7 +185,7 @@ class BayesianNetworkEncoder:
 
     def write_probs(self, outputfile):
         with open(outputfile, 'w') as f:
-            for (prob, var) in self.prob_vars.items():
+            for (var, prob) in self.prob_vars.items():
                 f.write(f"{var} {prob}\n")
 
     def write_rv_vars(self, outputfile):
@@ -203,8 +223,3 @@ if __name__ == '__main__':
     cnf.to_file(out_template + '.cnf')
     bn_encoder.write_probs(out_template + '.cnf_probs')
     bn_encoder.write_rv_vars(out_template + '.cnf_rv_vars')
-
-    #model = toy_network_1()
-    #model = toy_network_2()
-    #writer = XMLBIFWriter(model)
-    #writer.write_xmlbif("models/line.xmlbif")
