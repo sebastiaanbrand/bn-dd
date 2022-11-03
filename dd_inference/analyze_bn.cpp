@@ -8,8 +8,6 @@
 #include <wpbdd_inference.hpp>
 
 
-
-
 static int max_var;
 
 void printMeta(int *meta, int n)
@@ -131,7 +129,8 @@ void conditionPairs(WpBdd wpbdd)
     }
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
 
     // Standard Lace initialization with 1 worker
     lace_start(1, 0);
