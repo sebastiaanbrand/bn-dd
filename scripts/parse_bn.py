@@ -97,8 +97,6 @@ class BayesianNetworkEncoder:
                 else:
                     raise ValueError(f'unexpected value {assignment_bits[j]} in bitstring')
 
-        # TODO: Add this cube + implication to some list or file
-        # TODO: Use CNF instead of cubes + implications? Does it matter?
         info(f"Pr({','.join(variables)} = {assignment}) = {prob}", end='')
         info(f"\tencoded as {literals} ==> {self.prob_vars[prob]} ({prob})")
 
@@ -170,6 +168,14 @@ class BayesianNetworkEncoder:
             for (prob, var) in self.prob_vars.items():
                 f.write(f"{var} {prob}\n")
 
+    def write_rv_vars(self, outputfile):
+        with open(outputfile, 'w') as f:
+            for rv in self.rvs.values():
+                f.write(f"{rv.name}")
+                for bool_var in rv.boolean_vars:
+                    f.write(f" {bool_var}")
+                f.write("\n")
+
 
 def parse_args():
     if len(sys.argv) < 2:
@@ -196,6 +202,7 @@ if __name__ == '__main__':
     out_template = os.path.splitext(model_path)[0]
     cnf.to_file(out_template + '.cnf')
     bn_encoder.write_probs(out_template + '.cnf_probs')
+    bn_encoder.write_rv_vars(out_template + '.cnf_rv_vars')
 
     #model = toy_network_1()
     #model = toy_network_2()
