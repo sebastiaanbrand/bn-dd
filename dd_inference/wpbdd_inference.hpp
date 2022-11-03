@@ -70,6 +70,7 @@ double wpbdd_do(WpBdd wpbdd, Constraint x, Constraint t, std::set<int> pt);
  * Agrument 'filepath' without '.cnf' extension. Assumes two files:
  * - filepath.cnf
  * - filepath.cnf_probs
+ * - filepath.cnf_rv_vars
  */
 WpBdd wpbdd_from_files(std::string filepath);
 
@@ -81,6 +82,10 @@ sylvan::Bdd cnf_to_bdd(Cnf f);
 
 ProbMap probs_from_file(std::string filepath);
 
+std::vector<int> rv_vars_from_file(std::string filepath);
+
 void print_probmap(ProbMap pm);
+
+void print_rv_vars(std::vector<int> rv_vars);
 
 /**************</Loading CNF from file + building WPBDD>***********************/

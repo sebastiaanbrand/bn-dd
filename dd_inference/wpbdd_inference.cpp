@@ -132,7 +132,8 @@ WpBdd wpbdd_from_files(std::string filepath)
     print_cnf(f);
     wpbdd.dd = cnf_to_bdd(f);
     wpbdd.nvars = max_var + 1; // set by cnf_from_file(), not super clean
-    wpbdd.rv_vars = {1,2,3}; // TODO: don't hardcode this, output from python code
+    wpbdd.rv_vars = rv_vars_from_file(filepath + ".cnf_rv_vars");
+    print_rv_vars(wpbdd.rv_vars);
 
     // load probabilities
     wpbdd.pm = probs_from_file(filepath + ".cnf_probs");
@@ -246,10 +247,40 @@ ProbMap probs_from_file(std::string filepath)
     return res;
 }
 
+std::vector<int> rv_vars_from_file(std::string filepath)
+{
+    std::vector<int> rv_vars;
+
+    std::string line;
+    std::string token;
+    std::ifstream infile(filepath);
+    if (infile.is_open()) {
+        while (getline(infile, line)) {
+            std::istringstream ss(line);
+            ss >> token; // first token in the name of the rv
+            while (ss >> token) {
+                int var = std::stoi(token);
+                rv_vars.push_back(var);
+            }
+        }
+    }
+
+    return rv_vars;
+}
+
 void print_probmap(ProbMap pm)
 {
     for (auto it = pm.begin(); it != pm.end(); it++) {
         std::cout << "(" << it->first << ", " << it->second << ") ";
+    }
+    std::cout << std::endl;
+}
+
+void print_rv_vars(std::vector<int> rv_vars)
+{
+    std::cout << "RV vars: ";
+    for (int rv_var : rv_vars) {
+        std::cout << rv_var << " ";
     }
     std::cout << std::endl;
 }
