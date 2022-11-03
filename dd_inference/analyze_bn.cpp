@@ -8,11 +8,9 @@
 #include <wpbdd_inference.hpp>
 
 
-typedef std::set<int> Clause;
-typedef std::set<Clause> Cnf;
-typedef std::map<int, int> VarConstraint; // var -> var_meta
 
-int max_var;
+
+static int max_var;
 
 void printMeta(int *meta, int n)
 {
@@ -49,118 +47,7 @@ double wpbdd_marginals(WpBdd wpbdd, VarConstraint part_constraint)
     return wpbdd_modelcount(wpbdd.dd.GetBDD(), meta, &(wpbdd.pm));
 }
 
-void printClause(Clause clause)
-{
-    int var_prev = 0;
-    std::cout << "(";
-    for (int var : clause) {
-        if (var_prev > 0) {
-            std::cout << "x" << var_prev << " v ";
-        } else if (var_prev < 0) {
-            std::cout << "~x" << std::abs(var_prev) << " v ";
-        }
-        var_prev = var;
-    }
-    std::cout << "x" << var_prev << ")";
-}
 
-void printProbMap(ProbMap pm)
-{
-    for (auto it = pm.begin(); it != pm.end(); it++) {
-        std::cout << "(" << it->first << ", " << it->second << ") ";
-    }
-    std::cout << std::endl;
-}
-
-void printCnf(Cnf cnf)
-{
-    Clause clause_prev;
-    for (Clause clause : cnf) {
-        if (clause_prev.size() != 0) {
-            printClause(clause_prev);
-            std::cout << " ^ ";
-        }
-        clause_prev = clause;
-    }
-    printClause(clause_prev);
-    std::cout << std::endl;
-}
-
-Cnf CnfFromFile(std::string filepath)
-{
-    Cnf res;
-    max_var = 0;
-
-    std::string line;
-    std::string token;
-    std::ifstream inFile(filepath);
-    if (inFile.is_open()) {
-        std::cout << "loading CNF from " << filepath << std::endl;
-        while (getline(inFile, line)) {
-            Clause clause;
-            std::istringstream ss(line);
-            while (ss >> token) {
-                if (token == "p" || token == "cnf") {
-                    break;
-                }
-                int var = std::stoi(token);
-                clause.insert(var);
-                max_var = std::max(max_var, std::abs(var));
-            }
-            if (clause.size() > 0) {
-                res.insert(clause);
-            }
-        }
-        inFile.close();
-    } else {
-        std::cout << "unable to open " << filepath << std::endl;
-    }
-
-    return res;
-}
-
-ProbMap probsFromFile(std::string filepath)
-{
-    ProbMap res;
-
-    std::string line;
-    std::string token;
-    std::ifstream inFile(filepath);
-    if (inFile.is_open()) {
-        std::cout << "loading probs from " << filepath << std::endl;
-        while (getline(inFile, line)) {
-            std::istringstream ss(line);
-            ss >> token;
-            int var = std::stoi(token);
-            ss >> token;
-            double prob = atof(token.c_str());
-            res[var] = prob;
-        }
-    }
-
-    return res;
-}
-
-sylvan::Bdd Cnf2Bdd(Cnf f)
-{
-    sylvan::Bdd res = sylvan::Bdd::bddOne();
-
-    for (Clause clause : f){
-        sylvan::Bdd c = sylvan::Bdd::bddZero();
-
-        for (int lit : clause) {
-            if (lit != 0) {
-                sylvan::Bdd l = sylvan::Bdd::bddVar(abs(lit));
-                if (lit < 0) l = !l;
-                c = c | l;
-            }
-        }
-
-        res = res & c;
-    }
-    
-    return res;
-}
 
 void small_example()
 {
@@ -173,7 +60,7 @@ void small_example()
              {-a1, -b1, w2}, {-a1, -b2, w2}, {-a1, -b1, w2},
              {-a1, -b2, w2}, {-a1, -b3, w3}, {-a2, -b3, w3}};
 
-    sylvan::Bdd b = Cnf2Bdd(f);
+    sylvan::Bdd b = cnf_to_bdd(f);
 
     FILE *fp = fopen("small_example.dot", "w");
     b.PrintDot(fp);
@@ -270,21 +157,11 @@ int main(int argc, char** argv) {
         exit(1);
     }
 
-    WpBdd wpbdd;
-
-    Cnf f = CnfFromFile(path + ".cnf");
-    printCnf(f);
-    wpbdd.dd = Cnf2Bdd(f);
-
-    wpbdd.pm = probsFromFile(path + ".cnf_probs");
-    printProbMap(wpbdd.pm);
+    WpBdd wpbdd = wpbdd_from_files(path);
 
     FILE *fp = fopen("wpbdd.dot", "w");
     wpbdd.dd.PrintDot(fp);
     fclose(fp);
-
-    wpbdd.rv_vars = {1,2,3}; // TODO: don't hardcode this
-    wpbdd.nvars = max_var + 1;
 
     std::vector<int> rv_vars{1, 2, 3};
     computeAllProbs(wpbdd);

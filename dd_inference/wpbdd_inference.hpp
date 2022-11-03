@@ -10,6 +10,10 @@
 typedef std::map<int,double> ProbMap;
 typedef std::set<std::pair<int,bool>> Constraint;
 
+typedef std::set<int> Clause;
+typedef std::set<Clause> Cnf;
+typedef std::map<int, int> VarConstraint; // var -> var_meta
+
 // container for WPBDD info (dd + prob info + rv info)
 struct WpBdd {
     sylvan::Bdd dd;
@@ -56,3 +60,27 @@ double wpbdd_do(WpBdd wpbdd, Constraint x, Constraint t, std::set<int> pt);
 
 /*********************</Weighted model counting>*******************************/
 
+
+
+
+
+/***************<Loading CNF from file + building WPBDD>***********************/
+
+/**
+ * Agrument 'filepath' without '.cnf' extension. Assumes two files:
+ * - filepath.cnf
+ * - filepath.cnf_probs
+ */
+WpBdd wpbdd_from_files(std::string filepath);
+
+Cnf cnf_from_file(std::string filepath);
+
+void print_cnf(Cnf cnf);
+
+sylvan::Bdd cnf_to_bdd(Cnf f);
+
+ProbMap probs_from_file(std::string filepath);
+
+void print_probmap(ProbMap pm);
+
+/**************</Loading CNF from file + building WPBDD>***********************/
