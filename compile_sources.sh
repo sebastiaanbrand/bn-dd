@@ -10,7 +10,7 @@ while getopts "r" opt; do
 done
 
 # (re)compile Sylvan
-cd lib/sylvan-1.6.1
+cd extern/sylvan
 if [[ $recompile ]]; then rm -r -f build; fi
 mkdir -p build
 cd build

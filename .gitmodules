@@ -1,0 +1,3 @@
+[submodule "extern/sylvan"]
+	path = extern/sylvan
+	url = https://github.com/trolando/sylvan
