@@ -9,14 +9,14 @@ while getopts "r" opt; do
   esac
 done
 
-# (re)compile Sylvan
-cd extern/sylvan
-if [[ $recompile ]]; then rm -r -f build; fi
-mkdir -p build
-cd build
-cmake ..
+# (re)compile Sylvan (don't build in extern folder)
+cd dd_inference
+if [[ $recompile ]]; then rm -r -f sylvan_build; fi
+mkdir -p sylvan_build
+cd sylvan_build
+cmake ../../extern/sylvan
 make
-cd ../../..
+cd ../..
 
 # (re)compile BN code
 cd dd_inference
