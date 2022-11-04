@@ -34,6 +34,8 @@ int test_marginals_line()
     p = wpbdd_marginalize(wpbdd, {{C, 0}}); assert_close(p, .618); // Pr(C = 0)
     p = wpbdd_marginalize(wpbdd, {{C, 1}}); assert_close(p, .382); // Pr(C = 1)
 
+    // TODO: test Pr(A ^ B ^ C)
+
     printf("Marginal probs line:                OK\n");
     return 0;
 }
@@ -73,7 +75,24 @@ int test_conditionals_line()
 
 int test_do_operator_line()
 {
-    // TODO
+    double p;
+    int A = 1, B = 2, C = 3; // RV vars
+
+    // Pr(A|do(B)) = Pr(A) (last argument is parents of B)
+    p = wpbdd_do(wpbdd, {{A, 0}}, {{B, 0}}, {A});   assert_close(p, .2);
+    p = wpbdd_do(wpbdd, {{A, 0}}, {{B, 1}}, {A});   assert_close(p, .2);
+    p = wpbdd_do(wpbdd, {{A, 1}}, {{B, 0}}, {A});   assert_close(p, .8);
+    p = wpbdd_do(wpbdd, {{A, 1}}, {{B, 1}}, {A});   assert_close(p, .8);
+
+    // Pr(B|do(A)) = Pr(B|A)
+    p = wpbdd_do(wpbdd, {{B, 0}}, {{A, 0}}, {A});   assert_close(p, .3);
+    p = wpbdd_do(wpbdd, {{B, 0}}, {{A, 1}}, {A});   assert_close(p, .25);
+    p = wpbdd_do(wpbdd, {{B, 1}}, {{A, 0}}, {A});   assert_close(p, .7);
+    p = wpbdd_do(wpbdd, {{B, 1}}, {{A, 1}}, {A});   assert_close(p, .75);
+
+    // TODO: more
+
+    printf("Do-operator probs line:             OK\n");
     return 0;
 }
 

@@ -97,7 +97,7 @@ double wpbdd_condition(WpBdd wpbdd, Constraint x, Constraint y)
 
 double wpbdd_do(WpBdd wpbdd, Constraint x, Constraint t, std::set<int> pt)
 {
-    // Pr( X=x| do(T=t) ) = Pr( X=x ^ T=t ) / Pr( pa(T)_{|X=x} | T=t )
+    // Pr( X=x| do(T=t) ) = Pr( X=x ^ T=t ) / Pr( T=t | pa(T)_{|X=x} )
     Constraint x_and_t(x);
     x_and_t.insert(t.begin(), t.end());
     double num = wpbdd_marginalize(wpbdd, x_and_t); // Pr( X=x ^ T=t )
@@ -108,7 +108,7 @@ double wpbdd_do(WpBdd wpbdd, Constraint x, Constraint t, std::set<int> pt)
             ptx.insert(x_i);
         }
     }
-    double denom = wpbdd_condition(wpbdd, ptx, t);  // Pr( pa(T)_{X=x} | T=t) )
+    double denom = wpbdd_condition(wpbdd, t, ptx);  // Pr( T=t | pa(T)_{X=x}) )
 
     return num/denom;
 }
