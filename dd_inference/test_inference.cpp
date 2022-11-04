@@ -10,14 +10,17 @@
 
 WpBdd wpbdd;
 
+#define assert_close(a,b) assert(std::abs(a - b) < 1e-6)
+/*
 void assert_close(double a, double b)
 {
-    if (!(std::abs(a) - std::abs(b) < 1e-6)){
+    if (std::abs(a - b) > 1e-6){
         printf("Found:    %0.10lf\n", a);
         printf("Expected: %0.10lf\n", b);
         assert(false && "value not close");
-    }   
+    }
 }
+*/
 
 int test_marginals_line()
 {
@@ -31,13 +34,40 @@ int test_marginals_line()
     p = wpbdd_marginalize(wpbdd, {{C, 0}}); assert_close(p, .618); // Pr(C = 0)
     p = wpbdd_marginalize(wpbdd, {{C, 1}}); assert_close(p, .382); // Pr(C = 1)
 
-    printf("Marginal probs line:            OK\n");
+    printf("Marginal probs line:                OK\n");
     return 0;
 }
 
 int test_conditionals_line()
 {
-    // TODO
+    double p;
+    int A = 1, B = 2, C = 3; // RV vars
+
+    // direct from CPT of B
+    p = wpbdd_condition(wpbdd, {{B, 0}}, {{A, 0}}); assert_close(p, .3);
+    p = wpbdd_condition(wpbdd, {{B, 0}}, {{A, 1}}); assert_close(p, .25);
+    p = wpbdd_condition(wpbdd, {{B, 1}}, {{A, 0}}); assert_close(p, .7);
+    p = wpbdd_condition(wpbdd, {{B, 1}}, {{A, 1}}); assert_close(p, .75);
+
+    // direct from CPT of A
+    p = wpbdd_condition(wpbdd, {{C, 0}}, {{B, 0}}); assert_close(p, .1);
+    p = wpbdd_condition(wpbdd, {{C, 0}}, {{B, 1}}); assert_close(p, .8);
+    p = wpbdd_condition(wpbdd, {{C, 1}}, {{B, 0}}); assert_close(p, .9);
+    p = wpbdd_condition(wpbdd, {{C, 1}}, {{B, 1}}); assert_close(p, .2);
+
+    // Pr(A|B) = Pr(B|A)Pr(A)/Pr(B)
+    p = wpbdd_condition(wpbdd, {{A, 0}}, {{B, 0}}); assert_close(p, .3*.2/.26);
+    p = wpbdd_condition(wpbdd, {{A, 0}}, {{B, 1}}); assert_close(p, .7*.2/.74);
+    p = wpbdd_condition(wpbdd, {{A, 1}}, {{B, 0}}); assert_close(p, .25*.8/.26);
+    p = wpbdd_condition(wpbdd, {{A, 1}}, {{B, 1}}); assert_close(p, .75*.8/.74);
+
+    // Pr(B|C) = Pr(C|B)Pr(B)/Pr(C)
+    p = wpbdd_condition(wpbdd, {{B, 0}}, {{C, 0}}); assert_close(p, .1*.26/.618);
+    p = wpbdd_condition(wpbdd, {{B, 0}}, {{C, 1}}); assert_close(p, .9*.26/.382);
+    p = wpbdd_condition(wpbdd, {{B, 1}}, {{C, 0}}); assert_close(p, .8*.74/.618);
+    p = wpbdd_condition(wpbdd, {{B, 1}}, {{C, 1}}); assert_close(p, .2*.74/.382);
+
+    printf("Conditional probs line:             OK\n");
     return 0;
 }
 
