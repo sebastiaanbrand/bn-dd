@@ -1,0 +1,9 @@
+acl_batt_fatl_m 1 2 3 4 5 6
+acl_sum_evnt_m 7 8 9 10 11 12
+et_anom_y_STD_y 13 14 15
+loccount_y 16 17 18
+ndvi_act_std_m 19 20 21
+pig_number_s 22 23
+rurpop_s 24 25
+spam_V_agg_r_max_s 26 27 28
+spi_12_m 29 30 31
