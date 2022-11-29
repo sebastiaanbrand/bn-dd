@@ -161,7 +161,7 @@ int main(int argc, char** argv)
     lace_start(1, 0);
 
     // Simple Sylvan initialization, also initialize BDD support
-    sylvan::sylvan_set_sizes(1LL<<16, 1LL<<16, 1LL<<16, 1LL<<16);
+    sylvan::sylvan_set_sizes(1LL<<28, 1LL<<28, 1LL<<16, 1LL<<16);
     sylvan::sylvan_init_package();
     sylvan::sylvan_init_bdd();
 
