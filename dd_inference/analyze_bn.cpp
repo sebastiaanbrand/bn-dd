@@ -4,8 +4,24 @@
 #include <iterator>
 #include <set>
 #include <stdlib.h>
+#include <sys/time.h>
 
 #include <wpbdd_inference.hpp>
+
+/**
+ * Obtain current wallclock time
+ */
+static double
+wctime()
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (tv.tv_sec + 1E-6 * tv.tv_usec);
+}
+
+static double t_start;
+#define INFO(s, ...) fprintf(stdout, "[% 8.2f] " s, wctime()-t_start, ##__VA_ARGS__)
+#define Abort(...) { fprintf(stderr, __VA_ARGS__); fprintf(stderr, "Abort at line %d!\n", __LINE__); exit(-1); }
 
 
 static int max_var;
@@ -131,6 +147,15 @@ void conditionPairs(WpBdd wpbdd)
 
 int main(int argc, char** argv)
 {
+    std::string path;
+    if (argc == 2) {
+        path = argv[1];
+    } else {
+        std::cout << "Please specify an input file (without .cnf)" << std::endl;
+        exit(1);
+    }
+
+    t_start = wctime();
 
     // Standard Lace initialization with 1 worker
     lace_start(1, 0);
@@ -148,16 +173,13 @@ int main(int argc, char** argv)
     //Bdd b = Cnf2Bdd(f);
     //std::cout << "satcount: " << b.SatCount(3) << std::endl;
     //small_example();
-    std::string path;
-    if (argc == 2) {
-        path = argv[1];
-    } else {
-        std::cout << "Please specify an input file (without .cnf)" << std::endl;
-        exit(1);
-    }
 
     WpBdd wpbdd = wpbdd_from_files(path);
+    uint64_t nodecount = sylvan::sylvan_nodecount(wpbdd.dd.GetBDD());
+    INFO("WPBDD nodecount = %ld\n", nodecount);
 
+    
+    /*
     FILE *fp = fopen("wpbdd.dot", "w");
     wpbdd.dd.PrintDot(fp);
     fclose(fp);
@@ -171,6 +193,7 @@ int main(int argc, char** argv)
 
     sylvan::sylvan_quit();
     lace_stop();
+    */
 
     return 0;
 }
