@@ -3,8 +3,17 @@
 
 ## Dependencies
 
-* Python (**TODO:** add packages dependencies + venv instructions)
+
 * Dependencies of [Sylvan](https://github.com/trolando/sylvan).
+* Python + packages in [requirements.txt](requirements.txt)
+```bash
+# create a virtual environment (optional)
+python -m venv .venv
+source .venv/bin/activate
+
+# install dependencies
+pip install -r requirements.txt
+```
 
 
 ## Installation (Linux)
