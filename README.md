@@ -13,7 +13,7 @@ sudo apt install cmake cmake-data build-essential
 sudo apt install libgmp-dev
 
 # install Graphviz (optional)
-sudo apt-get install graphviz
+sudo apt install graphviz
 
 # create a virtual environment (optional)
 python -m venv .venv
