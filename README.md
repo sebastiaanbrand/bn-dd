@@ -5,8 +5,16 @@
 
 
 * Dependencies of [Sylvan](https://github.com/trolando/sylvan).
+* [Graphviz](https://graphviz.org/) for visualization of BNs
 * Python + packages in [requirements.txt](requirements.txt)
 ```bash
+# install Sylvan dependencies
+sudo apt install cmake cmake-data build-essential
+sudo apt install libgmp-dev
+
+# install Graphviz (optional)
+sudo apt-get install graphviz
+
 # create a virtual environment (optional)
 python -m venv .venv
 source .venv/bin/activate
@@ -14,7 +22,6 @@ source .venv/bin/activate
 # install dependencies
 pip install -r requirements.txt
 ```
-
 
 ## Installation (Linux)
 
