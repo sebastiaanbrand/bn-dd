@@ -17,14 +17,23 @@ int test_marginals_line()
     double p;
     int A = 1, B = 2, C = 3; // RV vars
 
+    // test Pr(A ^ B ^ C)
+    p = wpbdd_marginalize(wpbdd, {{A, 0}, {B, 0}, {C, 0}}); assert_close(p, .2*.3*.1);
+    p = wpbdd_marginalize(wpbdd, {{A, 0}, {B, 0}, {C, 1}}); assert_close(p, .2*.3*.9);
+    p = wpbdd_marginalize(wpbdd, {{A, 0}, {B, 1}, {C, 0}}); assert_close(p, .2*.7*.8);
+    p = wpbdd_marginalize(wpbdd, {{A, 0}, {B, 1}, {C, 1}}); assert_close(p, .2*.7*.2);
+    p = wpbdd_marginalize(wpbdd, {{A, 1}, {B, 0}, {C, 0}}); assert_close(p, .8*.25*.1);
+    p = wpbdd_marginalize(wpbdd, {{A, 1}, {B, 0}, {C, 1}}); assert_close(p, .8*.25*.9);
+    p = wpbdd_marginalize(wpbdd, {{A, 1}, {B, 1}, {C, 0}}); assert_close(p, .8*.75*.8);
+    p = wpbdd_marginalize(wpbdd, {{A, 1}, {B, 1}, {C, 1}}); assert_close(p, .8*.75*.2);
+
+    // test Pr(A), Pr(B), Pr(C)
     p = wpbdd_marginalize(wpbdd, {{A, 0}}); assert_close(p, .2);   // Pr(A = 0)
     p = wpbdd_marginalize(wpbdd, {{A, 1}}); assert_close(p, .8);   // Pr(A = 1)
     p = wpbdd_marginalize(wpbdd, {{B, 0}}); assert_close(p, .26);  // Pr(B = 0)
     p = wpbdd_marginalize(wpbdd, {{B, 1}}); assert_close(p, .74);  // Pr(B = 1)
     p = wpbdd_marginalize(wpbdd, {{C, 0}}); assert_close(p, .618); // Pr(C = 0)
     p = wpbdd_marginalize(wpbdd, {{C, 1}}); assert_close(p, .382); // Pr(C = 1)
-
-    // TODO: test Pr(A ^ B ^ C)
 
     printf("Marginal probs line:                OK\n");
     return 0;
@@ -91,14 +100,23 @@ int test_marginals_line_dupvals()
     double p;
     int A = 1, B = 2, C = 3; // RV vars
 
+    // test Pr(A ^ B ^ C)
+    p = wpbdd_marginalize(wpbdd, {{A, 0}, {B, 0}, {C, 0}}); assert_close(p, .5*.3*.1);
+    p = wpbdd_marginalize(wpbdd, {{A, 0}, {B, 0}, {C, 1}}); assert_close(p, .5*.3*.9);
+    p = wpbdd_marginalize(wpbdd, {{A, 0}, {B, 1}, {C, 0}}); assert_close(p, .5*.7*.1);
+    p = wpbdd_marginalize(wpbdd, {{A, 0}, {B, 1}, {C, 1}}); assert_close(p, .5*.7*.9);
+    p = wpbdd_marginalize(wpbdd, {{A, 1}, {B, 0}, {C, 0}}); assert_close(p, .5*.5*.1);
+    p = wpbdd_marginalize(wpbdd, {{A, 1}, {B, 0}, {C, 1}}); assert_close(p, .5*.5*.9);
+    p = wpbdd_marginalize(wpbdd, {{A, 1}, {B, 1}, {C, 0}}); assert_close(p, .5*.5*.1);
+    p = wpbdd_marginalize(wpbdd, {{A, 1}, {B, 1}, {C, 1}}); assert_close(p, .5*.5*.9);
+
+    // test Pr(A), Pr(B), Pr(C)
     p = wpbdd_marginalize(wpbdd, {{A, 0}}); assert_close(p, .5);  // Pr(A = 0)
     p = wpbdd_marginalize(wpbdd, {{A, 1}}); assert_close(p, .5);  // Pr(A = 1)
     p = wpbdd_marginalize(wpbdd, {{B, 0}}); assert_close(p, .4);  // Pr(B = 0)
     p = wpbdd_marginalize(wpbdd, {{B, 1}}); assert_close(p, .6);  // Pr(B = 1)
     p = wpbdd_marginalize(wpbdd, {{C, 0}}); assert_close(p, .1);  // Pr(C = 0)
     p = wpbdd_marginalize(wpbdd, {{C, 1}}); assert_close(p, .9);  // Pr(C = 1)
-
-    // TODO: test Pr(A ^ B ^ C)
 
     printf("Marginal probs line with dups:      OK\n");
     return 0;
