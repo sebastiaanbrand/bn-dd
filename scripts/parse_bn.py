@@ -19,6 +19,8 @@ parser = argparse.ArgumentParser(description='Convert BN from .xmlbif to CNF')
 parser.add_argument('filepath', type=str, help='path to .xmlbif BN file')
 parser.add_argument('--no-prob-merge', action='store_false', dest='merge_probs', default=True,
                     help='do not merge IDs for equal probs in a CPT')
+parser.add_argument('--draw-bn', action='store_true', dest='draw_bn', default=False,
+                    help='write the BN as an image to bn.png')
 
 
 def info(*args, **kwargs):
@@ -237,7 +239,8 @@ if __name__ == '__main__':
 
     # encode as cnf
     bn_encoder = BayesianNetworkEncoder(model)
-    bn_encoder.visualize_bn()
+    if (args.draw_bn):
+        bn_encoder.visualize_bn()
     cnf = bn_encoder.bn_to_cnf(model)
 
     # write to file
