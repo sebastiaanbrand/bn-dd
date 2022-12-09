@@ -11,16 +11,6 @@
 WpBdd wpbdd;
 
 #define assert_close(a,b) assert(std::abs(a - b) < 1e-6)
-/*
-void assert_close(double a, double b)
-{
-    if (std::abs(a - b) > 1e-6){
-        printf("Found:    %0.10lf\n", a);
-        printf("Expected: %0.10lf\n", b);
-        assert(false && "value not close");
-    }
-}
-*/
 
 int test_marginals_line()
 {
@@ -96,6 +86,24 @@ int test_do_operator_line()
     return 0;
 }
 
+int test_marginals_line_dupvals()
+{
+    double p;
+    int A = 1, B = 2, C = 3; // RV vars
+
+    p = wpbdd_marginalize(wpbdd, {{A, 0}}); assert_close(p, .5);  // Pr(A = 0)
+    p = wpbdd_marginalize(wpbdd, {{A, 1}}); assert_close(p, .5);  // Pr(A = 1)
+    p = wpbdd_marginalize(wpbdd, {{B, 0}}); assert_close(p, .4);  // Pr(B = 0)
+    p = wpbdd_marginalize(wpbdd, {{B, 1}}); assert_close(p, .6);  // Pr(B = 1)
+    p = wpbdd_marginalize(wpbdd, {{C, 0}}); assert_close(p, .1);  // Pr(C = 0)
+    p = wpbdd_marginalize(wpbdd, {{C, 1}}); assert_close(p, .9);  // Pr(C = 1)
+
+    // TODO: test Pr(A ^ B ^ C)
+
+    printf("Marginal probs line with dups:      OK\n");
+    return 0;
+}
+
 int main(int argc, char** argv)
 {
 
@@ -107,11 +115,17 @@ int main(int argc, char** argv)
     sylvan::sylvan_init_package();
     sylvan::sylvan_init_bdd();
 
-    // WIP: test line BN
+    // test line BN
     wpbdd = wpbdd_from_files("models/line");
     if (test_marginals_line()) return 1;
     if (test_conditionals_line()) return 1;
     if (test_do_operator_line()) return 1;
+
+    // WIP: test line BD where there are duplicate probabilities
+    wpbdd = wpbdd_from_files("models/line_dupvals");
+    if (test_marginals_line_dupvals()) return 1;
+    //if (test_conditionals_line_dupvals()) return 1;
+    //if (test_do_operator_line_dupvals()) return 1;
 
     sylvan::sylvan_quit();
     lace_stop();
