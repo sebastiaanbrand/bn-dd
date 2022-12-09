@@ -58,7 +58,7 @@ double wpbdd_marginals(WpBdd wpbdd, VarConstraint part_constraint)
     printMeta(meta, wpbdd.nvars);
     std::cout << std::endl;
 
-    return wpbdd_modelcount(wpbdd.dd.GetBDD(), meta, &(wpbdd.pm));
+    return wpbdd_modelcount(wpbdd.dd.GetBDD(), meta, &(wpbdd.pm), &(wpbdd.rv_vars));
 }
 
 
@@ -87,7 +87,7 @@ void _computeAllProbsRec(WpBdd wpbdd, int *meta, int i)
 {
     if (i == wpbdd.nvars) {
         // call modelcount here
-        double count = wpbdd_modelcount(wpbdd.dd.GetBDD(), meta, &(wpbdd.pm));
+        double count = wpbdd_modelcount(wpbdd.dd.GetBDD(), meta, &(wpbdd.pm), &(wpbdd.rv_vars));
         sylvan::cache_clear(); // temp, since  meta is not part of the cache key
         printMeta(meta, wpbdd.nvars);
         std::cout << " = " << count << std::endl;

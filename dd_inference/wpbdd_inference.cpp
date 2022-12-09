@@ -8,7 +8,7 @@
 
 /**********************<Weighted model counting>*******************************/
 
-TASK_IMPL_3(double, wpbdd_modelcount, sylvan::BDD, dd, int *, meta, ProbMap *, pm)
+TASK_IMPL_5(double, wpbdd_modelcount, sylvan::BDD, dd, int *, meta, ProbMap *, pm, std::vector<int> *, rv_vars, int, prev)
 {
     // TODO: deal with skipped vars
     // TODO: add restriction (i.e. compute marginal/conditional probabilities)
@@ -34,26 +34,26 @@ TASK_IMPL_3(double, wpbdd_modelcount, sylvan::BDD, dd, int *, meta, ProbMap *, p
     {
     case no_rv_var:
         // current var should correspond to a weight / prob
-        prob_low  = CALL(wpbdd_modelcount, low, meta, pm); // only used for assert
-        prob_high = CALL(wpbdd_modelcount, high, meta, pm);
+        prob_low  = CALL(wpbdd_modelcount, low, meta, pm, rv_vars, prev); // only used for assert
+        prob_high = CALL(wpbdd_modelcount, high, meta, pm, rv_vars, prev);
         assert(pm->count(var));
         assert(prob_low == 0);
         hack.d = (*pm)[var] * prob_high;
         break;
     case marg_out:
         // current var should be marginalized out
-        prob_low  = CALL(wpbdd_modelcount, low, meta, pm);
-        prob_high = CALL(wpbdd_modelcount, high, meta, pm);
+        prob_low  = CALL(wpbdd_modelcount, low, meta, pm, rv_vars, var);
+        prob_high = CALL(wpbdd_modelcount, high, meta, pm, rv_vars, var);
         hack.d = prob_low + prob_high;
         break;
     case marg_0:
         // compute prob for var = 0
-        prob_low  = CALL(wpbdd_modelcount, low, meta, pm);
+        prob_low  = CALL(wpbdd_modelcount, low, meta, pm, rv_vars, var);
         hack.d = prob_low;
         break;
     case marg_1:
         // compute prob for var = 1
-        prob_high = CALL(wpbdd_modelcount, high, meta, pm);
+        prob_high = CALL(wpbdd_modelcount, high, meta, pm, rv_vars, var);
         hack.d = prob_high;
         break;
     default:
@@ -61,6 +61,19 @@ TASK_IMPL_3(double, wpbdd_modelcount, sylvan::BDD, dd, int *, meta, ProbMap *, p
         exit(1);
         break;
     }
+
+    // check for skipped RV vars (only necessary if res != 0)
+    /*
+    if (var > prev + 1 && meta[var] != no_rv_var && hack.d != 0) {
+        // count the number of skipped vars
+        int n_skipped = 0;
+        for (int v : *rv_vars) {
+            if (v >= var) break;
+            if (v > prev) n_skipped++;
+        }
+        hack.d = hack.d * (double)(1<<n_skipped); // == res = res * 2^n_skipped
+    }
+    */
 
     /* Put in cache */
     sylvan::cache_put3(CACHE_WPBDD_MODELCOUNT, dd, 0, 0, hack.s);
@@ -82,7 +95,7 @@ double wpbdd_marginalize(WpBdd wpbdd, Constraint x)
 
     // Compute using model counting
     sylvan::cache_clear(); // new meta, need to reset cache
-    return wpbdd_modelcount(wpbdd.dd.GetBDD(), meta, &(wpbdd.pm));
+    return wpbdd_modelcount(wpbdd.dd.GetBDD(), meta, &(wpbdd.pm), &(wpbdd.rv_vars));
 }
 
 double wpbdd_condition(WpBdd wpbdd, Constraint x, Constraint y)

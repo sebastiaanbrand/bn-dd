@@ -39,8 +39,8 @@ enum var_meta {
 
 static const uint64_t CACHE_WPBDD_MODELCOUNT = (200LL<<40);
 
-TASK_DECL_3(double, wpbdd_modelcount, sylvan::BDD, int *, ProbMap *);
-#define wpbdd_modelcount(dd, meta, pm) RUN(wpbdd_modelcount, dd, meta, pm)
+TASK_DECL_5(double, wpbdd_modelcount, sylvan::BDD, int *, ProbMap *, std::vector<int> *, int);
+#define wpbdd_modelcount(dd, meta, pm, rv_vars) RUN(wpbdd_modelcount, dd, meta, pm, rv_vars, 0)
 
 /**
  * Compute Pr ( x1, x2, ... )
