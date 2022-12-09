@@ -15,6 +15,19 @@ def toy_network_1():
     return model, 'line'
 
 def toy_network_2():
+    model = BayesianNetwork([('A', 'B'), ('B', 'C')])
+    cpd_a = TabularCPD('A', 2, [[0.5], [0.5]])
+    cpd_b = TabularCPD('B', 2, [[0.3, 0.5], [0.7, 0.5]],
+                        evidence=['A'],
+                        evidence_card=[2])
+    cpd_c = TabularCPD('C', 2, [[0.1, 0.1], [0.9, 0.9]],
+                        evidence=['B'],
+                        evidence_card=[2])
+    model.add_cpds(cpd_a, cpd_b, cpd_c)
+    return model, 'line_dupvals'
+        
+
+def toy_network_3():
     model = BayesianNetwork([('D', 'G'), ('I', 'G'), ('G', 'L'), ('I', 'S')])
     grade_cpd  = TabularCPD(variable='G', variable_card=3,
                             values=[[0.3, 0.05, 0.9, 0.5],
@@ -36,12 +49,17 @@ def toy_network_2():
 
 if __name__ == '__main__':
 
-        # write toy BN 1
-        model, name = toy_network_1()
-        writer = XMLBIFWriter(model)
-        writer.write_xmlbif(f"models/{name}.xmlbif")
+    # write toy BN 1
+    model, name = toy_network_1()
+    writer = XMLBIFWriter(model)
+    writer.write_xmlbif(f"models/{name}.xmlbif")
+
+    # write toy BN 2
+    model, name = toy_network_2()
+    writer = XMLBIFWriter(model)
+    writer.write_xmlbif(f"models/{name}.xmlbif")
         
-        # write toy BN 2
-        model, name = toy_network_2()
-        writer = XMLBIFWriter(model)
-        writer.write_xmlbif(f"models/{name}.xmlbif")
+    # write toy BN 2
+    model, name = toy_network_3()
+    writer = XMLBIFWriter(model)
+    writer.write_xmlbif(f"models/{name}.xmlbif")

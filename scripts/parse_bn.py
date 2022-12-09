@@ -1,5 +1,6 @@
 import os
 import sys
+import argparse
 from typing import Iterable
 from itertools import product
 
@@ -12,6 +13,12 @@ from pgmpy.readwrite import XMLBIFReader
 
 
 verbose = True
+merge_probs = True
+
+parser = argparse.ArgumentParser(description='Convert BN from .xmlbif to CNF')
+parser.add_argument('filepath', type=str, help='path to .xmlbif BN file')
+parser.add_argument('--no-prob-merge', action='store_false', dest='merge_probs', default=True,
+                    help='do not merge IDs for equal probs in a CPT')
 
 
 def info(*args, **kwargs):
@@ -82,7 +89,7 @@ class BayesianNetworkEncoder:
             self.pr_zero_var = self._get_next_var()
         return self.pr_zero_var
 
-    def _add_clause(self, variables: Iterable, assignment : Iterable, prob : float):
+    def _add_clause(self, variables: Iterable, assignment : Iterable, prob : float, prob_map : map):
         """
         Adds a Boolean expression which encodes Pr(variables = assignment) = prob.
 
@@ -91,6 +98,8 @@ class BayesianNetworkEncoder:
             assignment: Iterable of assignments to these RVs (ints)
             prob: the corresponding probability
         """
+
+        print(prob_map)
 
         # Turn the assignment into a cube of literals
         literals = []
@@ -108,15 +117,15 @@ class BayesianNetworkEncoder:
                 else:
                     raise ValueError(f'unexpected value {assignment_bits[j]} in bitstring')
 
-        # NOTE: For now, we are using a new unique variable for each weight,
-        # even if weights are the same. (I think using the same var for the 
-        # same prob in different places in the BN might give issues.)
-        # (Except for 0, there having a single var for 0 should be fine.)
-        # TODO: Option for unique prob vars (and handle this in BN)
-        if prob == 0:
-            w = self._get_pr_zero_var()
+        # Get integer ID for this particular probability. If merge_probs == True
+        # only a single unique ID is used for every equal prob per CPT.
+        # Otherwise, a new ID is used for every prob, even duplicate probs.
+        if (merge_probs):
+            w = prob_map[prob]
+        elif prob == 0:
+            w = self._get_pr_zero_var() # weight for prob 0 is always merged
         else:
-            w = self._get_next_var()
+            w = self._get_next_var() # if no merging, get new unique var number
         self.prob_vars[w] = prob
         info(f"Pr({','.join(variables)} = {assignment}) = {prob}", end='')
         info(f"\tencoded as {literals} ==> {w} ({prob})")
@@ -130,7 +139,7 @@ class BayesianNetworkEncoder:
         self.cnf.append(clause)
 
 
-    def _cpd_to_cnf(self, cpd):
+    def _cpd_to_cnf(self, cpd, prob_map):
         """
         Convert a single CPD table to a Boolean formula (maybe CNF).
         """
@@ -148,7 +157,7 @@ class BayesianNetworkEncoder:
         # 3. Iterate over all table entries (i.e. all assignments to the RVs)
         info(f"Pr({cpd.variable} | {','.join(evidence)})")
         for assignment in product(*all_vals):
-            self._add_clause(all_vars, assignment, table[assignment])
+            self._add_clause(all_vars, assignment, table[assignment], prob_map)
         info()
 
 
@@ -157,17 +166,20 @@ class BayesianNetworkEncoder:
         Convert the given BN to a Boolean formula (maybe CNF).
         """
 
-        # 1. get all variables + cardinalities + unique probs
-        probs = set()
+        # 1. get all variables + cardinalities + unique probs per CPT
+        unique_probs = []
         nodes = bn.nodes()
         for node in nodes:
             cpd = bn.get_cpds(node) # get the CPD of this node
             cards = cpd.cardinality
             self.rvs[node] = RandomVariable(name=node, cardinality=cards[0])
+            probs = set()
             for value in np.nditer(cpd.get_values()):
                 probs.add(float(value))
+            unique_probs.append(probs)
             info("Node:", node)
-            info(cpd, '\n')
+            info(cpd)
+            info("Unique probs = ", probs, '\n')
 
         # 2. Assign Boolean vars to the RVs 
         #   (prob vars are assigned in _cpd_to_cnf())
@@ -176,10 +188,20 @@ class BayesianNetworkEncoder:
             x = rv.assign_boolean_vars(x)
         self._last_var = x - 1
 
-        # 3. encode CPDs into implications: a ^ b ^ ... ==> w
-        for node in nodes:
+        # 3. Assign unique var to each probability *per CPT*
+        prob_maps = [None] * len(nodes)
+        if (merge_probs):
+            for i in range(len(nodes)):
+                prob_map = {}
+                for p in unique_probs[i]:
+                    prob_map[p] = self._get_next_var()
+                prob_maps[i] = prob_map
+        
+
+        # 4. encode CPDs into implications: a ^ b ^ ... ==> w
+        for i, node in enumerate(nodes):
             cpd = bn.get_cpds(node)
-            self._cpd_to_cnf(cpd)
+            self._cpd_to_cnf(cpd, prob_maps[i])
 
         return self.cnf
 
@@ -195,19 +217,19 @@ class BayesianNetworkEncoder:
                 for bool_var in rv.boolean_vars:
                     f.write(f" {bool_var}")
                 f.write("\n")
-
-
-def parse_args():
-    if len(sys.argv) < 2:
-        print("Please specify a filepath to a .xmlbif BN file.")
-        exit()
-    model_path = sys.argv[1]
-    return model_path
+    
+    def count_rv_vars(self):
+        counter = 0
+        for rv in self.rvs.values():
+            counter += rv.nbits
+        return counter
 
 
 if __name__ == '__main__':
 
-    model_path = parse_args()
+    args = parser.parse_args()
+    merge_probs = args.merge_probs
+    model_path = args.filepath
 
     # read BN
     reader = XMLBIFReader(model_path)
@@ -223,3 +245,9 @@ if __name__ == '__main__':
     cnf.to_file(out_template + '.cnf')
     bn_encoder.write_probs(out_template + '.cnf_probs')
     bn_encoder.write_rv_vars(out_template + '.cnf_rv_vars')
+
+    # write some info
+    info("CNF formula has:")
+    info(f"  * {bn_encoder.count_rv_vars()} variables for BN random variables")
+    info(f"  * {len(bn_encoder.prob_vars)} variables for probabilities")
+    info(f"  * {len(bn_encoder.cnf.clauses)} clauses")
