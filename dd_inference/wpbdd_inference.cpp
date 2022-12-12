@@ -145,21 +145,28 @@ double wpbdd_do(WpBdd wpbdd, Constraint x, Constraint t, std::set<int> pt)
 
 static int max_var;
 
-WpBdd wpbdd_from_files(std::string filepath)
+WpBdd wpbdd_from_files(std::string filepath, bool verbose)
 {
     WpBdd wpbdd;
 
     // load cnf
+    if (verbose) std::cout << "loading CNF from " << filepath << std::endl;
     Cnf f = cnf_from_file(filepath + ".cnf");
-    print_cnf(f);
+    if (verbose) print_cnf(f);
+
+    // convert cnf to bdd
+    if (verbose) std::cout << "converting CNF to BDD" << std::endl;
     wpbdd.dd = cnf_to_bdd(f);
     wpbdd.nvars = max_var + 1; // set by cnf_from_file(), not super clean
+
+    // load RV var information
     wpbdd.rv_vars = rv_vars_from_file(filepath + ".cnf_rv_vars");
-    print_rv_vars(wpbdd.rv_vars);
+    if (verbose) print_rv_vars(wpbdd.rv_vars);
 
     // load probabilities
+    if (verbose) std::cout << "loading probs from " << filepath << std::endl;
     wpbdd.pm = probs_from_file(filepath + ".cnf_probs");
-    print_probmap(wpbdd.pm);
+    if (verbose) print_probmap(wpbdd.pm);
 
     return wpbdd;
 }
@@ -173,7 +180,6 @@ Cnf cnf_from_file(std::string filepath)
     std::string token;
     std::ifstream inFile(filepath);
     if (inFile.is_open()) {
-        std::cout << "loading CNF from " << filepath << std::endl;
         while (getline(inFile, line)) {
             Clause clause;
             std::istringstream ss(line);
@@ -191,7 +197,7 @@ Cnf cnf_from_file(std::string filepath)
         }
         inFile.close();
     } else {
-        std::cout << "unable to open " << filepath << std::endl;
+        std::cerr << "unable to open " << filepath << std::endl;
     }
 
     return res;
@@ -255,7 +261,6 @@ ProbMap probs_from_file(std::string filepath)
     std::string token;
     std::ifstream inFile(filepath);
     if (inFile.is_open()) {
-        std::cout << "loading probs from " << filepath << std::endl;
         while (getline(inFile, line)) {
             std::istringstream ss(line);
             ss >> token;
@@ -264,6 +269,8 @@ ProbMap probs_from_file(std::string filepath)
             double prob = atof(token.c_str());
             res[var] = prob;
         }
+    } else {
+        std::cerr << "unable to open " << filepath << std::endl;
     }
 
     return res;
@@ -285,6 +292,8 @@ std::vector<int> rv_vars_from_file(std::string filepath)
                 rv_vars.push_back(var);
             }
         }
+    } else {
+        std::cerr << "unable to open " << filepath << std::endl;
     }
 
     return rv_vars;

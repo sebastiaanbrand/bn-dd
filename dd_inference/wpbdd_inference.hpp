@@ -67,12 +67,12 @@ double wpbdd_do(WpBdd wpbdd, Constraint x, Constraint t, std::set<int> pt);
 /***************<Loading CNF from file + building WPBDD>***********************/
 
 /**
- * Agrument 'filepath' without '.cnf' extension. Assumes two files:
+ * Agrument 'filepath' without '.cnf' extension. Assumes files:
  * - filepath.cnf
  * - filepath.cnf_probs
  * - filepath.cnf_rv_vars
  */
-WpBdd wpbdd_from_files(std::string filepath);
+WpBdd wpbdd_from_files(std::string filepath, bool verbose=false);
 
 Cnf cnf_from_file(std::string filepath);
 

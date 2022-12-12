@@ -122,6 +122,27 @@ int test_marginals_line_dupvals()
     return 0;
 }
 
+int test_conditionals_line_dupvals()
+{
+    double p;
+    int A = 1, B = 2, C = 3; // RV vars
+
+    // direct from CPT of B
+    p = wpbdd_condition(wpbdd, {{B, 0}}, {{A, 0}}); assert_close(p, .3);
+    p = wpbdd_condition(wpbdd, {{B, 0}}, {{A, 1}}); assert_close(p, .5);
+    p = wpbdd_condition(wpbdd, {{B, 1}}, {{A, 0}}); assert_close(p, .7);
+    p = wpbdd_condition(wpbdd, {{B, 1}}, {{A, 1}}); assert_close(p, .5);
+
+    // direct from CPT of A
+    p = wpbdd_condition(wpbdd, {{C, 0}}, {{B, 0}}); assert_close(p, .1);
+    p = wpbdd_condition(wpbdd, {{C, 0}}, {{B, 1}}); assert_close(p, .1);
+    p = wpbdd_condition(wpbdd, {{C, 1}}, {{B, 0}}); assert_close(p, .9);
+    p = wpbdd_condition(wpbdd, {{C, 1}}, {{B, 1}}); assert_close(p, .9);
+
+    printf("Conditional probs line with dups:   OK\n");
+    return 0;
+}
+
 int main(int argc, char** argv)
 {
 
@@ -139,11 +160,10 @@ int main(int argc, char** argv)
     if (test_conditionals_line()) return 1;
     if (test_do_operator_line()) return 1;
 
-    // WIP: test line BD where there are duplicate probabilities
+    // test line BD where there are duplicate probabilities
     wpbdd = wpbdd_from_files("models/line_dupvals");
     if (test_marginals_line_dupvals()) return 1;
-    //if (test_conditionals_line_dupvals()) return 1;
-    //if (test_do_operator_line_dupvals()) return 1;
+    if (test_conditionals_line_dupvals()) return 1;
 
     sylvan::sylvan_quit();
     lace_stop();
