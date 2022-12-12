@@ -30,6 +30,27 @@ TASK_IMPL_5(double, wpbdd_modelcount, sylvan::BDD, dd, int *, meta, ProbMap *, p
     double prob_low  = 0;
     double prob_high = 0;
 
+    if (var > prev + 1 && meta[var] != no_rv_var) {
+
+        // reinsert skipped var
+        var = prev + 1;
+        low = dd;
+        high = dd;
+
+        // TODO: instead of reinserting in all cases,  we can have handle 
+        // things more efficiently depending on meta[var]
+
+        /*
+        // count the number of skipped vars
+        int n_skipped = 0;
+        for (int v : *rv_vars) {
+            if (v >= var) break;
+            if (v > prev) n_skipped++;
+        }
+        hack.d = hack.d * (double)(1<<n_skipped); // == res = res * 2^n_skipped
+        */
+    }
+
     switch (meta[var])
     {
     case no_rv_var:
@@ -62,18 +83,6 @@ TASK_IMPL_5(double, wpbdd_modelcount, sylvan::BDD, dd, int *, meta, ProbMap *, p
         break;
     }
 
-    // check for skipped RV vars (only necessary if res != 0)
-    /*
-    if (var > prev + 1 && meta[var] != no_rv_var && hack.d != 0) {
-        // count the number of skipped vars
-        int n_skipped = 0;
-        for (int v : *rv_vars) {
-            if (v >= var) break;
-            if (v > prev) n_skipped++;
-        }
-        hack.d = hack.d * (double)(1<<n_skipped); // == res = res * 2^n_skipped
-    }
-    */
 
     /* Put in cache */
     sylvan::cache_put3(CACHE_WPBDD_MODELCOUNT, dd, 0, 0, hack.s);
