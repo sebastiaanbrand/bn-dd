@@ -176,7 +176,8 @@ int main(int argc, char** argv)
 
     WpBdd wpbdd = wpbdd_from_files(path);
     uint64_t nodecount = sylvan::sylvan_nodecount(wpbdd.dd.GetBDD());
-    INFO("WPBDD nodecount = %ld\n", nodecount);
+    uint64_t full = 1LL<<wpbdd.rv_vars.size();
+    INFO("WPBDD nodecount = %ld / %ld = %lf\n", nodecount, full, (double)nodecount / (double)full);
 
     
     /*
