@@ -14,6 +14,7 @@ from pgmpy.readwrite import XMLBIFReader
 
 verbose = True
 merge_probs = True
+custom_rv_order = True
 
 parser = argparse.ArgumentParser(description='Convert BN from .xmlbif to CNF')
 parser.add_argument('filepath', type=str, help='path to .xmlbif BN file')
@@ -21,6 +22,8 @@ parser.add_argument('--no-prob-merge', action='store_false', dest='merge_probs',
                     help='do not merge IDs for equal probs in a CPT')
 parser.add_argument('--draw-bn', action='store_true', dest='draw_bn', default=False,
                     help='write the BN as an image to bn.png')
+parser.add_argument('--custom-rv-order', action='store_true', dest='custom_rv_order', default=False,
+                    help='allow custom order for RVs (relevant for DD size)')
 
 
 def info(*args, **kwargs):
@@ -182,15 +185,24 @@ class BayesianNetworkEncoder:
             info("Node:", node)
             info(cpd)
             info("Unique probs = ", probs, '\n')
+        
 
-        # 2. Assign Boolean vars to the RVs 
+        # 2. Option to reorder the variables
+        # TODO: have some algorithm do this depending on the BN structure
+        rv_order = list(self.rvs.keys())
+        if (custom_rv_order):
+            print(f"Current order = {rv_order}")
+            rv_order = input("Specify a new order: ").split()
+            print(f"New order = {rv_order}")
+
+        # 3. Assign Boolean vars to the RVs 
         #   (prob vars are assigned in _cpd_to_cnf())
         x = 1
-        for rv in self.rvs.values():
-            x = rv.assign_boolean_vars(x)
+        for name in rv_order:
+            x = self.rvs[name].assign_boolean_vars(x)
         self._last_var = x - 1
 
-        # 3. Assign unique var to each probability *per CPT*
+        # 4. Assign unique var to each probability *per CPT*
         prob_maps = [None] * len(nodes)
         if (merge_probs):
             for i in range(len(nodes)):
@@ -200,7 +212,7 @@ class BayesianNetworkEncoder:
                 prob_maps[i] = prob_map
         
 
-        # 4. encode CPDs into implications: a ^ b ^ ... ==> w
+        # 5. encode CPDs into implications: a ^ b ^ ... ==> w
         for i, node in enumerate(nodes):
             cpd = bn.get_cpds(node)
             self._cpd_to_cnf(cpd, prob_maps[i])
@@ -232,6 +244,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     merge_probs = args.merge_probs
     model_path = args.filepath
+    custom_rv_order = args.custom_rv_order
 
     # read BN
     reader = XMLBIFReader(model_path)
