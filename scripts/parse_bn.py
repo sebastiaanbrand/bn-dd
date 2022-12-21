@@ -104,8 +104,6 @@ class BayesianNetworkEncoder:
             prob: the corresponding probability
         """
 
-        print(prob_map)
-
         # Turn the assignment into a cube of literals
         literals = []
         for i in range(len(variables)):
