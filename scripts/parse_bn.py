@@ -166,6 +166,15 @@ class BayesianNetworkEncoder:
         info()
 
 
+    def _get_topological_order(self):
+        """
+        Given the BN in self.bn, get a topological ordering order over the nodes
+        of this network.
+        """
+        graph = nx.DiGraph(self.bn.edges())
+        return list(nx.topological_sort(graph))
+
+
     def bn_to_cnf(self, bn : BayesianNetwork) -> CNF:
         """
         Convert the given BN to a Boolean formula (maybe CNF).
@@ -188,8 +197,7 @@ class BayesianNetworkEncoder:
         
 
         # 2. Option to reorder the variables
-        # TODO: have some algorithm do this depending on the BN structure
-        rv_order = list(self.rvs.keys())
+        rv_order = self._get_topological_order()
         if (custom_rv_order):
             print(f"Current order = {rv_order}")
             rv_order = input("Specify a new order: ").split()
