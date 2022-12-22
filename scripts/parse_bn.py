@@ -15,6 +15,7 @@ from pgmpy.readwrite import XMLBIFReader
 verbose = True
 merge_probs = True
 custom_rv_order = True
+interleave_probs = True
 
 parser = argparse.ArgumentParser(description='Convert BN from .xmlbif to CNF')
 parser.add_argument('filepath', type=str, help='path to .xmlbif BN file')
@@ -24,6 +25,8 @@ parser.add_argument('--draw-bn', action='store_true', dest='draw_bn', default=Fa
                     help='write the BN as an image to bn.png')
 parser.add_argument('--custom-rv-order', action='store_true', dest='custom_rv_order', default=False,
                     help='allow custom order for RVs (relevant for DD size)')
+parser.add_argument('--no-interleave-probs', action='store_true', dest='no_interleave_probs', default=False,
+                    help='put prob vars at bottom of DD (default interleaved with RV vars)')
 
 
 def info(*args, **kwargs):
@@ -51,11 +54,11 @@ class RandomVariable:
         assignment to this random variable.
 
         Returns:
-            The next unused variable number (start + nbits)
+            The last used variable number (start + nbits - 1)
         """
         end = start + self.nbits
         self.boolean_vars = list(range(start, end))
-        return end
+        return end - 1
 
 
 class BayesianNetworkEncoder:
@@ -179,7 +182,7 @@ class BayesianNetworkEncoder:
         """
 
         # 1. get all variables + cardinalities + unique probs per CPT
-        unique_probs = []
+        unique_probs = {} # node (name) --> prob map ( prob --> var )
         nodes = bn.nodes()
         for node in nodes:
             cpd = bn.get_cpds(node) # get the CPD of this node
@@ -188,7 +191,7 @@ class BayesianNetworkEncoder:
             probs = set()
             for value in np.nditer(cpd.get_values()):
                 probs.add(float(value))
-            unique_probs.append(probs)
+            unique_probs[node] = probs
             info("Node:", node)
             info(cpd)
             info("Unique probs = ", probs, '\n')
@@ -201,25 +204,38 @@ class BayesianNetworkEncoder:
             rv_order = input("Specify a new order: ").split()
             print(f"New order = {rv_order}")
 
-        # 3. Assign Boolean vars to the RVs 
-        #   (prob vars are assigned in _cpd_to_cnf())
-        x = 1
-        for name in rv_order:
-            x = self.rvs[name].assign_boolean_vars(x)
-        self._last_var = x - 1
-
-        # 4. Assign unique var to each probability *per CPT*
+        # 3. Per CPT:
         prob_maps = [None] * len(nodes)
-        if (merge_probs):
-            for i in range(len(nodes)):
-                prob_map = {}
-                for p in unique_probs[i]:
-                    prob_map[p] = self._get_next_var()
-                prob_maps[i] = prob_map
-        
+        for i, name in enumerate(rv_order):
+            # 3a. Assign Boolean vars to the RVs 
+            self._last_var = self.rvs[name].assign_boolean_vars(self._last_var + 1)
+
+            # 3b. Assign unique var to each probability
+            if (interleave_probs):
+                if (merge_probs):
+                    prob_map = {}
+                    for p in unique_probs[name]:
+                        prob_map[p] = self._get_next_var()
+                    prob_maps[i] = prob_map
+                else:
+                    print("ERROR: --no-prob-merge also requires --no-interleave-probs")
+                    exit()
+
+        # 3b. Assign unique var to each probability *per CPT*
+        if (not interleave_probs):
+            if (merge_probs):
+                #for i in range(len(nodes)):
+                for i, name in enumerate(rv_order):
+                    prob_map = {}
+                    for p in unique_probs[name]:
+                        prob_map[p] = self._get_next_var()
+                    prob_maps[i] = prob_map
+            else:
+                pass
+                # vars are assigned to probs in _cpd_to_cnf
 
         # 5. encode CPDs into implications: a ^ b ^ ... ==> w
-        for i, node in enumerate(nodes):
+        for i, node in enumerate(rv_order):
             cpd = bn.get_cpds(node)
             self._cpd_to_cnf(cpd, prob_maps[i])
 
@@ -251,6 +267,7 @@ if __name__ == '__main__':
     merge_probs = args.merge_probs
     model_path = args.filepath
     custom_rv_order = args.custom_rv_order
+    interleave_probs = not args.no_interleave_probs
 
     # read BN
     reader = XMLBIFReader(model_path)
