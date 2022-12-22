@@ -15,7 +15,11 @@ WpBdd wpbdd;
 int test_marginals_line()
 {
     double p;
-    int A = 1, B = 2, C = 3; // RV vars
+    int A = wpbdd.rv_vars[0];
+    int B = wpbdd.rv_vars[1];
+    int C = wpbdd.rv_vars[2];
+
+    printf("RV vars = %d %d %d\n", A, B, C);
 
     // test Pr(A ^ B ^ C)
     p = wpbdd_marginalize(wpbdd, {{A, 0}, {B, 0}, {C, 0}}); assert_close(p, .2*.3*.1);
@@ -42,7 +46,9 @@ int test_marginals_line()
 int test_conditionals_line()
 {
     double p;
-    int A = 1, B = 2, C = 3; // RV vars
+    int A = wpbdd.rv_vars[0];
+    int B = wpbdd.rv_vars[1];
+    int C = wpbdd.rv_vars[2];
 
     // direct from CPT of B
     p = wpbdd_condition(wpbdd, {{B, 0}}, {{A, 0}}); assert_close(p, .3);
@@ -75,7 +81,9 @@ int test_conditionals_line()
 int test_do_operator_line()
 {
     double p;
-    int A = 1, B = 2, C = 3; // RV vars
+    int A = wpbdd.rv_vars[0];
+    int B = wpbdd.rv_vars[1];
+    int C = wpbdd.rv_vars[2];
 
     // Pr(A|do(B)) = Pr(A) (last argument is parents of B)
     p = wpbdd_do(wpbdd, {{A, 0}}, {{B, 0}}, {A});   assert_close(p, .2);
@@ -98,7 +106,9 @@ int test_do_operator_line()
 int test_marginals_line_dupvals()
 {
     double p;
-    int A = 1, B = 2, C = 3; // RV vars
+    int A = wpbdd.rv_vars[0];
+    int B = wpbdd.rv_vars[1];
+    int C = wpbdd.rv_vars[2];
 
     // test Pr(A ^ B ^ C)
     p = wpbdd_marginalize(wpbdd, {{A, 0}, {B, 0}, {C, 0}}); assert_close(p, .5*.3*.1);
@@ -125,7 +135,9 @@ int test_marginals_line_dupvals()
 int test_conditionals_line_dupvals()
 {
     double p;
-    int A = 1, B = 2, C = 3; // RV vars
+    int A = wpbdd.rv_vars[0];
+    int B = wpbdd.rv_vars[1];
+    int C = wpbdd.rv_vars[2];
 
     // direct from CPT of B
     p = wpbdd_condition(wpbdd, {{B, 0}}, {{A, 0}}); assert_close(p, .3);
@@ -155,7 +167,8 @@ int main(int argc, char** argv)
     sylvan::sylvan_init_bdd();
 
     // test line BN
-    wpbdd = wpbdd_from_files("models/line");
+    // TODO: fix: tests give a segfault when we set verbose=false
+    wpbdd = wpbdd_from_files("models/line", true);
     if (test_marginals_line()) return 1;
     if (test_conditionals_line()) return 1;
     if (test_do_operator_line()) return 1;

@@ -8,7 +8,7 @@
 
 /**********************<Weighted model counting>*******************************/
 
-TASK_IMPL_5(double, wpbdd_modelcount, sylvan::BDD, dd, int *, meta, ProbMap *, pm, std::vector<int> *, rv_vars, int, prev)
+TASK_IMPL_5(double, wpbdd_modelcount, sylvan::BDD, dd, int *, meta, ProbMap *, pm, std::vector<int> *, rv_vars, int, i)
 {
     // TODO: deal with skipped vars
     // TODO: add restriction (i.e. compute marginal/conditional probabilities)
@@ -30,51 +30,43 @@ TASK_IMPL_5(double, wpbdd_modelcount, sylvan::BDD, dd, int *, meta, ProbMap *, p
     double prob_low  = 0;
     double prob_high = 0;
 
-    if (var > prev + 1 && meta[var] != no_rv_var) {
 
+    // RV var has been skipped
+    if (var > (*rv_vars)[i]) {
+        
         // reinsert skipped var
-        var = prev + 1;
+        var = (*rv_vars)[i];
         low = dd;
         high = dd;
 
         // TODO: instead of reinserting in all cases,  we can have handle 
         // things more efficiently depending on meta[var]
-
-        /*
-        // count the number of skipped vars
-        int n_skipped = 0;
-        for (int v : *rv_vars) {
-            if (v >= var) break;
-            if (v > prev) n_skipped++;
-        }
-        hack.d = hack.d * (double)(1<<n_skipped); // == res = res * 2^n_skipped
-        */
     }
 
     switch (meta[var])
     {
     case no_rv_var:
         // current var should correspond to a weight / prob
-        prob_low  = CALL(wpbdd_modelcount, low, meta, pm, rv_vars, prev); // only used for assert
-        prob_high = CALL(wpbdd_modelcount, high, meta, pm, rv_vars, prev);
+        prob_low  = CALL(wpbdd_modelcount, low, meta, pm, rv_vars, i); // only used for assert
+        prob_high = CALL(wpbdd_modelcount, high, meta, pm, rv_vars, i);
         assert(pm->count(var));
         assert(prob_low == 0);
         hack.d = (*pm)[var] * prob_high;
         break;
     case marg_out:
         // current var should be marginalized out
-        prob_low  = CALL(wpbdd_modelcount, low, meta, pm, rv_vars, var);
-        prob_high = CALL(wpbdd_modelcount, high, meta, pm, rv_vars, var);
+        prob_low  = CALL(wpbdd_modelcount, low, meta, pm, rv_vars, i+1);
+        prob_high = CALL(wpbdd_modelcount, high, meta, pm, rv_vars, i+1);
         hack.d = prob_low + prob_high;
         break;
     case marg_0:
         // compute prob for var = 0
-        prob_low  = CALL(wpbdd_modelcount, low, meta, pm, rv_vars, var);
+        prob_low  = CALL(wpbdd_modelcount, low, meta, pm, rv_vars, i+1);
         hack.d = prob_low;
         break;
     case marg_1:
         // compute prob for var = 1
-        prob_high = CALL(wpbdd_modelcount, high, meta, pm, rv_vars, var);
+        prob_high = CALL(wpbdd_modelcount, high, meta, pm, rv_vars, i+1);
         hack.d = prob_high;
         break;
     default:
