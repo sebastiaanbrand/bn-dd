@@ -1,5 +1,4 @@
 import os
-import sys
 import argparse
 from typing import Iterable
 from itertools import product
@@ -19,6 +18,8 @@ interleave_probs = True
 
 parser = argparse.ArgumentParser(description='Convert BN from .xmlbif to CNF')
 parser.add_argument('filepath', type=str, help='path to .xmlbif BN file')
+parser.add_argument('--folder', action='store_true', dest='parsefolder', default=False,
+                    help='parse all .xmlbif files in folder (given in filepath)')
 parser.add_argument('--no-prob-merge', action='store_false', dest='merge_probs', default=True,
                     help='do not merge IDs for equal probs in a CPT')
 parser.add_argument('--draw-bn', action='store_true', dest='draw_bn', default=False,
@@ -261,32 +262,49 @@ class BayesianNetworkEncoder:
         return counter
 
 
+def get_xmlbif_files(folder):
+    """ Get all filepaths to .xmlbif files in the given folder. """
+    
+    model_paths = []
+    for filename in os.listdir(folder):
+        if (filename[-7:] == '.xmlbif'):
+            filepath = os.path.join(folder, filename)
+            model_paths.append(filepath)
+    return model_paths
+
+
 if __name__ == '__main__':
 
     args = parser.parse_args()
     merge_probs = args.merge_probs
-    model_path = args.filepath
+    path = args.filepath
     custom_rv_order = args.custom_rv_order
     interleave_probs = not args.no_interleave_probs
 
-    # read BN
-    reader = XMLBIFReader(model_path)
-    model = reader.get_model()
+    if (args.parsefolder):
+        model_paths = get_xmlbif_files(path)
+    else:
+        model_paths = [path]
 
-    # encode as cnf
-    bn_encoder = BayesianNetworkEncoder(model)
-    if (args.draw_bn):
-        bn_encoder.visualize_bn()
-    cnf = bn_encoder.bn_to_cnf(model)
+    for model_path in model_paths:
+        # read BN
+        reader = XMLBIFReader(model_path)
+        model = reader.get_model()
 
-    # write to file
-    out_template = os.path.splitext(model_path)[0]
-    cnf.to_file(out_template + '.cnf')
-    bn_encoder.write_probs(out_template + '.cnf_probs')
-    bn_encoder.write_rv_vars(out_template + '.cnf_rv_vars')
+        # encode as cnf
+        bn_encoder = BayesianNetworkEncoder(model)
+        if (args.draw_bn):
+            bn_encoder.visualize_bn()
+        cnf = bn_encoder.bn_to_cnf(model)
 
-    # write some info
-    info("CNF formula has:")
-    info(f"  * {bn_encoder.count_rv_vars()} variables for BN random variables")
-    info(f"  * {len(bn_encoder.prob_vars)} variables for probabilities")
-    info(f"  * {len(bn_encoder.cnf.clauses)} clauses")
+        # write to file
+        out_template = os.path.splitext(model_path)[0]
+        cnf.to_file(out_template + '.cnf')
+        bn_encoder.write_probs(out_template + '.cnf_probs')
+        bn_encoder.write_rv_vars(out_template + '.cnf_rv_vars')
+
+        # write some info
+        info("CNF formula has:")
+        info(f"  * {bn_encoder.count_rv_vars()} variables for BN random variables")
+        info(f"  * {len(bn_encoder.prob_vars)} variables for probabilities")
+        info(f"  * {len(bn_encoder.cnf.clauses)} clauses")
