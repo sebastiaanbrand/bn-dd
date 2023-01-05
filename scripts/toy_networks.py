@@ -24,7 +24,7 @@ def toy_network_2():
                         evidence=['B'],
                         evidence_card=[2])
     model.add_cpds(cpd_a, cpd_b, cpd_c)
-    return model, 'line_dupvals'
+    return model, 'line2'
         
 
 def toy_network_3():
@@ -58,6 +58,11 @@ if __name__ == '__main__':
     model, name = toy_network_2()
     writer = XMLBIFWriter(model)
     writer.write_xmlbif(f"models/{name}.xmlbif")
+
+    # copy of BN 2 with different name
+    model, _ = toy_network_2()
+    writer = XMLBIFWriter(model)
+    writer.write_xmlbif("models/line3.xmlbif")
         
     # write toy BN 2
     model, name = toy_network_3()
