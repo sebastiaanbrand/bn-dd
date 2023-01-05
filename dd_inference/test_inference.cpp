@@ -19,8 +19,6 @@ int test_marginals_line()
     int B = wpbdd.rv_vars[1];
     int C = wpbdd.rv_vars[2];
 
-    printf("RV vars = %d %d %d\n", A, B, C);
-
     // test Pr(A ^ B ^ C)
     p = wpbdd_marginalize(wpbdd, {{A, 0}, {B, 0}, {C, 0}}); assert_close(p, .2*.3*.1);
     p = wpbdd_marginalize(wpbdd, {{A, 0}, {B, 0}, {C, 1}}); assert_close(p, .2*.3*.9);
@@ -167,8 +165,7 @@ int main(int argc, char** argv)
     sylvan::sylvan_init_bdd();
 
     // test line BN
-    // TODO: fix: tests give a segfault when we set verbose=false
-    wpbdd = wpbdd_from_files("models/line", true);
+    wpbdd = wpbdd_from_files("models/line");
     if (test_marginals_line()) return 1;
     if (test_conditionals_line()) return 1;
     if (test_do_operator_line()) return 1;

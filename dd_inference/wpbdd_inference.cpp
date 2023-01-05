@@ -10,8 +10,6 @@
 
 TASK_IMPL_5(double, wpbdd_modelcount, sylvan::BDD, dd, int *, meta, ProbMap *, pm, std::vector<int> *, rv_vars, int, i)
 {
-    // TODO: deal with skipped vars
-    // TODO: add restriction (i.e. compute marginal/conditional probabilities)
     if (dd == sylvan::sylvan_true) return 1.0;
     if (dd == sylvan::sylvan_false) return 0.0;
 
@@ -19,8 +17,11 @@ TASK_IMPL_5(double, wpbdd_modelcount, sylvan::BDD, dd, int *, meta, ProbMap *, p
     /* Consult cache */
     // TODO: encode meta in e.g. LDD and add to cache key?
     union { double d; uint64_t s; } hack;
-    if (sylvan::cache_get3(CACHE_WPBDD_MODELCOUNT, dd, 0, 0, &hack.s)) {
-        return hack.d;
+    int cachenow = 1;
+    if (cachenow) {
+        if (sylvan::cache_get3(CACHE_WPBDD_MODELCOUNT, dd, 0, 0, &hack.s)) {
+            return hack.d;
+        }
     }
 
     sylvan::mtbddnode_t node = sylvan::MTBDD_GETNODE(dd);
@@ -32,13 +33,11 @@ TASK_IMPL_5(double, wpbdd_modelcount, sylvan::BDD, dd, int *, meta, ProbMap *, p
 
 
     // RV var has been skipped
-    if (var > (*rv_vars)[i]) {
-        
+    if (i < rv_vars->size() && var > (*rv_vars)[i]) {
         // reinsert skipped var
         var = (*rv_vars)[i];
         low = dd;
         high = dd;
-
         // TODO: instead of reinserting in all cases,  we can have handle 
         // things more efficiently depending on meta[var]
     }
@@ -77,7 +76,9 @@ TASK_IMPL_5(double, wpbdd_modelcount, sylvan::BDD, dd, int *, meta, ProbMap *, p
 
 
     /* Put in cache */
-    sylvan::cache_put3(CACHE_WPBDD_MODELCOUNT, dd, 0, 0, hack.s);
+    if (cachenow) {
+        sylvan::cache_put3(CACHE_WPBDD_MODELCOUNT, dd, 0, 0, hack.s);
+    }
 
     return hack.d;
 }
