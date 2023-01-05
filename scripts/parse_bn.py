@@ -11,7 +11,7 @@ from pgmpy.models import BayesianNetwork
 from pgmpy.readwrite import XMLBIFReader
 
 
-verbose = True
+verbose = 3
 merge_probs = True
 custom_rv_order = True
 interleave_probs = True
@@ -30,8 +30,8 @@ parser.add_argument('--no-interleave-probs', action='store_true', dest='no_inter
                     help='put prob vars at bottom of DD (default interleaved with RV vars)')
 
 
-def info(*args, **kwargs):
-    if (verbose):
+def info(*args, level=3, **kwargs):
+    if (verbose >= level):
         print(*args, **kwargs)
 
 
@@ -139,10 +139,10 @@ class BayesianNetworkEncoder:
 
         # Turn cube + implication into CNF clause:
         # (x1 ^ x2 ^ x3 ^ ... ==> w) = (~x1 v ~x2 v ~x3 v ... v w)
-        print(literals)
+        info(literals)
         clause = [-lit for lit in literals]
         clause.append(w)
-        print(clause)
+        info(clause)
         self.cnf.append(clause)
 
 
@@ -282,11 +282,13 @@ if __name__ == '__main__':
     interleave_probs = not args.no_interleave_probs
 
     if (args.parsefolder):
+        verbose = 1
         model_paths = get_xmlbif_files(path)
     else:
         model_paths = [path]
 
     for model_path in model_paths:
+        info(f"Processing BN {model_path}...", level=1)
         # read BN
         reader = XMLBIFReader(model_path)
         model = reader.get_model()
