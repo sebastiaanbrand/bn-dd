@@ -78,12 +78,13 @@ class LG_generator:
 
     def generate_data(self):
         "Generate root parameters"
+        np.random.seed(45)
         for i in range(len(self.roots)):
-            self.data[self.roots[i]] = np.random.normal(self.lg_root_params[i][0], self.lg_root_params[i][1],self.N)
+            self.data[self.roots[i]] = np.random.normal(self.lg_root_params[i][0], int(self.lg_root_params[i][1]),self.N)
 
+        
         for i in range(len(self.non_roots)):
-            self.data[self.non_roots[i]] = sum(self.lg_lin_params[i][j]*self.data[self.parent_dict[self.non_roots[i]][j]] for j in range(0,len(self.lg_lin_params[i])))
-            + np.random.normal(0, self.lg_var_params[i],self.N)
+            self.data[self.non_roots[i]] = sum(self.lg_lin_params[i][j]*self.data[self.parent_dict[self.non_roots[i]][j]] for j in range(0,len(self.lg_lin_params[i])))+np.random.normal(0, int(self.lg_var_params[i]),self.N)
 
     def make_network(self):
         "Define LG"
@@ -135,6 +136,9 @@ class LG_generator:
 
 
 if __name__ == '__main__':
+    np.random.seed(45)
     args = parser.parse_args()
-    LG = LG_generator(N=5000)
-    LG.create_bn_file()
+    distribution = args.distribution
+    if distribution == 'lg':
+        LG = LG_generator(N=5000)
+        LG.create_bn_file()

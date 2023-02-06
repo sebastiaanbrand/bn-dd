@@ -9,7 +9,9 @@ import json
 from pgmpy.sampling import BayesianModelSampling
 from pgmpy.models import BayesianNetwork
 from pgmpy.estimators import MaximumLikelihoodEstimator
-#from mdlp.discretization import MDLP
+from pgmpy.inference import VariableElimination
+import warnings
+from sklearn.metrics import mean_squared_error
 
 parser = argparse.ArgumentParser(description='Discretize Bayesian Network')
 parser.add_argument('filename', type=str, help='path to data BN file')
@@ -31,7 +33,7 @@ class Discretizer:
         logger = logging.getLogger()
         self.logger = logging.getLogger(__name__)
 
-        self.data = pd.read_csv(filename+'.csv')
+        self.data = pd.read_csv(filename+'.csv')  
         self.disc_data = pd.DataFrame()
 
         with open(filename+'settings.json') as json_file:
@@ -58,16 +60,33 @@ class Discretizer:
         self.logger.info("Sart Discretizing")
         #Discretize according to choosing disc method
         if self.disc_method == 'EV':
-            self.disc_data, cutpoints= self.discretization_EV
+            self.disc_data, cutpoints= self.discretization_EV()
         if self.disc_method == 'EB':
-            self.disc_data, cutpoints= self.discretization_EB
+            self.disc_data, cutpoints= self.discretization_EB()
         if self.disc_method == 'MDLP':
-            self.disc_data, cutpoints= self.discretization_MDLP
-        # Deal with missing data
-        self.make_network()
-        # Get analytical means:
-        self.write_data()
+            self.disc_data, cutpoints= self.discretization_MDLP()
 
+        # Fit data to disc data
+        self.create_original_network()
+        # Fit data to disc data
+        self.create_disc_network()
+        # Get analytical solution
+        discretized_solutions = self.compute_discretized_conditionals('E','A')
+        # Get analytical solution
+        exact_solutions = self.compute_exact_conditionals('E','A')
+        # Get errors
+        rmse = self.compute_RMSE(discretized_solutions,exact_solutions)
+        # Write xml:
+        self.write_data()
+        # Get json:
+        self.create_json()
+
+    def create_original_network(self):
+      "Create the network with LG"
+      if self.settings['distribution']=='lg':
+        self.lg = LinearGaussian()
+        self.lg.set_edges_from(self.settings['edges'])
+        self.lg.set_data(self.data)
 
     def discretization_EV(self):
       "Equal values: Discretize according to quantiles"
@@ -103,28 +122,44 @@ class Discretizer:
 
     def create_disc_network(self):
         "Write the generated data as csv"
-        #Learn Max likelihood Estimator
-        mle = MaximumLikelihoodEstimator(model=model_struct, data=disc_data)
-        # Estimating CPDs for all the nodes in the model
-        all_cpds = mle.get_parameters() 
         # Fit Equal Values Bayesian Network
         self.model_struct.fit(self.disc_data)
 
         # Compute the weighted average of the discretized bins
         merged_frame = self.data.merge(self.disc_data, left_index=True,right_index=True, suffixes=['_raw','_disc'])
         values = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().values for col in self.columns]
+        self.values_dict = dict(zip(self.columns,values))
 
         #Get the probability of these discretized values
-        dicts = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().to_dict() for col in data.columns]
-        disc_probs =[model_struct.get_cpds(col).values for col in data.columns]
+        #dicts = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().to_dict() for col in data.columns]
+        #disc_probs =[model_struct.get_cpds(col).values for col in data.columns]
 
-    def compute_RMSE_conditionals(self):
-        print('Use functions from pgmpy library here')
+    def compute_discretized_conditionals(self, inference_col, conditional_col):
+        "Compute P(inference_col|conditional_col) with the discretized values"
+        infer = VariableElimination(self.model_struct)  
+        solutions = []
+        for value in sorted(self.disc_data[conditional_col].unique()):
+            agg_solution = infer.query(variables=[inference_col], evidence={conditional_col: value}).values
+            solutions.append(sum(agg_solution * self.values_dict[inference_col]))
+        return solutions
 
+    def compute_exact_conditionals(self, inference_col, conditional_col):
+        "Compute P(inference_col|conditional_col) with the discretized values"
+        solutions=[]
+        for value in sorted(self.values_dict[conditional_col]):
+            self.lg.set_evidences({conditional_col: value})
+            inference = self.lg.run_inference(debug=False)
+            solutions.append(inference.loc[inference_col,'Mean_inferred'])
+        return solutions   
+
+    def compute_RMSE(self, disc_sol, exact_sol):
+        "Compute RMSE"
+        rms = mean_squared_error(exact_sol, disc_sol)
+        self.settings['RMSE'] = rms
+        return rms
 
     def write_data(self):
         "Write the generated data as csv"
-        print(self.settings)
         self.filename = f"data_{self.settings['distribution']}_{self.settings['disc_method']}{self.settings['bins']}"
         self.model_path = os.path.join(os.getcwd(), "models/linear_gaussian/")
         self.model_struct.save(self.model_path+self.filename+'.xmlbif', filetype='xmlbif')
@@ -132,7 +167,7 @@ class Discretizer:
     def create_json(self):
         "Write the specification of data as json"
         with open(self.model_path+self.filename+"settings.json", "w") as outfile:
-            json.dump(self.settings_lg, outfile)
+            json.dump(self.settings, outfile)
 
 
 if __name__ == '__main__':
@@ -143,4 +178,4 @@ if __name__ == '__main__':
     model_path = os.path.join(os.getcwd(), "models/undiscretized_models/")
     print(model_path+filename)
     Discretization = Discretizer(model_path+filename, disc_method, bins)
-    Discretization.write_data()
+    Discretization.create_discretization()

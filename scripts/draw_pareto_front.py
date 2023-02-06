@@ -1,0 +1,1 @@
+print('Scripts can be written once size BDD is stored somewhere apart from the terminal')
