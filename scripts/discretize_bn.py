@@ -60,22 +60,26 @@ class Discretizer:
         self.logger.info("Sart Discretizing")
         #Discretize according to choosing disc method
         if self.disc_method == 'EV':
-            self.disc_data, cutpoints= self.discretization_EV()
+            self.disc_data = self.discretization_EV()
         if self.disc_method == 'EB':
-            self.disc_data, cutpoints= self.discretization_EB()
+            self.disc_data = self.discretization_EB()
         if self.disc_method == 'MDLP':
-            self.disc_data, cutpoints= self.discretization_MDLP()
+            self.disc_data = self.discretization_MDLP()
 
         # Fit data to disc data
         self.create_original_network()
         # Fit data to disc data
         self.create_disc_network()
-        # Get analytical solution
-        discretized_solutions = self.compute_discretized_conditionals('E','A')
-        # Get analytical solution
-        exact_solutions = self.compute_exact_conditionals('E','A')
+        if self.settings['distribution']=='lg':
+            discretized_solutions = self.compute_discretized_conditionals('E','A')
+            exact_solutions = self.compute_exact_conditionals('E','A')
+        if self.settings['distribution']=='nm':
+            discretized_solutions = self.compute_discretized_conditionals('Y','X')
+            exact_solutions = self.compute_exact_conditionals('Y','X')
         # Get errors
         rmse = self.compute_RMSE(discretized_solutions,exact_solutions)
+        wmse = self.compute_WMSE(discretized_solutions,exact_solutions)
+
         # Write xml:
         self.write_data()
         # Get json:
@@ -93,18 +97,21 @@ class Discretizer:
       data = self.data.copy(deep='False')
       cutpoints = []
       for column in self.columns:
-        data[column], bin = pd.qcut(data[column], q=self.quantiles, duplicates='drop', retbins=True)
-        cutpoints.append(bin)
-      return data, np.vstack(cutpoints)
+        bins = min(self.bins, data[column].nunique())
+        if data[column].dtype == 'int64':
+            continue
+        data[column], bin = pd.qcut(data[column], q=bins, duplicates='drop', retbins=True)
+      return data#, np.vstack(cutpoints)
 
     def discretization_EB(self):
       "Equal length: Discretize according to bins"
       data = self.data.copy(deep='False')
       cutpoints = []
       for column in self.columns:
-        data[column], bin = pd.cut(data[column], bins=self.bins, duplicates='drop', retbins=True)
-        cutpoints.append(bin)
-      return data, np.vstack(cutpoints)
+        bins=min(self.bins, data[column].nunique())
+        data[column], bin = pd.cut(data[column], bins=bins, duplicates='drop', retbins=True)
+        #cutpoints.append(bin)
+      return data#, np.vstack(cutpoints)
 
     def discretization_MDLP(self):
       "MDLP discretization"
@@ -131,8 +138,9 @@ class Discretizer:
         self.values_dict = dict(zip(self.columns,values))
 
         #Get the probability of these discretized values
-        #dicts = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().to_dict() for col in data.columns]
-        #disc_probs =[model_struct.get_cpds(col).values for col in data.columns]
+        dicts = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().to_dict() for col in self.data.columns]
+        disc_probs =[self.model_struct.get_cpds(col).values for col in self.data.columns]
+        self.prob_dict = dict(zip(self.columns,disc_probs))
 
     def compute_discretized_conditionals(self, inference_col, conditional_col):
         "Compute P(inference_col|conditional_col) with the discretized values"
@@ -146,10 +154,14 @@ class Discretizer:
     def compute_exact_conditionals(self, inference_col, conditional_col):
         "Compute P(inference_col|conditional_col) with the discretized values"
         solutions=[]
-        for value in sorted(self.values_dict[conditional_col]):
-            self.lg.set_evidences({conditional_col: value})
-            inference = self.lg.run_inference(debug=False)
-            solutions.append(inference.loc[inference_col,'Mean_inferred'])
+        self.conditional_col=conditional_col
+        if self.settings['distribution']=='lg':
+            for value in sorted(self.values_dict[conditional_col]):
+                self.lg.set_evidences({conditional_col: value})
+                inference = self.lg.run_inference(debug=False)
+                solutions.append(inference.loc[inference_col,'Mean_inferred'])
+        elif self.settings['distribution']=='nm':
+            solutions = self.data.groupby(['X'])['Y'].mean().to_list()
         return solutions   
 
     def compute_RMSE(self, disc_sol, exact_sol):
@@ -158,10 +170,19 @@ class Discretizer:
         self.settings['RMSE'] = rms
         return rms
 
+    def compute_WMSE(self, disc_sol, exact_sol):
+        "Compute WMSE: based on the probabilities of the conditonals P(.)"
+        wms = mean_squared_error(exact_sol, disc_sol, sample_weight=self.prob_dict[self.conditional_col])
+        self.settings['WMSE'] = wms
+        return wms
+
     def write_data(self):
         "Write the generated data as csv"
         self.filename = f"data_{self.settings['distribution']}_{self.settings['disc_method']}{self.settings['bins']}"
-        self.model_path = os.path.join(os.getcwd(), "models/linear_gaussian/")
+        if self.settings['distribution']=='lg':
+            self.model_path = os.path.join(os.getcwd(), "models/linear_gaussian/")
+        elif self.settings['distribution']=='nm':
+            self.model_path = os.path.join(os.getcwd(), "models/normal_mixture/")
         self.model_struct.save(self.model_path+self.filename+'.xmlbif', filetype='xmlbif')
     
     def create_json(self):
@@ -176,6 +197,5 @@ if __name__ == '__main__':
     disc_method = args.disc_method
     bins = args.bins
     model_path = os.path.join(os.getcwd(), "models/undiscretized_models/")
-    print(model_path+filename)
     Discretization = Discretizer(model_path+filename, disc_method, bins)
     Discretization.create_discretization()

@@ -92,12 +92,12 @@ class LG_generator:
         self.lg.set_data(self.data)
 
     def run_marginal_inference(self):
-        "Run marginal inference with the data via the lg library"
+        "Run marginal inference with the sampled data via the lg library"
         inference_data = self.lg.run_inference(debug=False)
         return inference_data
 
     def run_conditional_inference(self, evidence_dict):
-        "Run conditional marginal inference with the data via the lg library"
+        "Run conditional marginal inference with the sampled data via the lg library"
         self.lg.set_evidences(evidence_dict)
         inference_data = self.lg.run_inference(debug=False)
         return inference_data
@@ -135,6 +135,79 @@ class LG_generator:
             json.dump(self.settings_lg, outfile)
 
 
+class nm_generator:
+    """Creating the normal mixture model Network:
+    TODO: Generalize making the input lg_edges, root_params and lin_params and computing
+    """
+
+    def __init__(self, N):
+
+            # Create logger
+        log_format = '%(asctime)s - %(name)s - %(levelname)s - %(funcName)s - %(message)s'
+        logging.basicConfig(format=log_format, level=logging.INFO, stream=sys.stdout)
+        logger = logging.getLogger()
+        self.logger = logging.getLogger(__name__)
+
+        self.N = N
+        self.edges = [('X', 'Y')]
+        self.nodes = sorted(set([i for sub in self.edges for i in sub]))
+        self.data = pd.DataFrame(columns=self.nodes)
+
+        self.bin_param = 0.5
+        self.lg_normal_params = [(10, 100), (50, 10)]
+
+    def create_bn_file(self):
+        """
+        This functions runs all the scripts to construct the Normal Mixture BN.
+        :return (pd.Dataframe): preprocessed data
+        """
+        self.logger.info("Sart Constructing Network")
+        #Generate data
+        self.generate_data()
+        # Get analytical means:
+        self.analytical_inference_solution()
+        #Create file name
+        self.create_file_name()
+        #Write csv
+        self.write_data()
+        #Write json
+        self.create_json()
+
+
+
+    def generate_data(self):
+        "Generate root parameters"
+        np.random.seed(45)
+        self.data['X'] = np.random.binomial(size=5000, p=0.5, n=1)
+        self.data['Y'] = [np.random.normal(self.lg_normal_params[0][0], self.lg_normal_params[0][1]) if x == 0 else 
+            np.random.normal(self.lg_normal_params[1][0], self.lg_normal_params[1][1]) for x in self.data['X']] 
+
+
+    def analytical_inference_solution(self):
+        "Evaluate the mean of the non-root nodes analytically. Assumes the BN can be evaluated alphabetically"
+        self.mean = self.bin_param * self.lg_normal_params[0][0]  + (1-self.bin_param) * self.lg_normal_params[1][0] 
+
+    def create_file_name(self):
+        "create name and json specifics of network"
+        bin_text = [f"X ~ B({self.bin_param})"]
+        
+        mean_texts = []
+        non_root_text = [f"P(Y|X) ~ N({self.lg_normal_params[i][0]},{self.lg_normal_params[i][1]}) if X = {np.linspace(0,1, num=2)[i]}" for i in range(len(self.lg_normal_params))]
+        self.settings = {'distribution':'nm', 'edges': self.edges, 'root_params':bin_text, 
+               'not_root_params': ' and '.join(non_root_text), 'sample_size': self.N, 'means': self.mean}
+
+    def write_data(self):
+        "Write the generated data as csv"
+        self.filename = f"{self.settings['distribution']}{self.settings['sample_size']}"
+        self.model_path = os.path.join(os.getcwd(), "models/undiscretized_models/")
+        self.data.to_csv(self.model_path + self.filename+'.csv', index=False)
+    
+    def create_json(self):
+        "Write the specification of data as json"
+        with open(self.model_path+self.filename+"settings.json", "w") as outfile:
+            json.dump(self.settings, outfile)
+
+
 if __name__ == '__main__':
     np.random.seed(45)
     args = parser.parse_args()
@@ -142,3 +215,7 @@ if __name__ == '__main__':
     if distribution == 'lg':
         LG = LG_generator(N=5000)
         LG.create_bn_file()
+    if distribution == 'nm':
+        NM = nm_generator(N=5000)
+        NM.create_bn_file()
+
