@@ -25,6 +25,24 @@ static double t_start;
 
 
 static int max_var;
+typedef struct stats {
+    size_t nodecount;
+    double load_time;
+} stats_t;
+stats_t stats = {0};
+
+
+void write_stats(std::string output_file)
+{
+    std::ofstream f;
+    f.open(output_file, std::ios::out);
+    f << "{" << std::endl;
+    f <<    "\t\"nodecount\" : " << stats.nodecount << "," << std::endl;
+    f <<    "\t\"load_time\" : " << stats.load_time << std::endl;
+    f << "}" << std::endl;
+    f.close();
+}
+
 
 void printMeta(int *meta, int n)
 {
@@ -174,12 +192,19 @@ int main(int argc, char** argv)
     //std::cout << "satcount: " << b.SatCount(3) << std::endl;
     //small_example();
 
+    INFO("Loading %s\n", path.c_str());
     WpBdd wpbdd = wpbdd_from_files(path);
-    uint64_t nodecount = sylvan::sylvan_nodecount(wpbdd.dd.GetBDD());
+    stats.load_time = wctime() - t_start;
+    stats.nodecount = sylvan::sylvan_nodecount(wpbdd.dd.GetBDD());
     uint64_t full = 1LL<<wpbdd.rv_vars.size();
-    INFO("WPBDD nodecount = %ld / %ld = %lf\n", nodecount, full, (double)nodecount / (double)full);
+    INFO("WPBDD nodecount = %ld / %ld = %lf\n", stats.nodecount, full, (double)stats.nodecount / (double)full);
 
-    
+    // write stats to JSON file
+    std::string stats_file = path + "_ddinfo.json";
+    INFO("Writing stats to %s\n", stats_file.c_str());
+    write_stats(stats_file);
+
+
     /*
     FILE *fp = fopen("wpbdd.dot", "w");
     wpbdd.dd.PrintDot(fp);
