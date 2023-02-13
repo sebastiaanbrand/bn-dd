@@ -61,7 +61,11 @@ void printMeta(int *meta, int n)
 
 double wpbdd_marginals(WpBdd wpbdd, VarConstraint part_constraint)
 {
-    int meta[wpbdd.nvars] = {marg_out}; // by default marginalize vars out
+    int meta[wpbdd.nvars];
+    // by default marginalize vars out
+    for (int i = 0; i < wpbdd.nvars; i++) {
+        meta[i] = marg_out;
+    }
 
     // mark probability vars as no_rv_vars
     for (auto const& v : wpbdd.pm) {
