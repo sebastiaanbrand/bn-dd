@@ -32,6 +32,21 @@ $ ./compile_sources.sh
 ```
 
 ## Run the code
+To generate a Bayesian network in data `.csv` format and settings `.json`, run
+```shell
+$ python scripts/generate_bn.py distribution
+```
+
+To discretize a Bayesian network to `.xmlbif` format and settings `.json`, run
+```shell
+$ python scripts/discretize_bn.py model discretization_method bins --target_column
+```
+
+for example: 
+```shell
+$ python scripts/generate_bn.py lg
+$ python scripts/discretize_bn.py lg5000 disc 10
+```
 
 To turn a Bayesian network in `.xmlbif` format into a CNF formula, run
 ```shell
