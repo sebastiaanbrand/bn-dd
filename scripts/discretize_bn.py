@@ -12,6 +12,9 @@ from pgmpy.estimators import MaximumLikelihoodEstimator
 from pgmpy.inference import VariableElimination
 import warnings
 from sklearn.metrics import mean_squared_error
+from MCMCsampler import McmcSampler
+import networkx as nx
+from dowhy import CausalModel
 
 parser = argparse.ArgumentParser(description='Discretize Bayesian Network')
 parser.add_argument('filename', type=str, help='path to data BN file')
@@ -70,15 +73,20 @@ class Discretizer:
         self.create_original_network()
         # Fit data to disc data
         self.create_disc_network()
+
         if self.settings['distribution']=='lg':
             discretized_solutions = self.compute_discretized_conditionals('E','A')
             exact_solutions = self.compute_exact_conditionals('E','A')
         if self.settings['distribution']=='nm':
             discretized_solutions = self.compute_discretized_conditionals('Y','X')
             exact_solutions = self.compute_exact_conditionals('Y','X')
+        if "tb" in self.settings['distribution']:
+            discretized_solutions = self.compute_discretized_conditionals('B','A')
+            exact_solutions = self.compute_exact_conditionals('B','A')
+
         # Get errors
         rmse = self.compute_RMSE(discretized_solutions,exact_solutions)
-        wmse = self.compute_WMSE(discretized_solutions,exact_solutions)
+        wmse = self.compute_WRMSE(discretized_solutions,exact_solutions)
 
         # Write xml:
         self.write_data()
@@ -145,14 +153,16 @@ class Discretizer:
     def compute_discretized_conditionals(self, inference_col, conditional_col):
         "Compute P(inference_col|conditional_col) with the discretized values"
         infer = VariableElimination(self.model_struct)  
+        non_nans_b = [x for x in self.values_dict[inference_col] if str(x) != 'nan']
         solutions = []
         for value in sorted(self.disc_data[conditional_col].unique()):
             agg_solution = infer.query(variables=[inference_col], evidence={conditional_col: value}).values
-            solutions.append(sum(agg_solution * self.values_dict[inference_col]))
+            solutions.append(sum(agg_solution * non_nans_b))
+        print(solutions)
         return solutions
 
     def compute_exact_conditionals(self, inference_col, conditional_col):
-        "Compute P(inference_col|conditional_col) with the discretized values"
+        "Compute (or approximate) E(inference_col|conditional_col) with the discretized values"
         solutions=[]
         self.conditional_col=conditional_col
         if self.settings['distribution']=='lg':
@@ -160,19 +170,31 @@ class Discretizer:
                 self.lg.set_evidences({conditional_col: value})
                 inference = self.lg.run_inference(debug=False)
                 solutions.append(inference.loc[inference_col,'Mean_inferred'])
+
         elif self.settings['distribution']=='nm':
             solutions = self.data.groupby(['X'])['Y'].mean().to_list()
+
+        elif "tb" in self.settings['distribution']:
+            nx.write_gml(nx.DiGraph([('A','B')]), "G.gml") 
+            causal_model = CausalModel(data = self.data, treatment=['A'], outcome=['B'], graph= 'G.gml')
+            samplerMCMC = McmcSampler(self.data,
+                           causal_model=causal_model,
+                           keep_original_treatment=False, # False cause we will specify interventions ourselves 
+                           variable_types={'A': 'c', 'B': 'c'})
+            input_dataframe = pd.DataFrame(data=np.random.choice(a=values[0], size=2000), columns=['A'])
+            interventional_df = samplerMCMC.do_sample(input_dataframe)
+            solutions = interventional_df.groupby(['A'])['B'].mean().values
         return solutions   
 
     def compute_RMSE(self, disc_sol, exact_sol):
         "Compute RMSE"
-        rms = mean_squared_error(exact_sol, disc_sol)
+        rms = mean_squared_error(exact_sol, disc_sol, squared=False)
         self.settings['RMSE'] = rms
         return rms
 
-    def compute_WMSE(self, disc_sol, exact_sol):
-        "Compute WMSE: based on the probabilities of the conditonals P(.)"
-        wms = mean_squared_error(exact_sol, disc_sol, sample_weight=self.prob_dict[self.conditional_col])
+    def compute_WRMSE(self, disc_sol, exact_sol):
+        "Compute WRMSE: based on the discretized probabilities of the conditonals P(.)"
+        wms = mean_squared_error(exact_sol, disc_sol, sample_weight=self.prob_dict[self.conditional_col], squared=False)
         self.settings['WMSE'] = wms
         return wms
 

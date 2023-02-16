@@ -45,7 +45,7 @@ $ python scripts/discretize_bn.py model discretization_method bins --target_colu
 for example: 
 ```shell
 $ python scripts/generate_bn.py lg
-$ python scripts/discretize_bn.py lg5000 disc 10
+$ python scripts/discretize_bn.py lg5000 disc EB10
 ```
 
 To turn a Bayesian network in `.xmlbif` format into a CNF formula, run
@@ -58,3 +58,7 @@ To run run inference (**TODO:** add cl options to run specific queries? We can a
 $ ./dd_inference/build/analyze_bn models/model_name
 ```
 
+To run run inference (**TODO:** add cl options to run specific queries? We can also do the entire optimization in C++.)
+```shell
+$ python scripts/draw_pareto_front.py lg
+```

@@ -6,6 +6,7 @@ import logging.config
 import sys
 import pandas as pd
 import json
+from cdt.data import load_dataset
 
 parser = argparse.ArgumentParser(description='Generate Bayesian Network')
 parser.add_argument('distribution', type=str, help='Sort of distribution to consider')
@@ -207,6 +208,63 @@ class nm_generator:
         with open(self.model_path+self.filename+"settings.json", "w") as outfile:
             json.dump(self.settings, outfile)
 
+class tb_generator:
+    """Creating the real tuebinger model Network:
+    TODO: Generalize making the input lg_edges, root_params and lin_params and computing
+    """
+
+    def __init__(self, pair):
+
+            # Create logger
+        log_format = '%(asctime)s - %(name)s - %(levelname)s - %(funcName)s - %(message)s'
+        logging.basicConfig(format=log_format, level=logging.INFO, stream=sys.stdout)
+        logger = logging.getLogger()
+        self.logger = logging.getLogger(__name__)
+
+        self.pair = pair
+        self.edges = [('A', 'B')]
+        self.nodes = sorted(set([i for sub in self.edges for i in sub]))
+        self.data = pd.DataFrame(columns=self.nodes)
+
+    def create_bn_file(self):
+        """
+        This functions runs all the scripts to construct the Normal Mixture BN.
+        :return (pd.Dataframe): preprocessed data
+        """
+        self.logger.info("Sart Constructing Network")
+        #Generate data
+        self.generate_data()
+        #Create file name
+        self.create_file_name()
+        #Write csv
+        self.write_data()
+        #Write json
+        self.create_json()
+
+
+
+    def generate_data(self):
+        "Generatethe set"
+        t_data, t_graph = load_dataset('tuebingen')
+        self.data = pd.DataFrame(data = [t_data.loc['pair'+str(self.pair),'A'], t_data.loc['pair'+str(self.pair),'B']]).transpose()
+        self.data.columns=['A','B']
+        self.N = len(self.data)
+
+    def create_file_name(self):
+        "create name and json specifics of network"
+        self.settings = {'distribution':'tb'+str(self.pair),'edges': self.edges,'sample_size': self.N}
+
+    def write_data(self):
+        "Write the generated data as csv"
+        self.filename = f"{self.settings['distribution']}"
+        self.model_path = os.path.join(os.getcwd(), "models/undiscretized_models/")
+        self.data.to_csv(self.model_path + self.filename+'.csv', index=False)
+    
+    def create_json(self):
+        "Write the specification of data as json"
+        with open(self.model_path+self.filename+"settings.json", "w") as outfile:
+            json.dump(self.settings, outfile)
+
 
 if __name__ == '__main__':
     np.random.seed(45)
@@ -218,4 +276,7 @@ if __name__ == '__main__':
     if distribution == 'nm':
         NM = nm_generator(N=5000)
         NM.create_bn_file()
+    if distribution == 'tb':
+        TB = tb_generator(pair=1)
+        TB.create_bn_file()
 
