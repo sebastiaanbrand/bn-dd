@@ -152,11 +152,12 @@ class Discretizer:
 
     def compute_discretized_conditionals(self, inference_col, conditional_col):
         "Compute P(inference_col|conditional_col) with the discretized values"
-        infer = VariableElimination(self.model_struct)  
+        infer = VariableElimination(self.model_struct)
         non_nans_b = [x for x in self.values_dict[inference_col] if str(x) != 'nan']
         solutions = []
         for value in sorted(self.disc_data[conditional_col].unique()):
             agg_solution = infer.query(variables=[inference_col], evidence={conditional_col: value}).values
+            print(value, infer.query(variables=[inference_col], evidence={conditional_col: value}))
             solutions.append(sum(agg_solution * non_nans_b))
         print(solutions)
         return solutions
@@ -184,6 +185,7 @@ class Discretizer:
             input_dataframe = pd.DataFrame(data=np.random.choice(a=values[0], size=2000), columns=['A'])
             interventional_df = samplerMCMC.do_sample(input_dataframe)
             solutions = interventional_df.groupby(['A'])['B'].mean().values
+        print(solutions)
         return solutions   
 
     def compute_RMSE(self, disc_sol, exact_sol):

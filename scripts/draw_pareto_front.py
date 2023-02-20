@@ -10,7 +10,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 # Change default plot size
-plt.rcParams['figure.figsize'] = (13, 7)
+plt.rcParams['figure.figsize'] = (8, 5)
 parser = argparse.ArgumentParser(description='Draw Pareto Front')
 parser.add_argument('distribution', type=str, help='Sort of distribution to consider')
 
@@ -74,11 +74,11 @@ class Pareto:
 
     def plot_pareto(self):
         "Extract RMSE and WMSE"
-        sns.scatterplot(x='Nodes', y='WMSE', data=self.error_frame, size = 8, legend=False, hue='Method') #change when dd size is available
+        sns.scatterplot(y='Nodes', x='WMSE', data=self.error_frame, size = 8, legend=False, hue='Method') #change when dd size is available
         for i in range(self.error_frame.shape[0]):
-            plt.text(x=self.error_frame.Nodes[i]+(self.error_frame.Nodes.max()*0.005),y=self.error_frame.WMSE[i],s=self.error_frame.Disc_method[i], fontsize=10) #change when dd size is available
+            plt.text(y=self.error_frame.Nodes[i],x=self.error_frame.WMSE[i]+(self.error_frame.WMSE.max()*0.005),s=self.error_frame.Disc_method[i], fontsize=11) #change when dd size is available
 
-        plt.title("Paretofront with Weighted Mean Squared Error (WMSE) vs node count of the BDD")
+        plt.title("Paretofront with Weighted Root Mean Squared Error (WRMSE) vs node count of the BDD")
         save_path = os.path.join(os.getcwd(), "plots/paretofront_"+args.distribution+".png")
         plt.savefig(save_path)
 
