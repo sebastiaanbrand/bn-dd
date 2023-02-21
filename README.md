@@ -19,8 +19,23 @@ sudo apt install graphviz graphviz-dev
 python -m venv .venv
 source .venv/bin/activate
 
-# install dependencies
+# install dependencies TODO: update requirements.txt inc. version numbers
 pip install -r requirements.txt
+```
+
+Some notes on version numbers of packages:
+```bash
+# 'pymc3' requires specific versions of scipy and numpy:
+pymc3 3.11.5 requires numpy<1.22.2,>=1.15.0     (e.g. numpy==1.21.6)
+pymc3 3.11.5 requires scipy<1.8.0,>=1.7.3       (scipy==1.7.3)
+# it should be possible to install these with (do scipy first)
+pip install --force-reinstall -v scipy==1.7.3
+pip install --force-reinstall -v numpy==1.21.6
+
+# However, 'dowhy' has dependencies which are incompatible:
+dowhy 0.9.1 requires numpy<2.0.0,>=1.23.1
+dowhy 0.9.1 requires scipy<2.0.0,>=1.8.1
+# (but we can try to run it anyway)
 ```
 
 ## Installation (Linux)
