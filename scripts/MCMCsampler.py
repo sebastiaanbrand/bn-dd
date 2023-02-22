@@ -80,7 +80,7 @@ class McmcSampler(DoSampler):
                 g = self.apply_parents(g)
                 g = self.apply_parameters(g, df, initialization_trace=initialization_trace)
                 g = self.build_bayesian_network(g, df)       
-                trace = pm.sample(7000, tune=7000, return_inferencedata=False, init="advi+adapt_diag")
+                trace = pm.sample(5000, tune=5000, return_inferencedata=False, init="advi+adapt_diag")
         else:
             raise Exception("Graph is not a DAG!")
         return g, trace

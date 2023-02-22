@@ -15,6 +15,7 @@ from sklearn.metrics import mean_squared_error
 from MCMCsampler import McmcSampler
 import networkx as nx
 from dowhy import CausalModel
+from mdlp.discretization import MDLP
 
 parser = argparse.ArgumentParser(description='Discretize Bayesian Network')
 parser.add_argument('filename', type=str, help='path to data BN file')
@@ -182,7 +183,7 @@ class Discretizer:
                            causal_model=causal_model,
                            keep_original_treatment=False, # False cause we will specify interventions ourselves 
                            variable_types={'A': 'c', 'B': 'c'})
-            input_dataframe = pd.DataFrame(data=np.random.choice(a=values[0], size=2000), columns=['A'])
+            input_dataframe = pd.DataFrame(data=np.random.choice(a=sorted(self.values_dict[conditional_col]), size=2000), columns=['A'])
             interventional_df = samplerMCMC.do_sample(input_dataframe)
             solutions = interventional_df.groupby(['A'])['B'].mean().values
         print(solutions)
@@ -207,6 +208,8 @@ class Discretizer:
             self.model_path = os.path.join(os.getcwd(), "models/linear_gaussian/")
         elif self.settings['distribution']=='nm':
             self.model_path = os.path.join(os.getcwd(), "models/normal_mixture/")
+        elif "tb" in self.settings['distribution']:
+            self.model_path = os.path.join(os.getcwd(), "models/tuebingen/")
         self.model_struct.save(self.model_path+self.filename+'.xmlbif', filetype='xmlbif')
     
     def create_json(self):
