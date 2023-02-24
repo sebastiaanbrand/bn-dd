@@ -85,31 +85,37 @@ class Discretizer:
         if self.settings['distribution']=='nm':
             discretized_solutions = self.compute_discretized_conditionals('Y','X')
             exact_solutions = self.compute_exact_conditionals('Y','X')
-        if "tb" in self.settings['distribution']:
-            discretized_solutions = self.compute_discretized_conditionals('B','A')
-            exact_solutions = self.compute_exact_conditionals('B','A')
+        #if "tb" in self.settings['distribution']:
+        #    discretized_solutions = self.compute_discretized_conditionals('B','A')
+        #    exact_solutions = self.compute_exact_conditionals('B','A')
 
         # Get Wasserstein distances:compute_1d_wasserstein
-        self.get_discretized_sample()
-        self.scale_data()
+        
+        if "tb" not in self.settings['distribution']:
+            self.get_discretized_sample()
+            self.scale_data()
 
-        if self.settings['distribution']=='lg':
-            self.compute_1d_wasserstein('E')
-        if self.settings['distribution']=='nm':
-            self.compute_1d_wasserstein('Y')
-        if "tb" in self.settings['distribution']:
-            self.compute_1d_wasserstein('B')
+            if self.settings['distribution']=='lg':
+                self.compute_1d_wasserstein('E')
+            if self.settings['distribution']=='nm':
+                self.compute_1d_wasserstein('Y')
+            if "tb" in self.settings['distribution']:
+                self.compute_1d_wasserstein('B')
 
-        self.compute_multivariate_wasserstein()
+            self.compute_multivariate_wasserstein()
 
-        # Get errors
-        rmse = self.compute_RMSE(discretized_solutions,exact_solutions)
-        wmse = self.compute_WRMSE(discretized_solutions,exact_solutions)
+            # Get errors
+            rmse = self.compute_RMSE(discretized_solutions,exact_solutions)
+            wmse = self.compute_WRMSE(discretized_solutions,exact_solutions)
+            mae = self.compute_MAE(discretized_solutions,exact_solutions)
 
         # Write xml:
         self.write_data()
         # Get json:
         self.create_json()
+        # Write disc csb:
+        if "tb" in self.settings['distribution']:
+            self.write_disc_data()
 
     def create_original_network(self):
       "Create the network with LG"
@@ -187,16 +193,16 @@ class Discretizer:
                 solutions.append(inference.loc[inference_col,'Mean_inferred'])
         elif self.settings['distribution']=='nm':
             solutions = self.data.groupby(['X'])['Y'].mean().to_list()
-        elif "tb" in self.settings['distribution']:
-            nx.write_gml(nx.DiGraph([('A','B')]), "G.gml") 
-            causal_model = CausalModel(data = self.data, treatment=['A'], outcome=['B'], graph= 'G.gml')
-            samplerMCMC = McmcSampler(self.data,
-                           causal_model=causal_model,
-                           keep_original_treatment=False, # False cause we will specify interventions ourselves 
-                           variable_types={'A': 'c', 'B': 'c'})
-            input_dataframe = pd.DataFrame(data=np.random.choice(a=sorted(self.values_dict[conditional_col]), size=2000), columns=['A'])
-            interventional_df = samplerMCMC.do_sample(input_dataframe)
-            solutions = interventional_df.groupby(['A'])['B'].mean().values
+        #elif "tb" in self.settings['distribution']:
+            #nx.write_gml(nx.DiGraph([('A','B')]), "G.gml") 
+            #causal_model = CausalModel(data = self.data, treatment=['A'], outcome=['B'], graph= 'G.gml')
+            #samplerMCMC = McmcSampler(self.data,
+            #              causal_model=causal_model,
+            #               keep_original_treatment=False, # False cause we will specify interventions ourselves 
+            #               variable_types={'A': 'c', 'B': 'c'})
+            #input_dataframe = pd.DataFrame(data=np.random.choice(a=sorted(self.values_dict[conditional_col]), size=2000), columns=['A'])
+            #interventional_df = samplerMCMC.do_sample(input_dataframe)
+            #solutions = interventional_df.groupby(['A'])['B'].mean().values
         return solutions   
 
     def get_discretized_sample(self):
@@ -219,6 +225,11 @@ class Discretizer:
         self.settings['WRMSE'] = wms
         return wms
     
+    def compute_MAE(self, disc_sol, exact_sol):
+        mae = mean_squared_error(exact_sol, disc_sol)
+        self.settings['MAE'] = mae
+        return mae       
+
     def scale_data(self):
         min_scaler = MinMaxScaler()
         min_scaler.fit(self.data[self.columns])
@@ -256,7 +267,11 @@ class Discretizer:
         elif "tb" in self.settings['distribution']:
             self.model_path = os.path.join(os.getcwd(), "models/tuebingen"+str(self.exp)+"/")
         self.model_struct.save(self.model_path+self.filename+'.xmlbif', filetype='xmlbif')
-    
+
+    def write_disc_data(self):
+        "Write discretized data"
+        self.disc_data.to_csv(self.model_path + self.filename+'.csv', index=False)
+
     def create_json(self):
         "Write the specification of data as json"
         with open(self.model_path+self.filename+"settings.json", "w") as outfile:

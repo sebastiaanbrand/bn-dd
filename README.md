@@ -49,7 +49,7 @@ $ ./compile_sources.sh
 ## Run the code
 To generate a Bayesian network in data `.csv` format and settings `.json`, run
 ```shell
-$ python scripts/generate_bn.py distribution experiment sample_size
+$ python scripts/generate_bn.py distribution experiment
 ```
 
 To discretize a Bayesian network to `.xmlbif` format and settings `.json`, run
@@ -59,7 +59,7 @@ $ python scripts/discretize_bn.py model discretization_method bins --target_colu
 
 for example: 
 ```shell
-$ python scripts/generate_bn.py lg 1 --sample_size 5000
+$ python scripts/generate_bn.py lg 1
 $ python scripts/discretize_bn.py lg5000 disc EB10
 ```
 
