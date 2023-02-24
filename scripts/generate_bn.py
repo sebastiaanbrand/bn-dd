@@ -10,13 +10,14 @@ from cdt.data import load_dataset
 
 parser = argparse.ArgumentParser(description='Generate Bayesian Network')
 parser.add_argument('distribution', type=str, help='Sort of distribution to consider')
+parser.add_argument('experiment', type=int, help='Sort of experiment to consider')
 
 class LG_generator:
     """Creating the linear gaussian Bayesian Network:
     TODO: Generalize making the input lg_edges, root_params and lin_params and computing
     """
 
-    def __init__(self, N):
+    def __init__(self, exp):
 
             # Create logger
         log_format = '%(asctime)s - %(name)s - %(levelname)s - %(funcName)s - %(message)s'
@@ -24,15 +25,43 @@ class LG_generator:
         logger = logging.getLogger()
         self.logger = logging.getLogger(__name__)
 
-        self.N = N
+        self.exp = exp
         self.lg = LinearGaussian()
         self.lg_edges = [('A', 'D'), ('B', 'D'), ('D', 'E'), ('C', 'E')]
         self.nodes = sorted(set([i for sub in self.lg_edges for i in sub]))
         self.data = pd.DataFrame(columns=self.nodes)
 
-        self.lg_root_params = [(5, 2), (10, 2), (-5, 2)]
-        self.lg_lin_params = [(2, 3), (3, 3)]
-        self.lg_var_params = [2,2]
+        if self.exp==1:
+            self.lg_root_params = [(5, 2), (10, 2), (-5, 2)]
+            self.lg_lin_params = [(2, 3), (3, 3)]
+            self.lg_var_params = [2,2]
+            self.N = 5000
+        elif self.exp==2:
+            self.lg_root_params = [(5, 5), (10, 5), (-5, 5)]
+            self.lg_lin_params = [(2, 3), (3, 3)]
+            self.lg_var_params = [5,5]
+            self.N = 5000
+        elif self.exp==3:
+            self.lg_root_params = [(5, 2), (10, 2), (-5, 2)]
+            self.lg_lin_params = [(2, 3), (3, 3)]
+            self.lg_var_params = [2,2]
+            self.N = 1000
+        elif self.exp==4:
+            self.lg_root_params = [(5, 5), (10, 5), (-5, 5)]
+            self.lg_lin_params = [(2, 3), (3, 3)]
+            self.lg_var_params = [5,5]
+            self.N = 1000
+        elif self.exp==5:
+            self.lg_root_params = [(5, 2), (10, 2), (-5, 2)]
+            self.lg_lin_params = [(2, 3), (3, 3)]
+            self.lg_var_params = [2,2]
+            self.N = 300
+        elif self.exp==6:
+            self.lg_root_params = [(5, 5), (10, 5), (-5, 5)]
+            self.lg_lin_params = [(2, 3), (3, 3)]
+            self.lg_var_params = [5,5]
+            self.N = 300
+        
         self.objective_input_set = []
         self.roots = []
         self.non_roots = []
@@ -121,12 +150,12 @@ class LG_generator:
         root_text = ' '.join(root_text)
         non_root_text = ' '.join(non_root_text)
 
-        self.settings_lg = {'distribution':'lg', 'edges': self.lg_edges, 'root_params':root_text, 
+        self.settings_lg = {'distribution':'lg', 'edges': self.lg_edges, 'root_params':root_text, 'experiment': self.exp, 
                'not_root_params':' '.join(non_root_text), 'sample_size': self.N, 'means': self.means}
 
     def write_data(self):
         "Write the generated data as csv"
-        self.filename = f"{self.settings_lg['distribution']}{self.settings_lg['sample_size']}"
+        self.filename = f"{self.settings_lg['distribution']}{self.exp}"
         self.model_path = os.path.join(os.getcwd(), "models/undiscretized_models/")
         self.data.to_csv(self.model_path + self.filename+'.csv', index=False)
     
@@ -141,7 +170,7 @@ class nm_generator:
     TODO: Generalize making the input lg_edges, root_params and lin_params and computing
     """
 
-    def __init__(self, N):
+    def __init__(self, exp):
 
             # Create logger
         log_format = '%(asctime)s - %(name)s - %(levelname)s - %(funcName)s - %(message)s'
@@ -149,13 +178,43 @@ class nm_generator:
         logger = logging.getLogger()
         self.logger = logging.getLogger(__name__)
 
-        self.N = N
         self.edges = [('X', 'Y')]
         self.nodes = sorted(set([i for sub in self.edges for i in sub]))
         self.data = pd.DataFrame(columns=self.nodes)
+        self.exp = exp
 
-        self.bin_param = 0.5
-        self.lg_normal_params = [(10, 100), (50, 10)]
+        if self.exp==1:
+            self.N = 500
+            self.bin_param = 0.5
+            self.lg_normal_params = [(10, 100), (50, 10)]
+        if self.exp==2:
+            self.N = 500
+            self.bin_param = 0.8
+            self.lg_normal_params = [(10, 100), (50, 10)]
+        if self.exp==3:
+            self.N = 100
+            self.bin_param = 0.5
+            self.lg_normal_params = [(10, 100), (50, 10)]
+        if self.exp==4:
+            self.N = 100
+            self.bin_param = 0.8
+            self.lg_normal_params = [(10, 100), (50, 10)]
+        if self.exp==5:
+            self.N = 500
+            self.bin_param = 0.5
+            self.lg_normal_params = [(40, 20), (60, 20)]
+        if self.exp==6:
+            self.N = 500
+            self.bin_param = 0.8
+            self.lg_normal_params = [(40, 20), (60, 20)]
+        if self.exp==7:
+            self.N = 100
+            self.bin_param = 0.5
+            self.lg_normal_params = [(40, 20), (60, 20)]
+        if self.exp==8:
+            self.N = 100
+            self.bin_param = 0.8
+            self.lg_normal_params = [(40, 20), (60, 20)]
 
     def create_bn_file(self):
         """
@@ -179,7 +238,7 @@ class nm_generator:
     def generate_data(self):
         "Generate root parameters"
         np.random.seed(45)
-        self.data['X'] = np.random.binomial(size=5000, p=0.5, n=1)
+        self.data['X'] = np.random.binomial(size=self.N, p=self.bin_param, n=1)
         self.data['Y'] = [np.random.normal(self.lg_normal_params[0][0], self.lg_normal_params[0][1]) if x == 0 else 
             np.random.normal(self.lg_normal_params[1][0], self.lg_normal_params[1][1]) for x in self.data['X']] 
 
@@ -194,12 +253,12 @@ class nm_generator:
         
         mean_texts = []
         non_root_text = [f"P(Y|X) ~ N({self.lg_normal_params[i][0]},{self.lg_normal_params[i][1]}) if X = {np.linspace(0,1, num=2)[i]}" for i in range(len(self.lg_normal_params))]
-        self.settings = {'distribution':'nm', 'edges': self.edges, 'root_params':bin_text, 
+        self.settings = {'distribution':'nm', 'edges': self.edges, 'root_params':bin_text, 'experiment': self.exp,
                'not_root_params': ' and '.join(non_root_text), 'sample_size': self.N, 'means': self.mean}
 
     def write_data(self):
         "Write the generated data as csv"
-        self.filename = f"{self.settings['distribution']}{self.settings['sample_size']}"
+        self.filename = f"{self.settings['distribution']}{self.exp}"
         self.model_path = os.path.join(os.getcwd(), "models/undiscretized_models/")
         self.data.to_csv(self.model_path + self.filename+'.csv', index=False)
     
@@ -213,15 +272,16 @@ class tb_generator:
     TODO: Generalize making the input lg_edges, root_params and lin_params and computing
     """
 
-    def __init__(self, pair):
+    def __init__(self, exp):
 
             # Create logger
         log_format = '%(asctime)s - %(name)s - %(levelname)s - %(funcName)s - %(message)s'
         logging.basicConfig(format=log_format, level=logging.INFO, stream=sys.stdout)
         logger = logging.getLogger()
         self.logger = logging.getLogger(__name__)
-
-        self.pair = pair
+        mapping_to_pair = {1:3,2:21,3:25,4:26,5:91,6:95}
+        self.exp = exp
+        self.pair = mapping_to_pair[exp]
         self.edges = [('A', 'B')]
         self.nodes = sorted(set([i for sub in self.edges for i in sub]))
         self.data = pd.DataFrame(columns=self.nodes)
@@ -252,7 +312,7 @@ class tb_generator:
 
     def create_file_name(self):
         "create name and json specifics of network"
-        self.settings = {'distribution':'tb'+str(self.pair),'edges': self.edges,'sample_size': self.N}
+        self.settings = {'distribution':'tb'+str(self.exp),'edges': self.edges,'sample_size': self.N, 'experiment': self.exp, 'pair': self.pair}
 
     def write_data(self):
         "Write the generated data as csv"
@@ -270,13 +330,14 @@ if __name__ == '__main__':
     np.random.seed(45)
     args = parser.parse_args()
     distribution = args.distribution
+    experiment = args.experiment
     if distribution == 'lg':
-        LG = LG_generator(N=5000)
+        LG = LG_generator(experiment)
         LG.create_bn_file()
     if distribution == 'nm':
-        NM = nm_generator(N=5000)
+        NM = nm_generator(experiment)
         NM.create_bn_file()
     if distribution == 'tb':
-        TB = tb_generator(pair=1)
+        TB = tb_generator(experiment)
         TB.create_bn_file()
 

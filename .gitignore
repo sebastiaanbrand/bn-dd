@@ -4,3 +4,4 @@ sylvan_build/
 
 # python
 .venv/
+__pycache__/

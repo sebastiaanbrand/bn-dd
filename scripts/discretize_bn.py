@@ -12,9 +12,13 @@ from pgmpy.estimators import MaximumLikelihoodEstimator
 from pgmpy.inference import VariableElimination
 import warnings
 from sklearn.metrics import mean_squared_error
-from MCMCsampler import McmcSampler
+#from MCMCsampler import McmcSampler
 import networkx as nx
 from dowhy import CausalModel
+from sklearn.preprocessing import MinMaxScaler
+import ot
+
+from mdlp.discretization import MDLP
 
 parser = argparse.ArgumentParser(description='Discretize Bayesian Network')
 parser.add_argument('filename', type=str, help='path to data BN file')
@@ -36,7 +40,8 @@ class Discretizer:
         logger = logging.getLogger()
         self.logger = logging.getLogger(__name__)
 
-        self.data = pd.read_csv(filename+'.csv')  
+        self.data = pd.read_csv(filename+'.csv')
+        self.exp = int(''.join(filter(str.isdigit, filename)))  
         self.disc_data = pd.DataFrame()
 
         with open(filename+'settings.json') as json_file:
@@ -84,6 +89,19 @@ class Discretizer:
             discretized_solutions = self.compute_discretized_conditionals('B','A')
             exact_solutions = self.compute_exact_conditionals('B','A')
 
+        # Get Wasserstein distances:compute_1d_wasserstein
+        self.get_discretized_sample()
+        self.scale_data()
+
+        if self.settings['distribution']=='lg':
+            self.compute_1d_wasserstein('E')
+        if self.settings['distribution']=='nm':
+            self.compute_1d_wasserstein('Y')
+        if "tb" in self.settings['distribution']:
+            self.compute_1d_wasserstein('B')
+
+        self.compute_multivariate_wasserstein()
+
         # Get errors
         rmse = self.compute_RMSE(discretized_solutions,exact_solutions)
         wmse = self.compute_WRMSE(discretized_solutions,exact_solutions)
@@ -123,17 +141,15 @@ class Discretizer:
 
     def discretization_MDLP(self):
       "MDLP discretization"
-      mdlp = MDLP()
+      if self.settings['distribution']=='nm':
+        mdlp = MDLP(min_depth=2)  #The rootvariable should remain binomial    
+      else:
+        mdlp = MDLP()
       data = self.data.copy(deep='False')
+      data[self.target_column] = data[self.target_column].clip(lower=0) # clip the target value to 0 to allow discretization
       disc_mdlp_result = mdlp.fit_transform(data, data[self.target_column])
       disc_mdlp = pd.DataFrame(disc_mdlp_result, columns=self.columns)
-      cutpoints_MLDP = mdlp.cut_points_
-      for i in range(len(cutpoints_MLDP)):
-        cutpoints_MLDP[i] = np.append(cutpoints_MLDP[i], float('inf'))
-        cutpoints_MLDP[i]  = np.append(float('-inf'), cutpoints_MLDP[i])
-      cutpoints_MLDP =[cutpoints_MLDP[i] for i in range(len(cutpoints_MLDP))]
-      cutpoints_MLDP = np.array(cutpoints_MLDP)
-      return disc_mdlp, cutpoints_MLDP
+      return disc_mdlp
 
     def create_disc_network(self):
         "Write the generated data as csv"
@@ -146,7 +162,7 @@ class Discretizer:
         self.values_dict = dict(zip(self.columns,values))
 
         #Get the probability of these discretized values
-        dicts = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().to_dict() for col in self.data.columns]
+        self.dicts = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().to_dict() for col in self.data.columns]
         disc_probs =[self.model_struct.get_cpds(col).values for col in self.data.columns]
         self.prob_dict = dict(zip(self.columns,disc_probs))
 
@@ -157,9 +173,7 @@ class Discretizer:
         solutions = []
         for value in sorted(self.disc_data[conditional_col].unique()):
             agg_solution = infer.query(variables=[inference_col], evidence={conditional_col: value}).values
-            print(value, infer.query(variables=[inference_col], evidence={conditional_col: value}))
             solutions.append(sum(agg_solution * non_nans_b))
-        print(solutions)
         return solutions
 
     def compute_exact_conditionals(self, inference_col, conditional_col):
@@ -171,10 +185,8 @@ class Discretizer:
                 self.lg.set_evidences({conditional_col: value})
                 inference = self.lg.run_inference(debug=False)
                 solutions.append(inference.loc[inference_col,'Mean_inferred'])
-
         elif self.settings['distribution']=='nm':
             solutions = self.data.groupby(['X'])['Y'].mean().to_list()
-
         elif "tb" in self.settings['distribution']:
             nx.write_gml(nx.DiGraph([('A','B')]), "G.gml") 
             causal_model = CausalModel(data = self.data, treatment=['A'], outcome=['B'], graph= 'G.gml')
@@ -182,11 +194,18 @@ class Discretizer:
                            causal_model=causal_model,
                            keep_original_treatment=False, # False cause we will specify interventions ourselves 
                            variable_types={'A': 'c', 'B': 'c'})
-            input_dataframe = pd.DataFrame(data=np.random.choice(a=values[0], size=2000), columns=['A'])
+            input_dataframe = pd.DataFrame(data=np.random.choice(a=sorted(self.values_dict[conditional_col]), size=2000), columns=['A'])
             interventional_df = samplerMCMC.do_sample(input_dataframe)
             solutions = interventional_df.groupby(['A'])['B'].mean().values
-        print(solutions)
         return solutions   
+
+    def get_discretized_sample(self):
+        # The discretized distribution, we can gather samples from the distribution
+        inference = BayesianModelSampling(self.model_struct)
+        self.discretized_sample = inference.forward_sample(size=len(self.data))[self.columns]
+        for i, col in enumerate(self.columns):
+            self.discretized_sample[col] = self.discretized_sample[col].map(self.dicts[i])
+        self.discretized_sample.fillna(self.discretized_sample.mean(), inplace=True)
 
     def compute_RMSE(self, disc_sol, exact_sol):
         "Compute RMSE"
@@ -197,16 +216,45 @@ class Discretizer:
     def compute_WRMSE(self, disc_sol, exact_sol):
         "Compute WRMSE: based on the discretized probabilities of the conditonals P(.)"
         wms = mean_squared_error(exact_sol, disc_sol, sample_weight=self.prob_dict[self.conditional_col], squared=False)
-        self.settings['WMSE'] = wms
+        self.settings['WRMSE'] = wms
         return wms
+    
+    def scale_data(self):
+        min_scaler = MinMaxScaler()
+        min_scaler.fit(self.data[self.columns])
+        self.scaled_raw_data = pd.DataFrame(min_scaler.transform(self.data[self.columns]), columns=self.columns)
+        min_scaler.fit(self.discretized_sample[self.columns])
+        self.scaled_discretized_data = pd.DataFrame(min_scaler.transform(self.discretized_sample[self.columns]), columns=self.columns)
+
+    def compute_1d_wasserstein(self, target_col):
+        """Compute 1d wasserstein distance: based on the scaled target distances
+        TODO: double check function"""
+        a, b = np.ones(len(self.data)) / len(self.data), np.ones(len(self.data)) / len(self.data) 
+        M = ot.dist(self.scaled_raw_data[target_col].to_numpy().reshape((len(self.data), 1)), self.scaled_discretized_data[target_col].to_numpy().reshape((len(self.data), 1)), metric='euclidean')
+        W1 = ot.emd2(a,b,M, numItermax=1000000)
+        self.settings['Wass1D'] = W1
+
+    def compute_multivariate_wasserstein(self):
+        """Compute 1d wasserstein distance: based on the (scaled) entire discretization
+        TODO: double check function"""
+        a, b = np.ones(len(self.data)) / len(self.data), np.ones(len(self.data)) / len(self.data) 
+        M = ot.dist(self.scaled_raw_data[self.columns].to_numpy(), 
+                    self.scaled_discretized_data[self.columns].to_numpy(), metric='euclidean')     
+        W1 = ot.emd2(a,b,M, numItermax=1000000)
+        self.settings['Wass_multi'] = W1
 
     def write_data(self):
         "Write the generated data as csv"
-        self.filename = f"data_{self.settings['distribution']}_{self.settings['disc_method']}{self.settings['bins']}"
+        if self.settings['disc_method']!='MDLP': 
+            self.filename = f"data_{self.settings['distribution']}_{self.settings['disc_method']}{self.settings['bins']}"
+        else:
+            self.filename = f"data_{self.settings['distribution']}_{self.settings['disc_method']}"
         if self.settings['distribution']=='lg':
-            self.model_path = os.path.join(os.getcwd(), "models/linear_gaussian/")
+            self.model_path = os.path.join(os.getcwd(), "models/linear_gaussian"+str(self.exp)+"/")
         elif self.settings['distribution']=='nm':
-            self.model_path = os.path.join(os.getcwd(), "models/normal_mixture/")
+            self.model_path = os.path.join(os.getcwd(), "models/normal_mixture"+str(self.exp)+"/")
+        elif "tb" in self.settings['distribution']:
+            self.model_path = os.path.join(os.getcwd(), "models/tuebingen"+str(self.exp)+"/")
         self.model_struct.save(self.model_path+self.filename+'.xmlbif', filetype='xmlbif')
     
     def create_json(self):
@@ -220,6 +268,7 @@ if __name__ == '__main__':
     filename = args.filename
     disc_method = args.disc_method
     bins = args.bins
+    target_col = args.target_variable
     model_path = os.path.join(os.getcwd(), "models/undiscretized_models/")
-    Discretization = Discretizer(model_path+filename, disc_method, bins)
+    Discretization = Discretizer(model_path+filename, disc_method, bins, target_col)
     Discretization.create_discretization()
