@@ -16,15 +16,15 @@ parser.add_argument('distribution', type=str, help='Sort of distribution to cons
 parser.add_argument('error', type=str, help='Error to draw in paretofront')
 
 palettes={'EB5': 'navy', 
-        'EB8': 'royalblue',
-        'EB10': 'dodgerblue',
-        'EB12': 'lightskyblue',
-        'EB14': 'powderblue',
+        'EB8': 'mediumblue',
+        'EB10': 'blue',
+        'EB12': 'royalblue',
+        'EB14': 'cornflowerblue',
         'EV5': 'maroon', 
         'EV8': 'red',
         'EV10': 'tomato',
         'EV12': 'salmon',
-        'EV14': 'mistyrose',
+        'EV14': 'lightsalmon',
         'MDLP': 'green'}
 
 class Pareto:

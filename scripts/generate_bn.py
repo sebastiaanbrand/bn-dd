@@ -186,35 +186,35 @@ class nm_generator:
         if self.exp==1:
             self.N = 500
             self.bin_param = 0.5
-            self.lg_normal_params = [(10, 100), (50, 10)]
+            self.lg_normal_params = [(21, 10), (25, 1)]
         if self.exp==2:
             self.N = 500
             self.bin_param = 0.8
-            self.lg_normal_params = [(10, 100), (50, 10)]
+            self.lg_normal_params = [(21, 10), (25, 1)]
         if self.exp==3:
             self.N = 100
             self.bin_param = 0.5
-            self.lg_normal_params = [(10, 100), (50, 10)]
+            self.lg_normal_params = [(6, 2), (4, 2)]
         if self.exp==4:
             self.N = 100
             self.bin_param = 0.8
-            self.lg_normal_params = [(10, 100), (50, 10)]
+            self.lg_normal_params = [(6, 2), (4, 2)]
         if self.exp==5:
             self.N = 500
             self.bin_param = 0.5
-            self.lg_normal_params = [(40, 20), (60, 20)]
+            self.lg_normal_params = [(21, 10), (25, 1)]
         if self.exp==6:
             self.N = 500
             self.bin_param = 0.8
-            self.lg_normal_params = [(40, 20), (60, 20)]
+            self.lg_normal_params = [(21, 10), (25, 1)]
         if self.exp==7:
             self.N = 100
             self.bin_param = 0.5
-            self.lg_normal_params = [(40, 20), (60, 20)]
+            self.lg_normal_params = [(6, 2), (4, 2)]
         if self.exp==8:
             self.N = 100
             self.bin_param = 0.8
-            self.lg_normal_params = [(40, 20), (60, 20)]
+            self.lg_normal_params = [(6, 2), (4, 2)]
 
     def create_bn_file(self):
         """
