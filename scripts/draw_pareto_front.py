@@ -20,12 +20,13 @@ palettes={'EB5': 'navy',
         'EB10': 'blue',
         'EB12': 'royalblue',
         'EB14': 'cornflowerblue',
-        'EV5': 'maroon', 
+        'EV5': 'darkred', 
         'EV8': 'red',
         'EV10': 'tomato',
         'EV12': 'salmon',
         'EV14': 'lightsalmon',
         'MDLP': 'green'}
+
 
 class Pareto:
     """Creating Pareto-front"""
@@ -101,23 +102,19 @@ class Pareto:
                     drop_indices.append(index)
     
         self.non_dom_sol = self.non_dom_sol.drop(drop_indices)
-        #index_node = self.non_dom_sol.idxmin(numeric_only=True)['Nodes']
-        #error_node = self.non_dom_sol.idxmin(numeric_only=True)[str(error)]
-        #self.non_dom_sol.append()
         
     def plot_pareto(self, error):
         "Plot data"
         sns.set(style='ticks', context='notebook', font_scale=1.2)
         fig, ax = plt.subplots()
-        sns.scatterplot(y='Nodes', x=str(error), data=self.error_frame, size = 8, legend=False, hue='Disc_method', ax=ax,
-        palette=palettes) #change when dd size is available
+        sns.scatterplot(y='Nodes', x=str(error), data=self.error_frame, legend=False, hue='Disc_method', ax=ax,
+        palette=palettes, style="Method", size='load_time', sizes=(199,200)) #change when dd size is available
         axe = sns.lineplot(data=self.non_dom_sol, x=str(error), y='Nodes',estimator='max', color='gainsboro')
         axe.lines[0].set_linestyle("--")
         print(self.error_frame)
         for i in range(self.error_frame.shape[0]):
-            plt.text(y=self.error_frame['Nodes'][i],x=self.error_frame[str(error)][i]+(self.error_frame[str(error)].max()*0.005),s=self.error_frame.Disc_method[i], fontsize=11) #change when dd size is available
+            plt.text(y=self.error_frame['Nodes'][i],x=self.error_frame[str(error)][i]+(self.error_frame[str(error)].max()*0.015),s=self.error_frame.Disc_method[i], fontsize=11) #change when dd size is available
 
-        #plt.title("Paretofront with Weighted Root Mean Squared Error (WRMSE) vs node count of the BDD")
         save_path = os.path.join(os.getcwd(), "plots/paretofront_"+args.distribution+"_"+error+".png")
         plt.savefig(save_path)
 
