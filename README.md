@@ -77,3 +77,12 @@ To draw the paretofront: run the following command
 ```shell
 $ python scripts/draw_pareto_front.py lg rmse
 ```
+
+To generate a bash script which runs all experiments:
+```shell
+$ python scripts/generate_experiments.py <folder>
+```
+which generates a bash file `exp_<exp-id>` (where <exp-id> is some number) which can then be run with
+```shell
+$ bash experiments/exp_<exp-id>
+```
