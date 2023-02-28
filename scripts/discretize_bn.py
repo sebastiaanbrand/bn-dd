@@ -14,7 +14,7 @@ import warnings
 from sklearn.metrics import mean_squared_error
 #from MCMCsampler import McmcSampler
 import networkx as nx
-from dowhy import CausalModel
+#from dowhy import CausalModel
 from sklearn.preprocessing import MinMaxScaler
 import ot
 

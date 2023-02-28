@@ -5,14 +5,50 @@ import os
 import argparse
 import pathlib
 from datetime import datetime
-
+from itertools import product
 
 output_file = "experiments/exp_{}.sh"
 exp_id = datetime.now().strftime("%Y%m%d%H%M%S")
 
 
 parser = argparse.ArgumentParser(description='Generate bash script with experiments.')
-parser.add_argument('folderpath', type=str, help='Path to folder with .cnf files.')
+parser.add_argument('distribution', type=str, help='Distribution to use')
+parser.add_argument('experiment', type=str, help='Experiment to use')
+dist_mapping = {'lg':'linear_gaussian',
+                'tb':'tuebingen',
+                'nm':'normal_mixture'}
+methods = ['EB','EV']
+bins = [5,8,10,12,14]
+errors=['RMSE','WRMSE','Wass1D','Wass_multi']
+
+def generate_bns(dist, exp):
+    """
+    For a given distribution and experiment, generate all the BN data and settings json
+    """
+    command = "python scripts/generate_bn.py {} {} 2>&1 | tee -a experiments/log_{}.txt\n".format(dist,exp,exp_id)
+    with open(output_file.format(exp_id), 'a', encoding='utf-8') as outfile:
+        outfile.write("# Generate BN\n")
+        outfile.write(command)
+        outfile.write("\n")
+
+def discretize_BNs(dist, exp):
+    """
+    For a given distribution and experiment, generate all the .xmlbif and settings file for all discretizations
+    """
+    command = "python scripts/discretize_bn.py {} {} {} 2>&1 | tee -a experiments/log_{}.txt\n"
+    with open(output_file.format(exp_id), 'a', encoding='utf-8') as outfile:
+        outfile.write("# Discretize BNs\n")
+        for meth, bin in product(methods, bins):
+            if meth!='MDLP':
+                outfile.write(command.format(dist+exp, meth, bin, exp_id))
+        # Add MDLP command
+        if dist=='lg':
+            outfile.write(command.format(dist+exp+"_MDLP",0,"--target_column E",exp_id)) 
+        if dist=='nm':
+            outfile.write(command.format(dist+exp+"_MDLP",0,"--target_column Y",exp_id)) 
+        if dist=='tb':
+            outfile.write(command.format(dist+exp+"_MDLP",0,"--target_column B",exp_id)) 
+        outfile.write("\n")
 
 
 def all_bn_to_cnf(folder):
@@ -44,13 +80,27 @@ def all_cnf_to_dd(folder):
                 stripped_path = os.path.join(folder, filename[:-4])
                 outfile.write(command.format(stripped_path, exp_id))
 
+def draw_pareto(dist, exp):
+    """
+    For a given distribution and experiment, generate all the BN data and settings json
+    """
+    command = "python scripts/draw_pareto_front.py {} {} 2>&1 | tee -a experiments/log_{}.txt\n"
+    with open(output_file.format(exp_id), 'a', encoding='utf-8') as outfile:
+        outfile.write("# Draw Pareto_front\n")
+        for error in errors:
+            if dist!='tb'
+                outfile.write(command.format(dist+exp, error,exp_id))
+        outfile.write("\n")
+
 
 def main():
     """
     Generate single bash file with complete experiments.
     """
     args = parser.parse_args()
-    folder = args.folderpath
+    distribution = args.distribution
+    experiment = args.experiment
+    folder = "models/{dis}{exp}".format(dis=dist_mapping[distribution], exp=experiment)
     pathlib.Path("experiments/").mkdir(parents=True, exist_ok=True)
 
     with open(output_file.format(exp_id), 'w', encoding='utf-8') as outfile:
@@ -58,10 +108,10 @@ def main():
         outfile.write(f"# experiments for folder {folder}\n\n")
 
     # 1. generate_bn
-    # TODO
+    generate_bns(distribution, experiment)
 
     # 2. discretize using different methods
-    # TODO
+    discretize_BNs(distribution, experiment)
 
     # 3. translate discretized BN to CNF
     all_bn_to_cnf(folder)
@@ -70,7 +120,7 @@ def main():
     all_cnf_to_dd(folder)
 
     # 5. plot pareto front for different distance metrics
-    # TODO 
+    draw_pareto(distribution,experiment)
 
 
 if __name__ == '__main__':
