@@ -5,3 +5,6 @@ sylvan_build/
 # python
 .venv/
 __pycache__/
+
+# experiments
+experiments/
