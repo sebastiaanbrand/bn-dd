@@ -80,7 +80,7 @@ $ python scripts/draw_pareto_front.py lg rmse
 
 To generate a bash script which runs all experiments:
 ```shell
-$ python scripts/generate_experiments.py <folder>
+$ python scripts/generate_experiments.py <distribution> <experiment>
 ```
 which generates a bash file `exp_<exp-id>` (where <exp-id> is some number) which can then be run with
 ```shell

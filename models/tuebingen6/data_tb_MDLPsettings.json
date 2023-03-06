@@ -1,0 +1,1 @@
+{"distribution": "tb", "edges": [["A", "B"]], "sample_size": 209, "experiment": 6, "pair": 95, "disc_method": "MDLP", "bins": 2, "target_column": "B", "Wass1D": 0.8401219936581966, "Wass_multi": 0.9317928379943156}

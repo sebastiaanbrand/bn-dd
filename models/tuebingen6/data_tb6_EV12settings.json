@@ -1,0 +1,1 @@
+{"distribution": "tb6", "edges": [["A", "B"]], "sample_size": 209, "experiment": 6, "pair": 95, "disc_method": "EV", "bins": 12, "target_column": null, "Wass1D": 0.05476267662718237, "Wass_multi": 0.08811841242096591}

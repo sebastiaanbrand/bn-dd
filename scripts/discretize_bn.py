@@ -85,13 +85,15 @@ class Discretizer:
         if self.settings['distribution']=='nm':
             discretized_solutions = self.compute_discretized_conditionals('Y','X')
             exact_solutions = self.compute_exact_conditionals('Y','X')
-        #if "tb" in self.settings['distribution']:
-        #    discretized_solutions = self.compute_discretized_conditionals('B','A')
-        #    exact_solutions = self.compute_exact_conditionals('B','A')
 
-        # Get Wasserstein distances:compute_1d_wasserstein
-        
-        if "tb" not in self.settings['distribution']:
+        if "tb" in self.settings['distribution']:
+            self.get_discretized_sample()
+            self.scale_data()
+            self.compute_1d_wasserstein('B')
+
+            self.compute_multivariate_wasserstein()
+
+        elif "tb" not in self.settings['distribution']:
             self.get_discretized_sample()
             self.scale_data()
 
@@ -109,6 +111,7 @@ class Discretizer:
             wmse = self.compute_WRMSE(discretized_solutions,exact_solutions)
             mae = self.compute_MAE(discretized_solutions,exact_solutions)
 
+        self.compute_complexity()
         # Write xml:
         self.write_data()
         # Get json:
@@ -147,10 +150,7 @@ class Discretizer:
 
     def discretization_MDLP(self):
       "MDLP discretization"
-      if self.settings['distribution']=='nm':
-        mdlp = MDLP(min_depth=2)  #The rootvariable should remain binomial    
-      else:
-        mdlp = MDLP()
+      mdlp = MDLP(min_depth=self.bins)  #The rootvariable should remain binomial    
       data = self.data.copy(deep='False')
       data[self.target_column] = data[self.target_column].clip(lower=0) # clip the target value to 0 to allow discretization
       disc_mdlp_result = mdlp.fit_transform(data, data[self.target_column])
@@ -237,11 +237,25 @@ class Discretizer:
         min_scaler.fit(self.discretized_sample[self.columns])
         self.scaled_discretized_data = pd.DataFrame(min_scaler.transform(self.discretized_sample[self.columns]), columns=self.columns)
 
+    def compute_complexity(self):
+        "Compute E(E), E(Y) or E(B) resp"
+        if self.settings['distribution']=='lg':
+            [sizeA, sizeB, sizeC, sizeD, sizeE] = self.disc_data.nunique().values
+            print([sizeA, sizeB, sizeC, sizeD, sizeE])
+            var_elimination_length = (sizeE-1)+sizeE*(1+(sizeD-1)+sizeD*((sizeC-1)+sizeC*(2+(sizeB-1)+sizeB*(1+(sizeA-1)+sizeA))))
+        elif self.settings['distribution']=='nm':
+            [sizeX, sizeY] = self.disc_data.nunique().values
+            var_elimination_length = (sizeB-1)+sizeB*(1+(sizeA-1)+sizeA)
+        elif "tb" in self.settings['distribution']:
+            [sizeA, sizeB] = self.disc_data.nunique().values
+            var_elimination_length = (sizeB-1)+sizeB*(1+(sizeA-1)+sizeA)
+        self.settings['VE_complexity'] = float(var_elimination_length)
+
     def compute_1d_wasserstein(self, target_col):
         """Compute 1d wasserstein distance: based on the scaled target distances
         TODO: double check function"""
         a, b = np.ones(len(self.data)) / len(self.data), np.ones(len(self.data)) / len(self.data) 
-        M = ot.dist(self.scaled_raw_data[target_col].to_numpy().reshape((len(self.data), 1)), self.scaled_discretized_data[target_col].to_numpy().reshape((len(self.data), 1)), metric='euclidean')
+        M = ot.dist(self.data[target_col].to_numpy().reshape((len(self.data), 1)), self.discretized_sample[target_col].to_numpy().reshape((len(self.data), 1)), metric='euclidean')
         W1 = ot.emd2(a,b,M, numItermax=1000000)
         self.settings['Wass1D'] = W1
 
@@ -249,8 +263,8 @@ class Discretizer:
         """Compute 1d wasserstein distance: based on the (scaled) entire discretization
         TODO: double check function"""
         a, b = np.ones(len(self.data)) / len(self.data), np.ones(len(self.data)) / len(self.data) 
-        M = ot.dist(self.scaled_raw_data[self.columns].to_numpy(), 
-                    self.scaled_discretized_data[self.columns].to_numpy(), metric='euclidean')     
+        M = ot.dist(self.data[self.columns].to_numpy(), 
+                    self.discretized_sample[self.columns].to_numpy(), metric='euclidean')     
         W1 = ot.emd2(a,b,M, numItermax=1000000)
         self.settings['Wass_multi'] = W1
 

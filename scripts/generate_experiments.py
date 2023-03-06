@@ -7,7 +7,7 @@ import pathlib
 from datetime import datetime
 from itertools import product
 
-output_file = "experiments/exp_{}.sh"
+output_file = "experiments/exp_{}{}_{}.sh"
 exp_id = datetime.now().strftime("%Y%m%d%H%M%S")
 
 
@@ -19,14 +19,15 @@ dist_mapping = {'lg':'linear_gaussian',
                 'nm':'normal_mixture'}
 methods = ['EB','EV']
 bins = [5,8,10,12,14]
-errors=['RMSE','WRMSE','Wass1D','Wass_multi']
+errors = ['Wass1D','Wass_multi']
+errors_all = ['Wass1D','Wass_multi','RMSE','WRMSE',]
 
 def generate_bns(dist, exp):
     """
     For a given distribution and experiment, generate all the BN data and settings json
     """
     command = "python scripts/generate_bn.py {} {} 2>&1 | tee -a experiments/log_{}.txt\n".format(dist,exp,exp_id)
-    with open(output_file.format(exp_id), 'a', encoding='utf-8') as outfile:
+    with open(output_file.format(dist, exp, exp_id), 'a', encoding='utf-8') as outfile:
         outfile.write("# Generate BN\n")
         outfile.write(command)
         outfile.write("\n")
@@ -36,29 +37,29 @@ def discretize_BNs(dist, exp):
     For a given distribution and experiment, generate all the .xmlbif and settings file for all discretizations
     """
     command = "python scripts/discretize_bn.py {} {} {} 2>&1 | tee -a experiments/log_{}.txt\n"
-    with open(output_file.format(exp_id), 'a', encoding='utf-8') as outfile:
+    with open(output_file.format(dist, exp, exp_id), 'a', encoding='utf-8') as outfile:
         outfile.write("# Discretize BNs\n")
         for meth, bin in product(methods, bins):
             if meth!='MDLP':
                 outfile.write(command.format(dist+exp, meth, bin, exp_id))
         # Add MDLP command
         if dist=='lg':
-            outfile.write(command.format(dist+exp+"_MDLP",0,"--target_column E",exp_id)) 
+            outfile.write(command.format(dist+exp+" MDLP",2,"--target_variable E",exp_id)) 
         if dist=='nm':
-            outfile.write(command.format(dist+exp+"_MDLP",0,"--target_column Y",exp_id)) 
+            outfile.write(command.format(dist+exp+" MDLP",2,"--target_variable Y",exp_id)) 
         if dist=='tb':
-            outfile.write(command.format(dist+exp+"_MDLP",0,"--target_column B",exp_id)) 
+            outfile.write(command.format(dist+exp+" MDLP",2,"--target_variable B",exp_id)) 
         outfile.write("\n")
 
 
-def all_bn_to_cnf(folder):
+def all_bn_to_cnf(dist, exp, folder):
     """
     For a given folder with .xmlbif files, generate .cnf files (+ some other 
     files) wich form a (weighted) CNF encoding of the BN.
     """
     # NOTE: "2>&1 | tee" writes all console output to a file,
     command = "python scripts/parse_bn.py {} 2>&1 | tee -a experiments/log_{}.txt\n"
-    with open(output_file.format(exp_id), 'a', encoding='utf-8') as outfile:
+    with open(output_file.format(dist, exp, exp_id), 'a', encoding='utf-8') as outfile:
         outfile.write("# generate CNF from .xmlbif\n")
         for filename in os.listdir(folder):
             if filename.endswith('.xmlbif'):
@@ -67,29 +68,29 @@ def all_bn_to_cnf(folder):
         outfile.write("\n")
 
 
-def all_cnf_to_dd(folder):
+def all_cnf_to_dd(dist, exp, folder):
     """
     For a given folder with .cnf files which encode BNs, generate the bash
     commands to generate DDs for all of these .cnf files.
     """
     command = "./dd_inference/build/analyze_bn {} 2>&1 | tee -a experiments/log_{}.txt\n"
-    with open(output_file.format(exp_id), 'a', encoding='utf-8') as outfile:
+    with open(output_file.format(dist, exp, exp_id), 'a', encoding='utf-8') as outfile:
         outfile.write("# generate DDs from .cnf\n")
         for filename in os.listdir(folder):
             if filename.endswith('.cnf'):
                 stripped_path = os.path.join(folder, filename[:-4])
                 outfile.write(command.format(stripped_path, exp_id))
+        outfile.write("\n")
 
 def draw_pareto(dist, exp):
     """
     For a given distribution and experiment, generate all the BN data and settings json
     """
     command = "python scripts/draw_pareto_front.py {} {} 2>&1 | tee -a experiments/log_{}.txt\n"
-    with open(output_file.format(exp_id), 'a', encoding='utf-8') as outfile:
+    with open(output_file.format(dist, exp, exp_id), 'a', encoding='utf-8') as outfile:
         outfile.write("# Draw Pareto_front\n")
-        for error in errors:
-            if dist!='tb'
-                outfile.write(command.format(dist+exp, error,exp_id))
+        for error in errors_all:
+            outfile.write(command.format(dist+exp, error,exp_id))
         outfile.write("\n")
 
 
@@ -103,7 +104,7 @@ def main():
     folder = "models/{dis}{exp}".format(dis=dist_mapping[distribution], exp=experiment)
     pathlib.Path("experiments/").mkdir(parents=True, exist_ok=True)
 
-    with open(output_file.format(exp_id), 'w', encoding='utf-8') as outfile:
+    with open(output_file.format(distribution, experiment, exp_id), 'w', encoding='utf-8') as outfile:
         outfile.write("#!/bin/bash\n")
         outfile.write(f"# experiments for folder {folder}\n\n")
 
@@ -114,10 +115,10 @@ def main():
     discretize_BNs(distribution, experiment)
 
     # 3. translate discretized BN to CNF
-    all_bn_to_cnf(folder)
+    all_bn_to_cnf(distribution, experiment, folder)
 
     # 4. construct DD from CNF
-    all_cnf_to_dd(folder)
+    all_cnf_to_dd(distribution, experiment, folder)
 
     # 5. plot pareto front for different distance metrics
     draw_pareto(distribution,experiment)

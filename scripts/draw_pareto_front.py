@@ -27,6 +27,13 @@ palettes={'EB5': 'navy',
         'EV14': 'lightsalmon',
         'MDLP': 'green'}
 
+errormap ={'Wass1D': '1-dimensional Wasserstein Distance',
+        'Wass_multi': 'Multi-dimensional Wasserstein Distance',
+        'WRMSE': 'WRMSE',
+        'RMSE': 'RMSE',
+        'MAE': 'MAE'}
+
+normalize = True
 
 class Pareto:
     """Creating Pareto-front"""
@@ -55,6 +62,8 @@ class Pareto:
         self.read_json_info()
         # Preprocess data:
         self.preprocess_data()
+        #Normalize or not
+        self.normalize_nodes(normalize)
         # Get non-dominated solutions:
         self.non_dominant_solutions(self.error)
         # Draw Front
@@ -62,20 +71,23 @@ class Pareto:
 
     def read_json_settings(self):
         "Read settings json"
-        rmses, wmses = [], []
+        rmses, wmses, maeses = [], [], []
         disc_methods= []
         wass_1d, wass_multi = [], []
         for json_file in self.settings_json_files:   
             with open(self.model_path+json_file) as json_file:
                 opened_data = json.load(json_file)
-                rmses.append(opened_data['RMSE']), wmses.append(opened_data['WRMSE'])
+                if 'tb' not in distribution:
+                    rmses.append(opened_data['RMSE']), wmses.append(opened_data['WRMSE']) , maeses.append(opened_data['MAE'])
+                else: 
+                    rmses.append(np.nan), wmses.append(np.nan), maeses.append(np.nan)
                 wass_1d.append(opened_data['Wass1D']), wass_multi.append(opened_data['Wass_multi'])
                 if opened_data['disc_method']!='MDLP':
                     disc_methods.append(opened_data['disc_method']+str(opened_data['bins']))
                 else:
                     disc_methods.append(opened_data['disc_method'])
-        self.error_frame = pd.DataFrame(data=np.transpose([disc_methods, rmses, wmses, wass_1d, wass_multi ]), columns=['Disc_method','RMSE','WRMSE', 'Wass1D','Wass_multi']) 
-        self.error_frame['RMSE'], self.error_frame['WRMSE'] = self.error_frame['RMSE'].astype(float), self.error_frame['WRMSE'].astype(float)
+        self.error_frame = pd.DataFrame(data=np.transpose([disc_methods, rmses, wmses, maeses, wass_1d, wass_multi]), columns=['Disc_method','RMSE','MAE','WRMSE', 'Wass1D','Wass_multi']) 
+        self.error_frame['RMSE'], self.error_frame['WRMSE'], self.error_frame['MAE'] = self.error_frame['RMSE'].astype(float), self.error_frame['WRMSE'].astype(float), self.error_frame['MAE'].astype(float)
         self.error_frame['Wass1D'], self.error_frame['Wass_multi'] = self.error_frame['Wass1D'].astype(float), self.error_frame['Wass_multi'].astype(float)
 
     def read_json_info(self):
@@ -98,24 +110,42 @@ class Pareto:
         drop_indices=[]
         for index, row in self.error_frame.iterrows():
             for index2, row2 in self.error_frame.iterrows():
-                if (row[error]>row2[error]) & (row['Nodes']>row2['Nodes']):
+                if (row[error]>row2[error]) & (row[self.y_axis]>row2[self.y_axis]):
                     drop_indices.append(index)
     
         self.non_dom_sol = self.non_dom_sol.drop(drop_indices)
-        
+
+    def normalize_nodes(self, normalize):
+        if normalize==True:
+            var_elimination_length = []
+            for json_file in self.settings_json_files:   
+                with open(self.model_path+json_file) as json_file: 
+                    opened_data = json.load(json_file)   
+                    var_elimination_length.append(opened_data['VE_complexity'])
+            self.error_frame['VE_complexity'] = var_elimination_length
+            self.error_frame['Relative Complexity'] = self.error_frame['Nodes']/self.error_frame['VE_complexity']
+            self.y_axis = 'Relative Complexity'
+        elif normalize==False:
+            self.y_axis = 'Nodes' 
+
+
     def plot_pareto(self, error):
         "Plot data"
         sns.set(style='ticks', context='notebook', font_scale=1.2)
         fig, ax = plt.subplots()
-        sns.scatterplot(y='Nodes', x=str(error), data=self.error_frame, legend=False, hue='Disc_method', ax=ax,
+        sns.scatterplot(y=self.y_axis, x=str(error), data=self.error_frame, legend=False, hue='Disc_method', ax=ax,
         palette=palettes, style="Method", size='load_time', sizes=(199,200)) #change when dd size is available
-        axe = sns.lineplot(data=self.non_dom_sol, x=str(error), y='Nodes',estimator='max', color='gainsboro')
+        ax.set(xlabel=errormap[self.error], ylabel=self.y_axis)
+        axe = sns.lineplot(data=self.non_dom_sol, x=str(error), y=self.y_axis,estimator='max', color='gainsboro')
         axe.lines[0].set_linestyle("--")
+        plt.title('Experiment '+str(''.join(filter(str.isdigit, distribution))))
         print(self.error_frame)
         for i in range(self.error_frame.shape[0]):
-            plt.text(y=self.error_frame['Nodes'][i],x=self.error_frame[str(error)][i]+(self.error_frame[str(error)].max()*0.015),s=self.error_frame.Disc_method[i], fontsize=11) #change when dd size is available
-
-        save_path = os.path.join(os.getcwd(), "plots/paretofront_"+args.distribution+"_"+error+".png")
+            plt.text(y=self.error_frame[self.y_axis][i],x=self.error_frame[str(error)][i]+(self.error_frame[str(error)].max()*0.015),s=self.error_frame.Disc_method[i], fontsize=11) #change when dd size is available
+        if normalize==True:
+            save_path = os.path.join(os.getcwd(), "plots/paretofront_"+args.distribution+"_"+error+"_normalized.png")
+        elif normalize==False:
+            save_path = os.path.join(os.getcwd(), "plots/paretofront_"+args.distribution+"_"+error+".png")
         plt.savefig(save_path)
 
 
@@ -128,6 +158,8 @@ if __name__ == '__main__':
         model_path = os.path.join(os.getcwd(), "models/linear_gaussian"+str(''.join(filter(str.isdigit, distribution)))  +"/")
     if 'nm' in distribution:
         model_path = os.path.join(os.getcwd(), "models/normal_mixture"+str(''.join(filter(str.isdigit, distribution)))  +"/")
+    if 'tb' in distribution:
+        model_path = os.path.join(os.getcwd(), "models/tuebingen"+str(''.join(filter(str.isdigit, distribution)))  +"/")
     Pareto_Front = Pareto(model_path, error)
     Pareto_Front.create_plots()
 

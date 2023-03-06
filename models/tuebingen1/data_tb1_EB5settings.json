@@ -1,1 +1,1 @@
-{"distribution": "tb1", "edges": [["A", "B"]], "sample_size": 349, "experiment": 1, "pair": 3, "disc_method": "EB", "bins": 5, "target_column": null, "Wass1D": 0.13585492737749846, "Wass_multi": 0.16784925441882254, "RMSE": 0.3944505309700105, "WRMSE": 0.4045555865461449, "MAE": 0.1555912213825232}
+{"distribution": "tb1", "edges": [["A", "B"]], "sample_size": 349, "experiment": 1, "pair": 3, "disc_method": "EB", "bins": 5, "target_column": null, "Wass1D": 0.13147839872338762, "Wass_multi": 0.16074461380631355}

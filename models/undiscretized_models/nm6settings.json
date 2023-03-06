@@ -1,1 +1,1 @@
-{"distribution": "nm", "edges": [["X", "Y"]], "root_params": ["X ~ B(0.8)"], "experiment": 6, "not_root_params": "P(Y|X) ~ N(40,20) if X = 0.0 and P(Y|X) ~ N(60,20) if X = 1.0", "sample_size": 500, "means": 44.0}
+{"distribution": "nm", "edges": [["X", "Y"]], "root_params": ["X ~ B(0.8)"], "experiment": 6, "not_root_params": "P(Y|X) ~ N(21,10) if X = 0.0 and P(Y|X) ~ N(25,1) if X = 1.0", "sample_size": 500, "means": 21.8}

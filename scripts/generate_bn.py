@@ -32,32 +32,32 @@ class LG_generator:
         self.data = pd.DataFrame(columns=self.nodes)
 
         if self.exp==1:
-            self.lg_root_params = [(5, 2), (10, 2), (-5, 2)]
+            self.lg_root_params = [(20, 2), (20, 2), (15, 2)]
             self.lg_lin_params = [(2, 3), (3, 3)]
             self.lg_var_params = [2,2]
             self.N = 5000
         elif self.exp==2:
-            self.lg_root_params = [(5, 5), (10, 5), (-5, 5)]
+            self.lg_root_params = [(20, 5), (20, 5), (15, 5)]
             self.lg_lin_params = [(2, 3), (3, 3)]
             self.lg_var_params = [5,5]
             self.N = 5000
         elif self.exp==3:
-            self.lg_root_params = [(5, 2), (10, 2), (-5, 2)]
+            self.lg_root_params = [(20, 2), (20, 2), (15, 2)]
             self.lg_lin_params = [(2, 3), (3, 3)]
             self.lg_var_params = [2,2]
             self.N = 1000
         elif self.exp==4:
-            self.lg_root_params = [(5, 5), (10, 5), (-5, 5)]
+            self.lg_root_params = [(20, 5), (20, 5), (15, 5)]
             self.lg_lin_params = [(2, 3), (3, 3)]
             self.lg_var_params = [5,5]
             self.N = 1000
         elif self.exp==5:
-            self.lg_root_params = [(5, 2), (10, 2), (-5, 2)]
+            self.lg_root_params = [(20, 2), (20, 2), (15, 2)]
             self.lg_lin_params = [(2, 3), (3, 3)]
             self.lg_var_params = [2,2]
             self.N = 300
         elif self.exp==6:
-            self.lg_root_params = [(5, 5), (10, 5), (-5, 5)]
+            self.lg_root_params = [(20, 5), (20, 5), (15, 5)]
             self.lg_lin_params = [(2, 3), (3, 3)]
             self.lg_var_params = [5,5]
             self.N = 300
@@ -312,11 +312,11 @@ class tb_generator:
 
     def create_file_name(self):
         "create name and json specifics of network"
-        self.settings = {'distribution':'tb'+str(self.exp),'edges': self.edges,'sample_size': self.N, 'experiment': self.exp, 'pair': self.pair}
+        self.settings = {'distribution':'tb','edges': self.edges,'sample_size': self.N, 'experiment': self.exp, 'pair': self.pair}
 
     def write_data(self):
         "Write the generated data as csv"
-        self.filename = f"{self.settings['distribution']}"
+        self.filename = f"{self.settings['distribution']}{self.exp}"
         self.model_path = os.path.join(os.getcwd(), "models/undiscretized_models/")
         self.data.to_csv(self.model_path + self.filename+'.csv', index=False)
     

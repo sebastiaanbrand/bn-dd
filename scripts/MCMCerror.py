@@ -20,7 +20,8 @@ from sklearn.preprocessing import MinMaxScaler
 import ot
 
 parser = argparse.ArgumentParser(description='Compute Error for Tuebinger Set')
-parser.add_argument('filename', type=str, help='path to data BN file')
+parser.add_argument('filename', type=str, help='data BN file')
+parser.add_argument('exp', type=int, help='data BN experiment')
 
 class MCMC_error:
     """
@@ -42,7 +43,7 @@ class MCMC_error:
             self.settings = json.load(json_file)
         
         model_path2 = os.path.join(os.getcwd(), "models/undiscretized_models/")
-        self.data = pd.read_csv(model_path2+'tb'+str(''.join(filter(str.isdigit, filename))[0]) +'.csv')
+        self.data = pd.read_csv(model_path2+'tb'+str(exp) +'.csv')
         self.columns = self.data.columns
 
     def compute_errors(self):
@@ -175,7 +176,7 @@ class MCMC_error:
             self.filename = f"data_{self.settings['distribution']}_{self.settings['disc_method']}{self.settings['bins']}"
         else:
             self.filename = f"data_{self.settings['distribution']}_{self.settings['disc_method']}"
-        self.model_path = os.path.join(os.getcwd(), "models/tuebingen"+str(''.join(filter(str.isdigit, filename))[0])+"/")
+        self.model_path = os.path.join(os.getcwd(),"models/tuebingen"+str(exp)+"/")
 
     def create_json(self):
         "Write the specification of data as json"
@@ -187,6 +188,7 @@ class MCMC_error:
 if __name__ == '__main__':
     args = parser.parse_args()
     filename = args.filename
-    model_path = os.path.join(os.getcwd(), "models/tuebingen"+str(''.join(filter(str.isdigit, filename))[0])  +"/")
+    exp = args.exp
+    model_path = os.path.join(os.getcwd(), "models/tuebingen"+str(exp)+"/")
     MCMC_error = MCMC_error(model_path,filename)
     MCMC_error.compute_errors()
