@@ -98,7 +98,7 @@ class Complexity:
         fig, ax = plt.subplots()
         sns.scatterplot(y='Nodes', x='VE_complexity', data=self.error_frame, legend=False, hue='Disc_method', ax=ax,
         palette=palettes, style="Method", size='load_time', sizes=(199,200)) #change when dd size is available
-        ax.set(xlabel='Variable Elimination Complexity', ylabel='Nodes')
+        ax.set(xlabel='Variable Elimination Complexity', ylabel='Nodes in decision diagram')
         plt.title('Experiment '+str(''.join(filter(str.isdigit, distribution))))
         for i in range(self.error_frame.shape[0]):
             plt.text(y=self.error_frame['Nodes'][i],x=self.error_frame['VE_complexity'][i]+(self.error_frame['VE_complexity'].max()*0.015),s=self.error_frame.Disc_method[i], fontsize=11) #change when dd size is available

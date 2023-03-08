@@ -1,1 +1,1 @@
-{"distribution": "tb", "edges": [["A", "B"]], "sample_size": 349, "experiment": 1, "pair": 3, "disc_method": "MDLP", "bins": 2, "target_column": "B", "Wass1D": 0.2557529080928512, "Wass_multi": 0.6380633702314129, "VE_complexity": 89.0}
+{"distribution": "tb", "edges": [["A", "B"]], "sample_size": 349, "experiment": 1, "pair": 3, "disc_method": "MDLP", "bins": 2, "target_column": "B", "Wass1D": 0.2757467197468491, "Wass_multi": 0.6588540777268839, "VE_complexity": 89.0}

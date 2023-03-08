@@ -241,13 +241,13 @@ class Discretizer:
         "Compute E(E), E(Y) or E(B) resp"
         if self.settings['distribution']=='lg':
             [sizeA, sizeB, sizeC, sizeD, sizeE] = self.disc_data.nunique().values
-            print([sizeA, sizeB, sizeC, sizeD, sizeE])
             var_elimination_length = (sizeE-1)+sizeE*(1+(sizeD-1)+sizeD*((sizeC-1)+sizeC*(2+(sizeB-1)+sizeB*(1+(sizeA-1)+sizeA))))
         elif self.settings['distribution']=='nm':
             [sizeX, sizeY] = self.disc_data.nunique().values
-            var_elimination_length = (sizeB-1)+sizeB*(1+(sizeA-1)+sizeA)
+            var_elimination_length = (sizeY-1)+sizeY*(1+(sizeX-1)+sizeX)
         elif "tb" in self.settings['distribution']:
             [sizeA, sizeB] = self.disc_data.nunique().values
+            print(self.disc_data.nunique())
             var_elimination_length = (sizeB-1)+sizeB*(1+(sizeA-1)+sizeA)
         self.settings['VE_complexity'] = float(var_elimination_length)
 
@@ -260,7 +260,7 @@ class Discretizer:
         self.settings['Wass1D'] = W1
 
     def compute_multivariate_wasserstein(self):
-        """Compute 1d wasserstein distance: based on the (scaled) entire discretization
+        """Compute 1d wasserstein distance: based on the entire discretization
         TODO: double check function"""
         a, b = np.ones(len(self.data)) / len(self.data), np.ones(len(self.data)) / len(self.data) 
         M = ot.dist(self.data[self.columns].to_numpy(), 

@@ -1,1 +1,0 @@
-{"distribution": "tb1", "edges": [["A", "B"]], "sample_size": 349, "disc_method": "EB", "bins": 8, "target_column": null, "RMSE": 1.3172487580017895, "WMSE": 0.30503433576115385}

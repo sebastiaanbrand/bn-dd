@@ -192,19 +192,19 @@ class nm_generator:
             self.bin_param = 0.8
             self.lg_normal_params = [(21, 10), (25, 1)]
         if self.exp==3:
-            self.N = 100
+            self.N = 500
             self.bin_param = 0.5
             self.lg_normal_params = [(6, 2), (4, 2)]
         if self.exp==4:
-            self.N = 100
+            self.N = 500
             self.bin_param = 0.8
             self.lg_normal_params = [(6, 2), (4, 2)]
         if self.exp==5:
-            self.N = 500
+            self.N = 100
             self.bin_param = 0.5
             self.lg_normal_params = [(21, 10), (25, 1)]
         if self.exp==6:
-            self.N = 500
+            self.N = 100
             self.bin_param = 0.8
             self.lg_normal_params = [(21, 10), (25, 1)]
         if self.exp==7:

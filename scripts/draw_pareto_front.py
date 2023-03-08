@@ -33,7 +33,7 @@ errormap ={'Wass1D': '1-dimensional Wasserstein Distance',
         'RMSE': 'RMSE',
         'MAE': 'MAE'}
 
-normalize = True
+normalize = False
 
 class Pareto:
     """Creating Pareto-front"""
@@ -77,6 +77,7 @@ class Pareto:
         for json_file in self.settings_json_files:   
             with open(self.model_path+json_file) as json_file:
                 opened_data = json.load(json_file)
+                print(opened_data)
                 if 'tb' not in distribution:
                     rmses.append(opened_data['RMSE']), wmses.append(opened_data['WRMSE']) , maeses.append(opened_data['MAE'])
                 else: 
@@ -135,7 +136,7 @@ class Pareto:
         fig, ax = plt.subplots()
         sns.scatterplot(y=self.y_axis, x=str(error), data=self.error_frame, legend=False, hue='Disc_method', ax=ax,
         palette=palettes, style="Method", size='load_time', sizes=(199,200)) #change when dd size is available
-        ax.set(xlabel=errormap[self.error], ylabel=self.y_axis)
+        ax.set(xlabel=errormap[self.error], ylabel='Nodes in decision diagram')
         axe = sns.lineplot(data=self.non_dom_sol, x=str(error), y=self.y_axis,estimator='max', color='gainsboro')
         axe.lines[0].set_linestyle("--")
         plt.title('Experiment '+str(''.join(filter(str.isdigit, distribution))))
