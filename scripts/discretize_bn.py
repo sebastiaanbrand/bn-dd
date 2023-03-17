@@ -6,6 +6,7 @@ import logging.config
 import sys
 import pandas as pd
 import json
+import math
 from pgmpy.sampling import BayesianModelSampling
 from pgmpy.models import BayesianNetwork
 from pgmpy.estimators import MaximumLikelihoodEstimator
@@ -155,6 +156,7 @@ class Discretizer:
       data[self.target_column] = data[self.target_column].clip(lower=0) # clip the target value to 0 to allow discretization
       disc_mdlp_result = mdlp.fit_transform(data, data[self.target_column])
       disc_mdlp = pd.DataFrame(disc_mdlp_result, columns=self.columns)
+      print(disc_mdlp.nunique())
       return disc_mdlp
 
     def create_disc_network(self):
@@ -188,21 +190,12 @@ class Discretizer:
         self.conditional_col=conditional_col
         if self.settings['distribution']=='lg':
             for value in sorted(self.values_dict[conditional_col]):
-                self.lg.set_evidences({conditional_col: value})
-                inference = self.lg.run_inference(debug=False)
-                solutions.append(inference.loc[inference_col,'Mean_inferred'])
+                if not math.isnan(value):
+                    self.lg.set_evidences({conditional_col: value})
+                    inference = self.lg.run_inference(debug=False)
+                    solutions.append(inference.loc[inference_col,'Mean_inferred'])
         elif self.settings['distribution']=='nm':
             solutions = self.data.groupby(['X'])['Y'].mean().to_list()
-        #elif "tb" in self.settings['distribution']:
-            #nx.write_gml(nx.DiGraph([('A','B')]), "G.gml") 
-            #causal_model = CausalModel(data = self.data, treatment=['A'], outcome=['B'], graph= 'G.gml')
-            #samplerMCMC = McmcSampler(self.data,
-            #              causal_model=causal_model,
-            #               keep_original_treatment=False, # False cause we will specify interventions ourselves 
-            #               variable_types={'A': 'c', 'B': 'c'})
-            #input_dataframe = pd.DataFrame(data=np.random.choice(a=sorted(self.values_dict[conditional_col]), size=2000), columns=['A'])
-            #interventional_df = samplerMCMC.do_sample(input_dataframe)
-            #solutions = interventional_df.groupby(['A'])['B'].mean().values
         return solutions   
 
     def get_discretized_sample(self):
@@ -247,7 +240,6 @@ class Discretizer:
             var_elimination_length = (sizeY-1)+sizeY*(1+(sizeX-1)+sizeX)
         elif "tb" in self.settings['distribution']:
             [sizeA, sizeB] = self.disc_data.nunique().values
-            print(self.disc_data.nunique())
             var_elimination_length = (sizeB-1)+sizeB*(1+(sizeA-1)+sizeA)
         self.settings['VE_complexity'] = float(var_elimination_length)
 

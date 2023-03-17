@@ -8,9 +8,10 @@ import pandas as pd
 import json
 import seaborn as sns
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 
 # Change default plot size
-plt.rcParams['figure.figsize'] = (8, 5)
+plt.rcParams['figure.figsize'] = (8, 5.5)
 parser = argparse.ArgumentParser(description='Draw Pareto Front')
 parser.add_argument('distribution', type=str, help='Sort of distribution to consider')
 parser.add_argument('error', type=str, help='Error to draw in paretofront')
@@ -27,8 +28,20 @@ palettes={'EB5': 'navy',
         'EV14': 'lightsalmon',
         'MDLP': 'green'}
 
-errormap ={'Wass1D': '1-dimensional Wasserstein Distance',
-        'Wass_multi': 'Multi-dimensional Wasserstein Distance',
+namemap={'EB5': 'EW5', 
+        'EB8': 'EW8',
+        'EB10': 'EW10',
+        'EB12': 'EW12',
+        'EB14': 'EW14',
+        'EV5': 'EF5', 
+        'EV8': 'EF8',
+        'EV10': 'EF10',
+        'EV12': 'EF12',
+        'EV14': 'EF14',
+        'MDLP': 'MDLP'}
+
+errormap ={#'Wass1D': '1-dimensional Wasserstein Distance',
+        'Wass_multi': "Earth Mover's Distance",
         'WRMSE': 'WRMSE',
         'RMSE': 'RMSE',
         'MAE': 'MAE'}
@@ -77,7 +90,6 @@ class Pareto:
         for json_file in self.settings_json_files:   
             with open(self.model_path+json_file) as json_file:
                 opened_data = json.load(json_file)
-                print(opened_data)
                 if 'tb' not in distribution:
                     rmses.append(opened_data['RMSE']), wmses.append(opened_data['WRMSE']) , maeses.append(opened_data['MAE'])
                 else: 
@@ -132,22 +144,34 @@ class Pareto:
 
     def plot_pareto(self, error):
         "Plot data"
-        sns.set(style='ticks', context='notebook', font_scale=1.2)
+        sns.set(style='ticks', context='notebook', font_scale=1.1)
         fig, ax = plt.subplots()
         sns.scatterplot(y=self.y_axis, x=str(error), data=self.error_frame, legend=False, hue='Disc_method', ax=ax,
         palette=palettes, style="Method", size='load_time', sizes=(199,200)) #change when dd size is available
-        ax.set(xlabel=errormap[self.error], ylabel='Nodes in decision diagram')
+        ax.set(xlabel=errormap[self.error], ylabel='Nodes in Decision Diagram')
+        if self.error == 'WRMSE' and 'lg' in distribution:
+            ax.set(xlabel=r'WRMSE with respect to $\mathbb{E}[E\mid A]$', ylabel='Nodes in Decision Diagram')
+        elif self.error == 'WRMSE' and 'nm' in distribution:
+            ax.set(xlabel=r'WRMSE with respect to  $\mathbb{E}[B\mid A]$', ylabel='Nodes in Decision Diagram')
+        else: 
+            ax.set(xlabel=errormap[self.error], ylabel='Nodes in Decision Diagram')
         axe = sns.lineplot(data=self.non_dom_sol, x=str(error), y=self.y_axis,estimator='max', color='gainsboro')
         axe.lines[0].set_linestyle("--")
         plt.title('Experiment '+str(''.join(filter(str.isdigit, distribution))))
         print(self.error_frame)
         for i in range(self.error_frame.shape[0]):
-            plt.text(y=self.error_frame[self.y_axis][i],x=self.error_frame[str(error)][i]+(self.error_frame[str(error)].max()*0.015),s=self.error_frame.Disc_method[i], fontsize=11) #change when dd size is available
+            plt.text(y=self.error_frame[self.y_axis][i],x=self.error_frame[str(error)][i]+(self.error_frame[str(error)].max()*0.015),s=namemap[self.error_frame.Disc_method[i]], fontsize=11) #change when dd size is available
         if normalize==True:
             save_path = os.path.join(os.getcwd(), "plots/paretofront_"+args.distribution+"_"+error+"_normalized.png")
         elif normalize==False:
             save_path = os.path.join(os.getcwd(), "plots/paretofront_"+args.distribution+"_"+error+".png")
+
+        
         plt.savefig(save_path)
+    
+
+
+
 
 
 

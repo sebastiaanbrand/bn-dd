@@ -61,7 +61,57 @@ class LG_generator:
             self.lg_lin_params = [(2, 3), (3, 3)]
             self.lg_var_params = [5,5]
             self.N = 300
-        
+        if self.exp==7:
+            self.lg_root_params = [(20, 2), (20, 2), (15, 2)]
+            self.lg_lin_params = [(2, 3), (3, 3)]
+            self.lg_var_params = [2,2]
+            self.N = 3000
+        elif self.exp==8:
+            self.lg_root_params = [(20, 2), (20, 2), (15, 2)]
+            self.lg_lin_params = [(2, 3), (3, 3)]
+            self.lg_var_params = [2,2]
+            self.N = 2000
+        elif self.exp==9:
+            self.lg_root_params = [(20, 2), (20, 2), (15, 2)]
+            self.lg_lin_params = [(2, 3), (3, 3)]
+            self.lg_var_params = [2,2]
+            self.N = 1000
+        elif self.exp==10:
+            self.lg_root_params = [(20, 5), (20, 5), (15, 5)]
+            self.lg_lin_params = [(2, 3), (3, 3)]
+            self.lg_var_params = [5,5]
+            self.N = 800
+        elif self.exp==11:
+            self.lg_root_params = [(20, 2), (20, 2), (15, 2)]
+            self.lg_lin_params = [(2, 3), (3, 3)]
+            self.lg_var_params = [2,2]
+            self.N = 600
+        elif self.exp==12:
+            self.lg_root_params = [(20, 5), (20, 5), (15, 5)]
+            self.lg_lin_params = [(2, 3), (3, 3)]
+            self.lg_var_params = [5,5]
+            self.N = 500
+        elif self.exp==13:
+            self.lg_root_params = [(20, 2), (20, 2), (15, 2)]
+            self.lg_lin_params = [(2, 3), (3, 3)]
+            self.lg_var_params = [2,2]
+            self.N = 400
+        elif self.exp==14:
+            self.lg_root_params = [(20, 2), (20, 2), (15, 2)]
+            self.lg_lin_params = [(2, 3), (3, 3)]
+            self.lg_var_params = [2,2]
+            self.N = 300
+        elif self.exp==15:
+            self.lg_root_params = [(20, 2), (20, 2), (15, 2)]
+            self.lg_lin_params = [(2, 3), (3, 3)]
+            self.lg_var_params = [2,2]
+            self.N = 200
+        elif self.exp==16:
+            self.lg_root_params = [(20, 2), (20, 2), (15, 2)]
+            self.lg_lin_params = [(2, 3), (3, 3)]
+            self.lg_var_params = [2,2]
+            self.N = 100
+
         self.objective_input_set = []
         self.roots = []
         self.non_roots = []
@@ -279,7 +329,7 @@ class tb_generator:
         logging.basicConfig(format=log_format, level=logging.INFO, stream=sys.stdout)
         logger = logging.getLogger()
         self.logger = logging.getLogger(__name__)
-        mapping_to_pair = {1:3,2:21,3:25,4:26,5:91,6:95}
+        mapping_to_pair = {1:3,2:21,3:25,4:26,5:43,6:48,7:68,8:76,9:79,10:84,11:85,12:88,13:91,14:95}
         self.exp = exp
         self.pair = mapping_to_pair[exp]
         self.edges = [('A', 'B')]
