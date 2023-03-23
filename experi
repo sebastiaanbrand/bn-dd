@@ -1,6 +1,0 @@
-[    0.02] Loading models/linear_gaussian10/data_lg_EB14
-unable to open models/linear_gaussian10/data_lg_EB14.cnf
-unable to open models/linear_gaussian10/data_lg_EB14.cnf_rv_vars
-unable to open models/linear_gaussian10/data_lg_EB14.cnf_probs
-[    0.03] WPBDD nodecount = 1 / 1 = 1.000000
-[    0.03] Writing stats to models/linear_gaussian10/data_lg_EB14_ddinfo.json
