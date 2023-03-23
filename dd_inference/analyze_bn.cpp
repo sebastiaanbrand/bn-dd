@@ -220,10 +220,10 @@ int main(int argc, char** argv)
     wpbdd_marginals(wpbdd, a);
     marinalizeIndividual(wpbdd);
     conditionPairs(wpbdd);
+    */
 
     sylvan::sylvan_quit();
     lace_stop();
-    */
 
     return 0;
 }
