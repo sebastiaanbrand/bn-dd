@@ -92,11 +92,7 @@ class BayesianNetworkEncoder:
         """
         self._last_var += 1
         return self._last_var
-    
-    def _get_pr_zero_var(self) -> int:
-        if self.pr_zero_var is None:
-            self.pr_zero_var = self._get_next_var()
-        return self.pr_zero_var
+
 
     def _add_clause(self, variables: Iterable, assignment : Iterable, prob : float, prob_map : map):
         """
@@ -127,21 +123,23 @@ class BayesianNetworkEncoder:
         # Get integer ID for this particular probability. If merge_probs == True
         # only a single unique ID is used for every equal prob per CPT.
         # Otherwise, a new ID is used for every prob, even duplicate probs.
-        if (merge_probs):
+        if prob == 0:
+            # no omega variable for 0, instead just: (x ==> 0) == not(x)
+            w = 'false'
+        elif merge_probs:
             w = prob_map[prob]
-        elif prob == 0:
-            w = self._get_pr_zero_var() # weight for prob 0 is always merged
+            self.prob_vars[w] = prob
         else:
             w = self._get_next_var() # if no merging, get new unique var number
-        self.prob_vars[w] = prob
+            self.prob_vars[w] = prob
         info(f"Pr({','.join(variables)} = {assignment}) = {prob}", end='')
         info(f"\tencoded as {literals} ==> {w} ({prob})")
 
         # Turn cube + implication into CNF clause:
         # (x1 ^ x2 ^ x3 ^ ... ==> w) = (~x1 v ~x2 v ~x3 v ... v w)
-        info(literals)
         clause = [-lit for lit in literals]
-        clause.append(w)
+        if w != 'false':
+            clause.append(w)
         info(clause)
         self.cnf.append(clause)
 
@@ -165,6 +163,13 @@ class BayesianNetworkEncoder:
         info(f"Pr({cpd.variable} | {','.join(evidence)})")
         for assignment in product(*all_vals):
             self._add_clause(all_vars, assignment, table[assignment], prob_map)
+
+        # 4. For the "unused values" v, i.e. where maxval < v < 2^bits,
+        #    add clauses (v ==> 0) == not(v)
+        last_val = self.rvs[cpd.variable].values[-1]
+        max_val  = 2**self.rvs[cpd.variable].nbits - 1
+        for val in range(last_val + 1, max_val + 1):
+            self._add_clause([cpd.variable], [val], 0, prob_map)
         info()
 
 
