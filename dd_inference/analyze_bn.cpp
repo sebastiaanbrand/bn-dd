@@ -214,10 +214,7 @@ int main(int argc, char** argv)
     wpbdd.dd.PrintDot(fp);
     fclose(fp);
 
-    std::vector<int> rv_vars{1, 2, 3};
     computeAllProbs(wpbdd);
-    VarConstraint a{{1, marg_0}, {2, marg_1}, {3, marg_1}};
-    wpbdd_marginals(wpbdd, a);
     marinalizeIndividual(wpbdd);
     conditionPairs(wpbdd);
     */
