@@ -64,11 +64,11 @@ def paper_example():
     Generate the 2 node example network from Fig ... in ... .
     """
     model = BayesianNetwork([('A','B')])
-    cpd_a = TabularCPD(variable='A', variable_card=2, values=[[0.2], [0.8]])
+    cpd_a = TabularCPD(variable='A', variable_card=2, values=[[0.5], [0.5]])
     cpd_b = TabularCPD(variable='B', variable_card=3,
-                       values=[[0.5, 0.5],
-                               [0.3, 0.2],
-                               [0.2, 0.3]],
+                       values=[[0.6, 0.33],
+                               [0.2, 0.33],
+                               [0.2, 0.33]],
                        evidence=['A'], evidence_card=[2])
     model.add_cpds(cpd_a, cpd_b)
     return model, 'paper_example'
