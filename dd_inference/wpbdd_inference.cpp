@@ -138,7 +138,7 @@ double wpbdd_do(WpBdd wpbdd, Constraint x, Constraint t, std::set<int> pt)
 
 static int max_var;
 
-WpBdd wpbdd_from_files(std::string filepath, bool verbose)
+WpBdd wpbdd_from_files(std::string filepath, bool trackpeak, bool verbose)
 {
     WpBdd wpbdd;
 
@@ -149,7 +149,7 @@ WpBdd wpbdd_from_files(std::string filepath, bool verbose)
 
     // convert cnf to bdd
     if (verbose) std::cout << "converting CNF to BDD" << std::endl;
-    wpbdd.dd = cnf_to_bdd(f);
+    wpbdd.dd = cnf_to_bdd(f, trackpeak, &wpbdd.peaknodes);
     wpbdd.nvars = max_var + 1; // set by cnf_from_file(), not super clean
 
     // load RV var information
@@ -225,10 +225,17 @@ void print_cnf(Cnf cnf)
     std::cout << std::endl;
 }
 
-sylvan::Bdd cnf_to_bdd(Cnf f)
+sylvan::Bdd cnf_to_bdd(Cnf f, bool trackpeak, size_t *peaknodes)
 {
     sylvan::Bdd res = sylvan::Bdd::bddOne();
+    int freq = 1;
+    if (trackpeak) {
+        *peaknodes = 0;
+        // count nodes 100 times
+        freq = (int) std::ceil((double)f.size() / 100.0);
+    }
 
+    int i = 0;
     for (Clause clause : f){
         sylvan::Bdd c = sylvan::Bdd::bddZero();
 
@@ -241,8 +248,12 @@ sylvan::Bdd cnf_to_bdd(Cnf f)
         }
 
         res = res & c;
+        if (trackpeak != 0 && (i % freq == 0)) {
+            *peaknodes = std::max(*peaknodes, sylvan::sylvan_nodecount(res.GetBDD()));
+        }
+        i++;
     }
-    
+
     return res;
 }
 

@@ -27,9 +27,11 @@ static double t_start;
 static int max_var;
 typedef struct stats {
     size_t nodecount;
+    size_t peaknodes;
     double load_time;
 } stats_t;
 stats_t stats = {0};
+static int trackpeak = 1; // count peak nodes (every #clauses/100 clauses)
 
 
 void write_stats(std::string output_file)
@@ -38,6 +40,7 @@ void write_stats(std::string output_file)
     f.open(output_file, std::ios::out);
     f << "{" << std::endl;
     f <<    "\t\"nodecount\" : " << stats.nodecount << "," << std::endl;
+    f <<    "\t\"peaknodes\" : " << stats.peaknodes << "," << std::endl;
     f <<    "\t\"load_time\" : " << stats.load_time << std::endl;
     f << "}" << std::endl;
     f.close();
@@ -96,7 +99,7 @@ void small_example()
              {-a1, -b1, w2}, {-a1, -b2, w2}, {-a1, -b1, w2},
              {-a1, -b2, w2}, {-a1, -b3, w3}, {-a2, -b3, w3}};
 
-    sylvan::Bdd b = cnf_to_bdd(f);
+    sylvan::Bdd b = cnf_to_bdd(f, 0);
 
     FILE *fp = fopen("small_example.dot", "w");
     b.PrintDot(fp);
@@ -197,9 +200,10 @@ int main(int argc, char** argv)
     //small_example();
 
     INFO("Loading %s\n", path.c_str());
-    WpBdd wpbdd = wpbdd_from_files(path);
+    WpBdd wpbdd = wpbdd_from_files(path, trackpeak);;
     stats.load_time = wctime() - t_start;
     stats.nodecount = sylvan::sylvan_nodecount(wpbdd.dd.GetBDD());
+    stats.peaknodes = std::max(wpbdd.peaknodes, stats.nodecount);
     uint64_t full = 1LL<<wpbdd.rv_vars.size();
     INFO("WPBDD nodecount = %ld / %ld = %lf\n", stats.nodecount, full, (double)stats.nodecount / (double)full);
 

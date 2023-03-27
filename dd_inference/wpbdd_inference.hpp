@@ -20,6 +20,7 @@ struct WpBdd {
     ProbMap pm;
     std::vector<int> rv_vars;
     int nvars; // number of dd vars
+    size_t peaknodes; // for keeping track of peak nodes
 };
 
 enum var_meta {
@@ -71,14 +72,16 @@ double wpbdd_do(WpBdd wpbdd, Constraint x, Constraint t, std::set<int> pt);
  * - filepath.cnf
  * - filepath.cnf_probs
  * - filepath.cnf_rv_vars
+ * 
+ *  trackpeak = true does a nodecount every #clauses/100 clauses (i.e. 100 times)
  */
-WpBdd wpbdd_from_files(std::string filepath, bool verbose=false);
+WpBdd wpbdd_from_files(std::string filepath, bool trackpeak=false, bool verbose=false);
 
 Cnf cnf_from_file(std::string filepath);
 
 void print_cnf(Cnf cnf);
 
-sylvan::Bdd cnf_to_bdd(Cnf f);
+sylvan::Bdd cnf_to_bdd(Cnf f, bool trackpeak = false, size_t *peaknodes = nullptr);
 
 ProbMap probs_from_file(std::string filepath);
 
