@@ -11,6 +11,7 @@ from pgmpy.sampling import BayesianModelSampling
 from pgmpy.models import BayesianNetwork
 from pgmpy.estimators import MaximumLikelihoodEstimator
 from pgmpy.inference import VariableElimination
+from pgmpy.readwrite import NETWriter, XMLBIFWriter
 import warnings
 from sklearn.metrics import mean_squared_error
 #from MCMCsampler import McmcSampler
@@ -261,7 +262,7 @@ class Discretizer:
         self.settings['Wass_multi'] = W1
 
     def write_data(self):
-        "Write the generated data as csv"
+        """Write the generated data as csv"""
         if self.settings['disc_method']!='MDLP': 
             self.filename = f"data_{self.settings['distribution']}_{self.settings['disc_method']}{self.settings['bins']}"
         else:
@@ -272,7 +273,13 @@ class Discretizer:
             self.model_path = os.path.join(os.getcwd(), "models/normal_mixture"+str(self.exp)+"/")
         elif "tb" in self.settings['distribution']:
             self.model_path = os.path.join(os.getcwd(), "models/tuebingen"+str(self.exp)+"/")
-        self.model_struct.save(self.model_path+self.filename+'.xmlbif', filetype='xmlbif')
+        # write both XMLBIF and NET files
+        #self.model_struct.save(self.model_path+self.filename+'.xmlbif', filetype='xmlbif')
+        writer = XMLBIFWriter(self.model_struct)
+        writer.write_xmlbif(self.model_path+self.filename+'.xmlbif')
+        writer = NETWriter(self.model_struct)
+        writer.write_net(self.model_path+self.filename+'.net')
+
 
     def write_disc_data(self):
         "Write discretized data"
