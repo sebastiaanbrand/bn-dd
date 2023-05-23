@@ -9,7 +9,7 @@ import json
 from cdt.data import load_dataset
 
 parser = argparse.ArgumentParser(description='Generate Bayesian Network')
-parser.add_argument('distribution', type=str, help='Sort of distribution to consider')
+parser.add_argument('distribution', type=str, choices=['lg','tb','nm'], help='Sort of distribution to consider')
 parser.add_argument('experiment', type=int, help='Sort of experiment to consider')
 
 class LG_generator:
@@ -208,6 +208,7 @@ class LG_generator:
         self.filename = f"{self.settings_lg['distribution']}{self.exp}"
         self.model_path = os.path.join(os.getcwd(), "models/undiscretized_models/")
         self.data.to_csv(self.model_path + self.filename+'.csv', index=False)
+        print("Written data to " + self.model_path + self.filename + '.csv')
     
     def create_json(self):
         "Write the specification of data as json"
@@ -384,10 +385,12 @@ if __name__ == '__main__':
     if distribution == 'lg':
         LG = LG_generator(experiment)
         LG.create_bn_file()
-    if distribution == 'nm':
+    elif distribution == 'nm':
         NM = nm_generator(experiment)
         NM.create_bn_file()
-    if distribution == 'tb':
+    elif distribution == 'tb':
         TB = tb_generator(experiment)
         TB.create_bn_file()
+    else:
+        raise ValueError(f"Unrecognized distribution '{distribution}'")
 

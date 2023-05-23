@@ -12,7 +12,7 @@ exp_id = datetime.now().strftime("%Y%m%d%H%M%S")
 
 
 parser = argparse.ArgumentParser(description='Generate bash script with experiments.')
-parser.add_argument('distribution', type=str, help='Distribution to use')
+parser.add_argument('distribution', type=str, choices=['lg','tb','nm'], help='Distribution to use')
 parser.add_argument('experiment', type=str, help='Experiment to use')
 dist_mapping = {'lg':'linear_gaussian',
                 'tb':'tuebingen',

@@ -1,4 +1,5 @@
 # package
+cdt
 matplotlib
 mdlp
 mdlp-discretization
