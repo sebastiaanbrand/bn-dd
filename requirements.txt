@@ -1,7 +1,10 @@
 # package
 matplotlib
+mdlp
+mdlp-discretization
 networkx
 numpy
 pgmpy
+POT
 pygraphviz
 python-sat

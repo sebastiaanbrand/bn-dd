@@ -41,7 +41,13 @@ dowhy 0.9.1 requires scipy<2.0.0,>=1.8.1
 ## Installation (Linux)
 
 1. Clone the repo (including submodules)
-2. To compile everything, run
+2. Compilation has been tested with GCC/G++ 10. It might work with different version, but gcc/g++ version can be set with the following (though paths could be different).
+```shell
+$ export CC=/usr/bin/gcc-10
+$ export CXX=/usr/bin/g++-10
+```
+
+3. To compile everything, run
 ```shell
 $ ./compile_sources.sh
 ```
