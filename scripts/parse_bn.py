@@ -8,7 +8,7 @@ import pylab as plt
 import networkx as nx
 from pysat.formula import CNF # python-sat package
 from pgmpy.models import BayesianNetwork
-from pgmpy.readwrite import XMLBIFReader
+from pgmpy.readwrite import XMLBIFReader, NETReader
 
 
 verbose = 3
@@ -295,7 +295,12 @@ if __name__ == '__main__':
     for model_path in model_paths:
         info(f"Processing BN {model_path}...", level=1)
         # read BN
-        reader = XMLBIFReader(model_path)
+        if model_path[-7:] == '.xmlbif':
+            reader = XMLBIFReader(model_path)
+        elif model_path[-4:] == '.net':
+            reader = NETReader(model_path)
+        else:
+            raise ValueError("Invalid BN file type (.net or .xmlbif)")
         model = reader.get_model()
 
         # encode as cnf
