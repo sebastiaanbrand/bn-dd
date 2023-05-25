@@ -29,6 +29,7 @@ typedef struct stats {
     size_t nodecount;
     size_t peaknodes;
     double load_time;
+    double wmc_time;
 } stats_t;
 stats_t stats = {0};
 static int trackpeak = 1; // count peak nodes (every #clauses/100 clauses)
@@ -41,7 +42,8 @@ void write_stats(std::string output_file)
     f << "{" << std::endl;
     f <<    "\t\"nodecount\" : " << stats.nodecount << "," << std::endl;
     f <<    "\t\"peaknodes\" : " << stats.peaknodes << "," << std::endl;
-    f <<    "\t\"load_time\" : " << stats.load_time << std::endl;
+    f <<    "\t\"load_time\" : " << stats.load_time << "," << std::endl;
+    f <<    "\t\"wmc_time\" : "  << stats.wmc_time  << std::endl;
     f << "}" << std::endl;
     f.close();
 }
@@ -206,6 +208,11 @@ int main(int argc, char** argv)
     stats.peaknodes = std::max(wpbdd.peaknodes, stats.nodecount);
     uint64_t full = 1LL<<wpbdd.rv_vars.size();
     INFO("WPBDD nodecount = %ld / %ld = %lf\n", stats.nodecount, full, (double)stats.nodecount / (double)full);
+
+    // time WMC
+    t_start = wctime();
+    double count = wpbdd_marginalize(wpbdd, {});
+    stats.wmc_time = wctime() - t_start;
 
     // write stats to JSON file
     std::string stats_file = path + "_ddinfo.json";

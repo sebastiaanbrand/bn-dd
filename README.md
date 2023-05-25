@@ -1,5 +1,8 @@
 # BN inference with DDs
 
+**TODO:**
+- Verify WMC with no constraint on all networks.
+
 
 ## Dependencies
 
