@@ -21,6 +21,7 @@ struct WpBdd {
     std::vector<int> rv_vars;
     int nvars; // number of dd vars
     size_t peaknodes; // for keeping track of peak nodes
+    double build_time; // time from CNF --> DD
 };
 
 enum var_meta {

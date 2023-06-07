@@ -2,8 +2,20 @@
 #include <fstream>
 #include <bits/stdc++.h>
 #include <stdlib.h>
+#include <sys/time.h>
 
 #include <wpbdd_inference.hpp>
+
+/**
+ * Obtain current wallclock time
+ */
+static double
+wctime()
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (tv.tv_sec + 1E-6 * tv.tv_usec);
+}
 
 
 /**********************<Weighted model counting>*******************************/
@@ -149,8 +161,10 @@ WpBdd wpbdd_from_files(std::string filepath, bool trackpeak, bool verbose)
 
     // convert cnf to bdd
     if (verbose) std::cout << "converting CNF to BDD" << std::endl;
+    double t_start = wctime();
     wpbdd.dd = cnf_to_bdd(f, trackpeak, &wpbdd.peaknodes);
     wpbdd.nvars = max_var + 1; // set by cnf_from_file(), not super clean
+    wpbdd.build_time = wctime() - t_start;
 
     // load RV var information
     wpbdd.rv_vars = rv_vars_from_file(filepath + ".cnf_rv_vars");
