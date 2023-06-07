@@ -74,7 +74,7 @@ $ python scripts/discretize_bn.py lg5000 disc EB10
 
 To turn a Bayesian network in `.xmlbif` format into a CNF formula, run
 ```shell
-$ python scripts/parse_bn.py models/model_name.xmlbif
+$ python scripts/bn_to_cnf.py models/model_name.xmlbif
 ```
 
 To run run inference (**TODO:** add cl options to run specific queries? We can also do the entire optimization in C++.)

@@ -22,6 +22,7 @@ bins = [5,8,10,12,14]
 errors = ['Wass1D','Wass_multi']
 errors_all = ['Wass1D','Wass_multi','RMSE','WRMSE',]
 
+
 def generate_bns(dist, exp):
     """
     For a given distribution and experiment, generate all the BN data and settings json
@@ -31,6 +32,7 @@ def generate_bns(dist, exp):
         outfile.write("# Generate BN\n")
         outfile.write(command)
         outfile.write("\n")
+
 
 def discretize_BNs(dist, exp):
     """
@@ -58,7 +60,7 @@ def all_bn_to_cnf(dist, exp, folder):
     files) wich form a (weighted) CNF encoding of the BN.
     """
     # NOTE: "2>&1 | tee" writes all console output to a file,
-    command = "python scripts/parse_bn.py {} 2>&1 | tee -a experiments/log_{}.txt\n"
+    command = "python scripts/bn_to_cnf.py {} 2>&1 | tee -a experiments/log_{}.txt\n"
     with open(output_file.format(dist, exp, exp_id), 'a', encoding='utf-8') as outfile:
         outfile.write("# generate CNF from .xmlbif\n")
         for filename in os.listdir(folder):
@@ -115,7 +117,8 @@ def main():
     discretize_BNs(distribution, experiment)
 
     # 3. translate discretized BN to CNF
-    all_bn_to_cnf(distribution, experiment, folder)
+    # By default, the discretize_bn script now outputs cnf directly
+    #all_bn_to_cnf(distribution, experiment, folder)
 
     # 4. construct DD from CNF
     all_cnf_to_dd(distribution, experiment, folder)

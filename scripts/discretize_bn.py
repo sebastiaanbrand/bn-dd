@@ -19,14 +19,17 @@ import networkx as nx
 #from dowhy import CausalModel
 from sklearn.preprocessing import MinMaxScaler
 import ot
-
 from mdlp.discretization import MDLP
+
+from bn_to_cnf import write_bn_to_cnf
 
 parser = argparse.ArgumentParser(description='Discretize Bayesian Network')
 parser.add_argument('filename', type=str, help='path to data BN file')
 parser.add_argument('disc_method', type=str, help='discretization method used')
 parser.add_argument('bins', type=int, help='bins used in discretization')
 parser.add_argument('--target_variable', type=str, help='target variable in case of supervised learning')
+parser.add_argument('--output_type', type=str, choices=['cnf','xmlbif','net'], help='format to write BN in, default=cnf', default='cnf')
+
 
 class Discretizer:
     """
@@ -63,7 +66,7 @@ class Discretizer:
         # Initiate Bayesian Network Structure
         self.model_struct = BayesianNetwork(ebunch = self.settings['edges'])
 
-    def create_discretization(self):
+    def create_discretization(self, write_as : str):
         """
         This functions runs all the scripts from discretizing the continuous BN till storing the discretized BN.
         """
@@ -115,7 +118,7 @@ class Discretizer:
 
         self.compute_complexity()
         # Write xml:
-        self.write_data()
+        self.write_data(write_as)
         # Get json:
         self.create_json()
         # Write disc csb:
@@ -261,7 +264,7 @@ class Discretizer:
         W1 = ot.emd2(a,b,M, numItermax=1000000)
         self.settings['Wass_multi'] = W1
 
-    def write_data(self):
+    def write_data(self, write_as : str):
         """Write the generated data as csv"""
         if self.settings['disc_method']!='MDLP': 
             self.filename = f"data_{self.settings['distribution']}_{self.settings['disc_method']}{self.settings['bins']}"
@@ -273,12 +276,15 @@ class Discretizer:
             self.model_path = os.path.join(os.getcwd(), "models/normal_mixture"+str(self.exp)+"/")
         elif "tb" in self.settings['distribution']:
             self.model_path = os.path.join(os.getcwd(), "models/tuebingen"+str(self.exp)+"/")
-        # write both XMLBIF and NET files
-        #self.model_struct.save(self.model_path+self.filename+'.xmlbif', filetype='xmlbif')
-        writer = XMLBIFWriter(self.model_struct)
-        writer.write_xmlbif(self.model_path+self.filename+'.xmlbif')
-        writer = NETWriter(self.model_struct)
-        writer.write_net(self.model_path+self.filename+'.net')
+        # write BN
+        if write_as == 'xmlbif':
+            writer = XMLBIFWriter(self.model_struct)
+            writer.write_xmlbif(self.model_path+self.filename+'.xmlbif')
+        elif write_as == 'net':
+            writer = NETWriter(self.model_struct)
+            writer.write_net(self.model_path+self.filename+'.net')
+        elif write_as == 'cnf':
+            write_bn_to_cnf(self.model_struct, self.model_path+self.filename)
 
 
     def write_disc_data(self):
@@ -299,4 +305,4 @@ if __name__ == '__main__':
     target_col = args.target_variable
     model_path = os.path.join(os.getcwd(), "models/undiscretized_models/")
     Discretization = Discretizer(model_path+filename, disc_method, bins, target_col)
-    Discretization.create_discretization()
+    Discretization.create_discretization(args.output_type)

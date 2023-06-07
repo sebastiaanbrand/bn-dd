@@ -13,7 +13,7 @@ from pgmpy.readwrite import XMLBIFReader, NETReader
 
 verbose = 3
 merge_probs = True
-custom_rv_order = True
+custom_rv_order = False
 interleave_probs = True
 
 parser = argparse.ArgumentParser(description='Convert BN from .xmlbif to CNF')
@@ -277,6 +277,27 @@ def get_xmlbif_files(folder):
             model_paths.append(filepath)
     return model_paths
 
+def write_bn_to_cnf(model : BayesianNetwork, path_prefix : str):
+    """
+    Convert a BayesianNetwork to CNF and write the files.
+    """
+    # 1. encode as cnf
+    bn_encoder = BayesianNetworkEncoder(model)
+    #if (args.draw_bn):
+    #    bn_encoder.visualize_bn()
+    cnf = bn_encoder.bn_to_cnf(model)
+
+    # 2. write to files
+    cnf.to_file(path_prefix + '.cnf')
+    bn_encoder.write_probs(path_prefix + '.cnf_probs')
+    bn_encoder.write_rv_vars(path_prefix + '.cnf_rv_vars')
+
+    # 3. write some info
+    info("CNF formula has:")
+    info(f"  * {bn_encoder.count_rv_vars()} variables for BN random variables")
+    info(f"  * {len(bn_encoder.prob_vars)} variables for probabilities")
+    info(f"  * {len(bn_encoder.cnf.clauses)} clauses")
+    
 
 if __name__ == '__main__':
 
@@ -303,20 +324,5 @@ if __name__ == '__main__':
             raise ValueError("Invalid BN file type (.net or .xmlbif)")
         model = reader.get_model()
 
-        # encode as cnf
-        bn_encoder = BayesianNetworkEncoder(model)
-        if (args.draw_bn):
-            bn_encoder.visualize_bn()
-        cnf = bn_encoder.bn_to_cnf(model)
-
-        # write to file
-        out_template = os.path.splitext(model_path)[0]
-        cnf.to_file(out_template + '.cnf')
-        bn_encoder.write_probs(out_template + '.cnf_probs')
-        bn_encoder.write_rv_vars(out_template + '.cnf_rv_vars')
-
-        # write some info
-        info("CNF formula has:")
-        info(f"  * {bn_encoder.count_rv_vars()} variables for BN random variables")
-        info(f"  * {len(bn_encoder.prob_vars)} variables for probabilities")
-        info(f"  * {len(bn_encoder.cnf.clauses)} clauses")
+        # encode as cnf and write
+        write_bn_to_cnf(model, os.path.splitext(model_path)[0])
