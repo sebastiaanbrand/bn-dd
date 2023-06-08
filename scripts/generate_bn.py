@@ -1,4 +1,5 @@
 import os
+import sys
 import argparse
 from lgnpy import LinearGaussian
 import numpy as np
@@ -7,110 +8,38 @@ import sys
 import pandas as pd
 import json
 from cdt.data import load_dataset
+import pyreadr
+
+print(os.path.join(os.getcwd(), "conf/"))
+sys.path.insert(1,os.path.join(os.getcwd(), "conf/"))
+import generate_config as config
 
 parser = argparse.ArgumentParser(description='Generate Bayesian Network')
-parser.add_argument('distribution', type=str, choices=['lg','tb','nm'], help='Sort of distribution to consider')
-parser.add_argument('experiment', type=int, help='Sort of experiment to consider')
+parser.add_argument('distribution', type=str, choices=['lg','tb','nm', 'lgS', 'causal'], help='Sort of distribution to consider')
 
 class LG_generator:
-    """Creating the linear gaussian Bayesian Network:
-    TODO: Generalize making the input lg_edges, root_params and lin_params and computing
+    """
+    Creating the linear gaussian Bayesian Network:
     """
 
-    def __init__(self, exp):
+    def __init__(self, exp, sample=None):
 
             # Create logger
         log_format = '%(asctime)s - %(name)s - %(levelname)s - %(funcName)s - %(message)s'
         logging.basicConfig(format=log_format, level=logging.INFO, stream=sys.stdout)
-        logger = logging.getLogger()
         self.logger = logging.getLogger(__name__)
 
         self.exp = exp
         self.lg = LinearGaussian()
-        self.lg_edges = [('A', 'D'), ('B', 'D'), ('D', 'E'), ('C', 'E')]
+        self.lg_edges = config.lg_edges
         self.nodes = sorted(set([i for sub in self.lg_edges for i in sub]))
         self.data = pd.DataFrame(columns=self.nodes)
 
-        if self.exp==1:
-            self.lg_root_params = [(20, 2), (20, 2), (15, 2)]
-            self.lg_lin_params = [(2, 3), (3, 3)]
-            self.lg_var_params = [2,2]
-            self.N = 5000
-        elif self.exp==2:
-            self.lg_root_params = [(20, 5), (20, 5), (15, 5)]
-            self.lg_lin_params = [(2, 3), (3, 3)]
-            self.lg_var_params = [5,5]
-            self.N = 5000
-        elif self.exp==3:
-            self.lg_root_params = [(20, 2), (20, 2), (15, 2)]
-            self.lg_lin_params = [(2, 3), (3, 3)]
-            self.lg_var_params = [2,2]
-            self.N = 1000
-        elif self.exp==4:
-            self.lg_root_params = [(20, 5), (20, 5), (15, 5)]
-            self.lg_lin_params = [(2, 3), (3, 3)]
-            self.lg_var_params = [5,5]
-            self.N = 1000
-        elif self.exp==5:
-            self.lg_root_params = [(20, 2), (20, 2), (15, 2)]
-            self.lg_lin_params = [(2, 3), (3, 3)]
-            self.lg_var_params = [2,2]
-            self.N = 300
-        elif self.exp==6:
-            self.lg_root_params = [(20, 5), (20, 5), (15, 5)]
-            self.lg_lin_params = [(2, 3), (3, 3)]
-            self.lg_var_params = [5,5]
-            self.N = 300
-        if self.exp==7:
-            self.lg_root_params = [(20, 2), (20, 2), (15, 2)]
-            self.lg_lin_params = [(2, 3), (3, 3)]
-            self.lg_var_params = [2,2]
-            self.N = 3000
-        elif self.exp==8:
-            self.lg_root_params = [(20, 2), (20, 2), (15, 2)]
-            self.lg_lin_params = [(2, 3), (3, 3)]
-            self.lg_var_params = [2,2]
-            self.N = 2000
-        elif self.exp==9:
-            self.lg_root_params = [(20, 2), (20, 2), (15, 2)]
-            self.lg_lin_params = [(2, 3), (3, 3)]
-            self.lg_var_params = [2,2]
-            self.N = 1000
-        elif self.exp==10:
-            self.lg_root_params = [(20, 5), (20, 5), (15, 5)]
-            self.lg_lin_params = [(2, 3), (3, 3)]
-            self.lg_var_params = [5,5]
-            self.N = 800
-        elif self.exp==11:
-            self.lg_root_params = [(20, 2), (20, 2), (15, 2)]
-            self.lg_lin_params = [(2, 3), (3, 3)]
-            self.lg_var_params = [2,2]
-            self.N = 600
-        elif self.exp==12:
-            self.lg_root_params = [(20, 5), (20, 5), (15, 5)]
-            self.lg_lin_params = [(2, 3), (3, 3)]
-            self.lg_var_params = [5,5]
-            self.N = 500
-        elif self.exp==13:
-            self.lg_root_params = [(20, 2), (20, 2), (15, 2)]
-            self.lg_lin_params = [(2, 3), (3, 3)]
-            self.lg_var_params = [2,2]
-            self.N = 400
-        elif self.exp==14:
-            self.lg_root_params = [(20, 2), (20, 2), (15, 2)]
-            self.lg_lin_params = [(2, 3), (3, 3)]
-            self.lg_var_params = [2,2]
-            self.N = 300
-        elif self.exp==15:
-            self.lg_root_params = [(20, 2), (20, 2), (15, 2)]
-            self.lg_lin_params = [(2, 3), (3, 3)]
-            self.lg_var_params = [2,2]
-            self.N = 200
-        elif self.exp==16:
-            self.lg_root_params = [(20, 2), (20, 2), (15, 2)]
-            self.lg_lin_params = [(2, 3), (3, 3)]
-            self.lg_var_params = [2,2]
-            self.N = 100
+        if sample is not None:
+            self.lg_root_params = [(config.mean_A, sample[1]), (config.mean_B, sample[1]), (config.mean_C, sample[1])]
+            self.lg_lin_params = config.lin_params
+            self.lg_var_params = [sample[1],sample[1]]
+            self.N = int(round(sample[0]))
 
         self.objective_input_set = []
         self.roots = []
@@ -158,11 +87,10 @@ class LG_generator:
 
     def generate_data(self):
         "Generate root parameters"
-        np.random.seed(45)
+        np.random.seed(config.randomseed)
         for i in range(len(self.roots)):
             self.data[self.roots[i]] = np.random.normal(self.lg_root_params[i][0], int(self.lg_root_params[i][1]),self.N)
 
-        
         for i in range(len(self.non_roots)):
             self.data[self.non_roots[i]] = sum(self.lg_lin_params[i][j]*self.data[self.parent_dict[self.non_roots[i]][j]] for j in range(0,len(self.lg_lin_params[i])))+np.random.normal(0, int(self.lg_var_params[i]),self.N)
 
@@ -215,57 +143,26 @@ class LG_generator:
         with open(self.model_path+self.filename+"settings.json", "w") as outfile:
             json.dump(self.settings_lg, outfile)
 
-
 class nm_generator:
-    """Creating the normal mixture model Network:
-    TODO: Generalize making the input lg_edges, root_params and lin_params and computing
+    """
+    Creating the normal mixture model Network:
     """
 
-    def __init__(self, exp):
+    def __init__(self, exp, sample=None):
 
             # Create logger
         log_format = '%(asctime)s - %(name)s - %(levelname)s - %(funcName)s - %(message)s'
         logging.basicConfig(format=log_format, level=logging.INFO, stream=sys.stdout)
-        logger = logging.getLogger()
         self.logger = logging.getLogger(__name__)
-
-        self.edges = [('X', 'Y')]
+        self.edges = config.nm_edges
         self.nodes = sorted(set([i for sub in self.edges for i in sub]))
         self.data = pd.DataFrame(columns=self.nodes)
         self.exp = exp
 
-        if self.exp==1:
-            self.N = 500
-            self.bin_param = 0.5
-            self.lg_normal_params = [(21, 10), (25, 1)]
-        if self.exp==2:
-            self.N = 500
-            self.bin_param = 0.8
-            self.lg_normal_params = [(21, 10), (25, 1)]
-        if self.exp==3:
-            self.N = 500
-            self.bin_param = 0.5
-            self.lg_normal_params = [(6, 2), (4, 2)]
-        if self.exp==4:
-            self.N = 500
-            self.bin_param = 0.8
-            self.lg_normal_params = [(6, 2), (4, 2)]
-        if self.exp==5:
-            self.N = 100
-            self.bin_param = 0.5
-            self.lg_normal_params = [(21, 10), (25, 1)]
-        if self.exp==6:
-            self.N = 100
-            self.bin_param = 0.8
-            self.lg_normal_params = [(21, 10), (25, 1)]
-        if self.exp==7:
-            self.N = 100
-            self.bin_param = 0.5
-            self.lg_normal_params = [(6, 2), (4, 2)]
-        if self.exp==8:
-            self.N = 100
-            self.bin_param = 0.8
-            self.lg_normal_params = [(6, 2), (4, 2)]
+        if sample is not None:
+            self.N = sample[0]
+            self.bin_param = sample[1]
+            self.lg_normal_params = sample[2]
 
     def create_bn_file(self):
         """
@@ -284,15 +181,12 @@ class nm_generator:
         #Write json
         self.create_json()
 
-
-
     def generate_data(self):
         "Generate root parameters"
-        np.random.seed(45)
+        np.random.seed(config.randomseed)
         self.data['X'] = np.random.binomial(size=self.N, p=self.bin_param, n=1)
         self.data['Y'] = [np.random.normal(self.lg_normal_params[0][0], self.lg_normal_params[0][1]) if x == 0 else 
             np.random.normal(self.lg_normal_params[1][0], self.lg_normal_params[1][1]) for x in self.data['X']] 
-
 
     def analytical_inference_solution(self):
         "Evaluate the mean of the non-root nodes analytically. Assumes the BN can be evaluated alphabetically"
@@ -301,8 +195,6 @@ class nm_generator:
     def create_file_name(self):
         "create name and json specifics of network"
         bin_text = [f"X ~ B({self.bin_param})"]
-        
-        mean_texts = []
         non_root_text = [f"P(Y|X) ~ N({self.lg_normal_params[i][0]},{self.lg_normal_params[i][1]}) if X = {np.linspace(0,1, num=2)[i]}" for i in range(len(self.lg_normal_params))]
         self.settings = {'distribution':'nm', 'edges': self.edges, 'root_params':bin_text, 'experiment': self.exp,
                'not_root_params': ' and '.join(non_root_text), 'sample_size': self.N, 'means': self.mean}
@@ -319,8 +211,7 @@ class nm_generator:
             json.dump(self.settings, outfile)
 
 class tb_generator:
-    """Creating the real tuebinger model Network:
-    TODO: Generalize making the input lg_edges, root_params and lin_params and computing
+    """generate tuebingen dataset
     """
 
     def __init__(self, exp):
@@ -330,10 +221,11 @@ class tb_generator:
         logging.basicConfig(format=log_format, level=logging.INFO, stream=sys.stdout)
         logger = logging.getLogger()
         self.logger = logging.getLogger(__name__)
-        mapping_to_pair = {1:3,2:21,3:25,4:26,5:43,6:48,7:68,8:76,9:79,10:84,11:85,12:88,13:91,14:95}
+        continuous_pairs = config.continuous_pairs
+        mapping_to_pair = dict(zip(range(1, len(continuous_pairs)+1), continuous_pairs))
         self.exp = exp
         self.pair = mapping_to_pair[exp]
-        self.edges = [('A', 'B')]
+        self.edges = config.tb_edges
         self.nodes = sorted(set([i for sub in self.edges for i in sub]))
         self.data = pd.DataFrame(columns=self.nodes)
 
@@ -352,13 +244,11 @@ class tb_generator:
         #Write json
         self.create_json()
 
-
-
     def generate_data(self):
-        "Generatethe set"
+        "Generate the set"
         t_data, t_graph = load_dataset('tuebingen')
-        self.data = pd.DataFrame(data = [t_data.loc['pair'+str(self.pair),'A'], t_data.loc['pair'+str(self.pair),'B']]).transpose()
-        self.data.columns=['A','B']
+        self.data = pd.DataFrame(data = [t_data.loc['pair'+str(self.pair),config.tb_source], t_data.loc['pair'+str(self.pair),config.tb_sink]]).transpose()
+        self.data.columns=[config.tb_source, config.tb_sink]
         self.N = len(self.data)
 
     def create_file_name(self):
@@ -376,21 +266,84 @@ class tb_generator:
         with open(self.model_path+self.filename+"settings.json", "w") as outfile:
             json.dump(self.settings, outfile)
 
+class Causal_generator:
+    """generate tuebingen dataset
+    """
+
+    def __init__(self):
+
+            # Create logger
+        log_format = '%(asctime)s - %(name)s - %(levelname)s - %(funcName)s - %(message)s'
+        logging.basicConfig(format=log_format, level=logging.INFO, stream=sys.stdout)
+        logger = logging.getLogger()
+        self.logger = logging.getLogger(__name__)
+        self.edges = config.causal_edges
+        self.nodes = sorted(set([i for sub in self.edges for i in sub]))
+        self.data = pd.DataFrame(columns=self.nodes)
+
+    def create_bn_file(self):
+        """
+        This functions runs all the scripts to construct the Normal Mixture BN.
+        :return (pd.Dataframe): preprocessed data
+        """
+        self.logger.info("Sart Constructing Network")
+        #Generate data
+        self.generate_data()
+        #Create file name
+        self.create_file_name()
+        #Write csv
+        self.write_data()
+        #Write json
+        self.create_json()
+
+    def generate_data(self):
+        "Generate the set"
+        self.N = config.N
+        self.data = pd.DataFrame({'Z': config.z, 'T': config.t, 'Y': config.y})
+
+    def create_file_name(self):
+        "create name and json specifics of network"
+        self.settings = {'distribution':'causal','edges': self.edges,'sample_size': self.N}
+
+    def write_data(self):
+        "Write the generated data as csv"
+        self.filename = f"{self.settings['distribution']}"
+        self.model_path = os.path.join(os.getcwd(), "models/undiscretized_models/")
+        self.data.to_csv(self.model_path + self.filename+'.csv', index=False)
+    
+    def create_json(self):
+        "Write the specification of data as json"
+        with open(self.model_path+self.filename+"settings.json", "w") as outfile:
+            json.dump(self.settings, outfile)
+
+
 
 if __name__ == '__main__':
-    np.random.seed(45)
+    np.random.seed(config.randomseed)
     args = parser.parse_args()
     distribution = args.distribution
-    experiment = args.experiment
     if distribution == 'lg':
-        LG = LG_generator(experiment)
-        LG.create_bn_file()
+        samples = config.samples_sizes
+        for count, sample in enumerate(samples):
+            LG = LG_generator(config.experiment_count_size + count, sample) #experiments from 9-19 onwards
+            LG.create_bn_file()
+    elif distribution == 'lgS':
+        samples = config.samples_sobolt        
+        for count, sample in enumerate(samples):
+            LG = LG_generator(config.experiment_count_sobolt + count, sample) #experiments from 101-125 onwards
+            LG.create_bn_file()
     elif distribution == 'nm':
-        NM = nm_generator(experiment)
-        NM.create_bn_file()
+        samples = config.samples_nm        
+        for count, sample in enumerate(samples):
+            NM = nm_generator(1 + count, sample) #experiments from 1-8
+            NM.create_bn_file()
     elif distribution == 'tb':
-        TB = tb_generator(experiment)
-        TB.create_bn_file()
+        for exp in range(1, len(config.continuous_pairs)+1):
+            TB = tb_generator(exp)
+            TB.create_bn_file()
+    elif distribution == 'causal':
+        Causal = Causal_generator()
+        Causal.create_bn_file()    
     else:
         raise ValueError(f"Unrecognized distribution '{distribution}'")
 
