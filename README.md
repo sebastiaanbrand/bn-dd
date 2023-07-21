@@ -95,3 +95,8 @@ which generates a bash file `exp_<exp-id>` (where <exp-id> is some number) which
 ```shell
 $ bash experiments/exp_<exp-id>
 ```
+
+To run WMC with Ace:
+```shell
+$ python include/Ace/ace.py [model.xmlbif|model.net]
+```

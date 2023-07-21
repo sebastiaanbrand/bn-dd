@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# Original script from https://github.com/gisodal/wmc/blob/master/usr/src/Ace/ace.py
+# Modified to also convert XMLBIF to HUGIN/NET for convenience.
+
 import sys
 import os
 import re
 import fcntl
 import subprocess
 import argparse
-from time import sleep
+import time
+from pgmpy.readwrite import XMLBIFReader, NETWriter, NETReader
 
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 
@@ -31,7 +35,7 @@ def execute_find(cmd, expressions):
 
         matches = [[] for _ in range(len(expressions))]
         while tee.poll() is None:
-            sleep(0.001)
+            time.sleep(0.001)
             while True:
                 line = output.readline()
                 if line == '':
@@ -54,6 +58,21 @@ def execute_find(cmd, expressions):
 
     return matches
 
+def xmlbif_to_net(filepath):
+    """
+    Given filepath = basename.xmlbif, convert and write basename.xmlbif.
+    """
+    basename = filepath[:-7]
+
+    print(f"Converting {basename}.xmlbif to {basename}.net")
+    start = time.time()
+    reader = XMLBIFReader(basename + '.xmlbif')
+    bn = reader.get_model()
+    writer = NETWriter(bn)
+    writer.write_net(basename + '.net')
+    end = time.time()
+
+    return basename + '.net', (end - start)
 
 class QueryParser():
 
@@ -288,6 +307,11 @@ def main():
     options = parser.parse_args()
     if options.hugin == None:
         parser.error('{} requires --network'.format(options.test))
+    
+    convert_time = 0
+    if options.hugin.endswith('xmlbif'):
+        options.hugin, convert_time = xmlbif_to_net(options.hugin)
+        print(f"Convert time : {round(convert_time, 4)} s")
 
     if options.query != None:
         options.query = " ".join(options.query)
