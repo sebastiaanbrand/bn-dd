@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 
 # Original script from https://github.com/gisodal/wmc/blob/master/usr/src/Ace/ace.py
-# Modified to also convert XMLBIF to HUGIN/NET for convenience.
+# Modifications:
+# - also convert XMLBIF to HUGIN/NET for convenience
+# - writes output to JSON file
 
 import sys
 import os
@@ -11,6 +13,7 @@ import fcntl
 import subprocess
 import argparse
 import time
+import json
 from pgmpy.readwrite import XMLBIFReader, NETWriter, NETReader
 
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
@@ -237,14 +240,14 @@ class Ace():
     def compile(self,options):
         if options.compile or options.overwrite or not self.is_compiled(options.hugin):
             cmd = [self.compiler,options.hugin]
-            return self.compile_cmd(cmd,options);
+            return self.compile_cmd(cmd,options)
         return -1,-1,-1,-1,-1
 
 
     def compile_c2d(self,options):
         if options.compile or options.overwrite or not self.is_compiled(options.hugin):
             cmd = [self.compiler,'-forceC2d','-noEclause',options.hugin]
-            return self.compile_cmd(cmd,options);
+            return self.compile_cmd(cmd,options)
         return -1,-1,-1,-1,-1
 
     def posterior(self,options):
@@ -341,6 +344,17 @@ def main():
         print("Prob : {0}".format(probability))
         print("Time : {0} s".format(float(time)*0.001))
 
+    # write to JSON file (should run with --overwrite to produce both a 
+    # nodecount and inference time)
+    basename = os.path.splitext(options.hugin)[0]
+    info = {'nodecount' : nodes, 
+            'peaknodes' : nodes,
+            'build_time' : compile_time,
+            'wmc_time' : float(time)*0.001}
+    with open(basename + "_aceinfo.json", 'w') as f:
+        json.dump(info, f, indent=4)
 
-main();
+
+if __name__ == '__main__':
+    main()
 

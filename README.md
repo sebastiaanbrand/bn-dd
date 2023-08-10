@@ -98,5 +98,7 @@ $ bash experiments/exp_<exp-id>
 
 To run WMC with Ace:
 ```shell
-$ python include/Ace/ace.py [model.xmlbif|model.net]
+$ python include/Ace/ace.py --network <model.xmlbif|model.net> --overwrite
 ```
+* `--overwrite` recompiles the BN to the format Ace uses, even if it has already previously been compiled.
+* this produces an outputfile `model_aceinfo.json` similar to `model_ddinfo.json`
