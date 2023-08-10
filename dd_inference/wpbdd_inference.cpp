@@ -156,7 +156,7 @@ WpBdd wpbdd_from_files(std::string filepath, bool trackpeak, bool verbose)
 
     // load cnf
     if (verbose) std::cout << "loading CNF from " << filepath << std::endl;
-    Cnf f = cnf_from_file(filepath + ".cnf");
+    Cnf f = cnf_from_file(filepath + ".cnf", &(wpbdd.bn2cnf_time));
     if (verbose) print_cnf(f);
 
     // convert cnf to bdd
@@ -178,7 +178,7 @@ WpBdd wpbdd_from_files(std::string filepath, bool trackpeak, bool verbose)
     return wpbdd;
 }
 
-Cnf cnf_from_file(std::string filepath)
+Cnf cnf_from_file(std::string filepath, double *bn_to_cnf_time)
 {
     Cnf res;
     max_var = 0;
@@ -194,7 +194,15 @@ Cnf cnf_from_file(std::string filepath)
                 if (token == "p" || token == "cnf") {
                     break;
                 }
+                if (token == "c") {
+                    ss >> token;
+                    *bn_to_cnf_time = std::stod(token);
+                    break;
+                }
                 int var = std::stoi(token);
+                if (var == 0) {
+                    break;
+                }
                 clause.insert(var);
                 max_var = std::max(max_var, std::abs(var));
             }

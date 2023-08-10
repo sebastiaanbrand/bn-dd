@@ -1,4 +1,5 @@
 import os
+import time
 import argparse
 from typing import Iterable
 from itertools import product
@@ -277,26 +278,30 @@ def get_xmlbif_files(folder):
             model_paths.append(filepath)
     return model_paths
 
-def write_bn_to_cnf(model : BayesianNetwork, path_prefix : str):
+def write_bn_to_cnf(model : BayesianNetwork, path_prefix : str, _verbose=2):
     """
     Convert a BayesianNetwork to CNF and write the files.
+    (set _verbose = 3 to get more console output)
     """
+    global verbose
+    verbose = _verbose
+
     # 1. encode as cnf
+    t_start = time.time()
     bn_encoder = BayesianNetworkEncoder(model)
-    #if (args.draw_bn):
-    #    bn_encoder.visualize_bn()
     cnf = bn_encoder.bn_to_cnf(model)
+    t_enc = time.time() - t_start
 
     # 2. write to files
-    cnf.to_file(path_prefix + '.cnf')
+    cnf.to_file(path_prefix + '.cnf', comments=[f'c {t_enc} (encode time in sec)'])
     bn_encoder.write_probs(path_prefix + '.cnf_probs')
     bn_encoder.write_rv_vars(path_prefix + '.cnf_rv_vars')
 
     # 3. write some info
-    info("CNF formula has:")
-    info(f"  * {bn_encoder.count_rv_vars()} variables for BN random variables")
-    info(f"  * {len(bn_encoder.prob_vars)} variables for probabilities")
-    info(f"  * {len(bn_encoder.cnf.clauses)} clauses")
+    info("CNF formula has:", level=2)
+    info(f"  * {bn_encoder.count_rv_vars()} variables for BN random variables", level=2)
+    info(f"  * {len(bn_encoder.prob_vars)} variables for probabilities", level=2)
+    info(f"  * {len(bn_encoder.cnf.clauses)} clauses", level=2)
     
 
 if __name__ == '__main__':

@@ -22,6 +22,7 @@ struct WpBdd {
     int nvars; // number of dd vars
     size_t peaknodes; // for keeping track of peak nodes
     double build_time; // time from CNF --> DD
+    double bn2cnf_time; // time from BN --> CNF
 };
 
 enum var_meta {
@@ -78,7 +79,7 @@ double wpbdd_do(WpBdd wpbdd, Constraint x, Constraint t, std::set<int> pt);
  */
 WpBdd wpbdd_from_files(std::string filepath, bool trackpeak=false, bool verbose=false);
 
-Cnf cnf_from_file(std::string filepath);
+Cnf cnf_from_file(std::string filepath, double *bn_to_cnf_time);
 
 void print_cnf(Cnf cnf);
 

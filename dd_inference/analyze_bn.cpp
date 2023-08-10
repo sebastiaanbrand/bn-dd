@@ -31,6 +31,7 @@ typedef struct stats {
     double load_time; // time from file reading to DD
     double build_time; // only includes loaded CNF --> DD
     double wmc_time;
+    double bn2cnf_time; // time from BN --> CNF (should be much less than build_time)
 } stats_t;
 stats_t stats = {0};
 static int trackpeak = 1; // count peak nodes (every #clauses/100 clauses)
@@ -46,6 +47,7 @@ void write_stats(std::string output_file)
     f <<    "\t\"total_load_time\" : " << stats.load_time << "," << std::endl;
     f <<    "\t\"build_time\" : " << stats.build_time << "," << std::endl;
     f <<    "\t\"wmc_time\" : "  << stats.wmc_time  << std::endl;
+    f <<    "\t\"bn_to_cnf_time\" : " << stats.bn2cnf_time << std::endl;
     f << "}" << std::endl;
     f.close();
 }
@@ -207,6 +209,7 @@ int main(int argc, char** argv)
     WpBdd wpbdd = wpbdd_from_files(path, trackpeak);;
     stats.load_time = wctime() - t_start;
     stats.build_time = wpbdd.build_time;
+    stats.bn2cnf_time = wpbdd.bn2cnf_time;
     stats.nodecount = sylvan::sylvan_nodecount(wpbdd.dd.GetBDD());
     stats.peaknodes = std::max(wpbdd.peaknodes, stats.nodecount);
     uint64_t full = 1LL<<wpbdd.rv_vars.size();
