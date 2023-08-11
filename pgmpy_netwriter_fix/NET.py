@@ -144,16 +144,15 @@ class NETWriter(object):
         cpt_array = np.moveaxis(cpt, 0, -1)
 
         # Seb: fix for str(cpt_array) producing a struncated version of array
-        import sys
-        np.set_printoptions(threshold=sys.maxsize)
+        # (also fixes line breaks, which would otherwise require adding
+        # .replace(".\n", ".0\n") below)
+        cpt_string = np.array2string(cpt_array, threshold=np.inf, max_line_width=np.inf)
         # /Seb
 
-        cpt_string = str(cpt_array)
         net_cpt_string = (
             cpt_string.replace("[", "(")
             .replace("]", ")")
             .replace(". ", ".0 ")
-            .replace(".\n", ".0\n") # Seb: additional replace
             .replace(".)", ".0)")
         )
         # Genie does not read potentials such as 1. therefore last line adds .0 to those
