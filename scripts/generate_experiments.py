@@ -43,9 +43,10 @@ def discretize_BNs(dist, exp, ace):
 
     # for now, let's use xmlbif for Ace, which is then converted to NET/HUGIN
     # (writing NET output directly using pgmpy appeard to give some issues)
+    # (writing XMLBIF and converting those to NET _also_ gives issues, but fewer...)
     bn_format = '--output_type cnf'
     if ace:
-        bn_format = '--output_type net'
+        bn_format = '--output_type xmlbif'
 
     command = "python scripts/discretize_bn.py {} {} {} {} 2>&1 | tee -a experiments/log_{}.txt\n"
     with open(output_file.format(dist, exp, exp_id), 'a', encoding='utf-8') as outfile:
@@ -100,9 +101,9 @@ def wmc_with_ace(dist, exp, folder):
     """
     command = "python include/Ace/ace.py --network {} --overwrite 2>&1 | tee -a experiments/log_{}.txt\n"
     with open(output_file.format(dist, exp, exp_id), 'a', encoding='utf-8') as outfile:
-        outfile.write("# run Ace on .net files\n")
+        outfile.write("# run Ace on .xmlbif files\n")
         for filename in os.listdir(folder):
-            if filename.endswith('.net'):
+            if filename.endswith('.xmlbif'):
                 filepath = os.path.join(folder, filename)
                 outfile.write(command.format(filepath, exp_id))
         outfile.write("\n")

@@ -1,7 +1,7 @@
 import argparse
 from pgmpy.readwrite import XMLBIFReader, NETWriter
 
-parser = argparse.ArgumentParser(description='Convert XMLBIF format to HUBIN (NET) format.')
+parser = argparse.ArgumentParser(description='Convert XMLBIF format to HUGIN (NET) format.')
 parser.add_argument('filepath', type=str, help='path to .xmlbif BN file.')
 
 
