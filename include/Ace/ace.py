@@ -322,6 +322,9 @@ def main():
     if not os.path.exists(options.hugin):
         parser.error('network "{}" not found'.format(options.hugin))
 
+
+    print(f"Parsing {options.hugin} with Ace...")
+    sys.stdout.flush()
     ace = Ace()
     if options.noc2d:
         compile_time,nodes,edges,variables,operators = ace.compile(options)

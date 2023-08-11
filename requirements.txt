@@ -8,4 +8,5 @@ numpy
 pgmpy
 POT
 pygraphviz
+pyreadr
 python-sat
