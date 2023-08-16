@@ -52,8 +52,9 @@ def execute_find(cmd, expressions):
         os.close(fd_r)
         os.close(fd_w)
 
-    except:
-        pass
+    except Exception as e:
+        print("Unhandled exception:")
+        print(e)
 
     command.communicate()
     if command.returncode != 0:
