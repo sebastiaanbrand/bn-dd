@@ -1,1 +1,0 @@
-{"distribution": "tb", "edges": [["A", "B"]], "sample_size": 349, "experiment": 1, "pair": 3, "disc_method": "EV", "bins": 12, "target_column": null, "Wass1D": 0.2285488245060354, "Wass_multi": 0.38852474011597227, "VE_complexity": 299.0}

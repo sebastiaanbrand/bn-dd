@@ -1,1 +1,0 @@
-{"distribution": "nm", "edges": [["X", "Y"]], "root_params": ["X ~ B(0.5)"], "not_root_params": "P(Y|X) ~ N(10,100) if X = 0.0 and P(Y|X) ~ N(50,10) if X = 1.0", "sample_size": 5000, "means": 30.0, "disc_method": "EV", "bins": 5, "target_column": null, "RMSE": 5.566479962734034, "WMSE": 5.563908397807214}

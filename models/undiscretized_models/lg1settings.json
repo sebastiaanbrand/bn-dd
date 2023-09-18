@@ -1,1 +1,0 @@
-{"distribution": "lg", "edges": [["A", "D"], ["B", "D"], ["D", "E"], ["C", "E"]], "root_params": "A ~ N(20,20) B ~ N(20,20) C ~ N(15,15)", "experiment": 1, "not_root_params": "D   ~   N ( 2 A + 3 B , 2 )   E   ~   N ( 3 C + 3 D , 2 )", "sample_size": 5000, "means": {"A": 20, "B": 20, "C": 15, "D": 100, "E": 345}}

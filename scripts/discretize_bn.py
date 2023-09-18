@@ -21,13 +21,16 @@ import networkx as nx
 from sklearn.preprocessing import MinMaxScaler
 import ot
 from mdlp.discretization import MDLP
+from pgmpy.estimators import BayesianEstimator
 
 parser = argparse.ArgumentParser(description='Discretize Bayesian Network')
 parser.add_argument('filename', type=str, help='path to data BN file')
 parser.add_argument('disc_method', type=str, help='discretization method used')
 parser.add_argument('bins', type=int, help='bins used in discretization')
-parser.add_argument('--target_variable', type=str, help='target variable in case of supervised learning')
+parser.add_argument('--target_variable', type=str, choices=['B','Y','E','re78'], help='target variable in case of supervised learning')
 parser.add_argument('--output_type', type=str, choices=['cnf','xmlbif','net'], help='format to write BN in, default=cnf', default='cnf')
+parser.add_argument('--CPT_method', type=str, choices=['MLE','Bayes','Bayespriors'], help='method to infer CPT, default=MLE', default='MLE')
+
 
 class Discretizer:
     """
@@ -35,7 +38,7 @@ class Discretizer:
     TODO: fix MDLP environment install
     """
 
-    def __init__(self, filename, disc_method, bins, target_column=None):
+    def __init__(self, filename, disc_method, bins, target_column=None, cpt_fit_method=None):
         # Create logger
         log_format = '%(asctime)s - %(name)s - %(levelname)s - %(funcName)s - %(message)s'
         logging.basicConfig(format=log_format, level=logging.INFO, stream=sys.stdout)
@@ -50,6 +53,8 @@ class Discretizer:
         self.columns = self.data.columns
         self.settings['bins'] = self.bins = bins
         self.settings['target_column'] = self.target_column = target_column
+        self.settings['CPT_method'] = self.cpt_fit_method = cpt_fit_method
+
         self.model_struct = BayesianNetwork(ebunch = self.settings['edges'])
 
     def create_discretization(self, write_as : str):
@@ -65,7 +70,6 @@ class Discretizer:
             self.disc_data = self.discretization_EB()
         if self.disc_method == 'MDLP':
             self.disc_data = self.discretization_MDLP()
-
         self.create_disc_network()
         self.settings['time_disc'] = timeit.default_timer()-time_disc
         time_cnf= timeit.default_timer()
@@ -98,27 +102,51 @@ class Discretizer:
         if data[column].isin([0,1]).all():
             continue
         else:    
-          data[column], bin = pd.qcut(data[column], q=bins, duplicates='drop', retbins=True)
+          data[column], bin = pd.cut(data[column], bins=self.bins, duplicates='drop', retbins=True)
       return data
 
     def discretization_MDLP(self, min_length=2):
       "MDLP discretization"
-      mdlp = MDLP()
-      data = self.data.clip(lower=-50)
+      mdlp = MDLP(min_depth=min_length)
+      data = self.data.clip(lower=0) #mdlp does not work for negative data, but none of our data is negative
       disc_mdlp_result = mdlp.fit_transform(data, data[self.target_column])
       disc_mdlp = pd.DataFrame(disc_mdlp_result, columns=self.columns)
-      cutpoints_MLDP = mdlp.cut_points_
-      for i in range(len(cutpoints_MLDP)):
-        cutpoints_MLDP[i] = np.append(cutpoints_MLDP[i], float('inf'))
-        cutpoints_MLDP[i]  = np.append(float('-inf'), cutpoints_MLDP[i])
-      cutpoints_MLDP =[cutpoints_MLDP[i] for i in range(len(cutpoints_MLDP))]
-      cutpoints_MLDP = np.array(cutpoints_MLDP)
-      return disc_mdlp, cutpoints_MLDP
+      if config.sort_mapping[self.settings['distribution']]=='causal': #Ensure the treatment variable remains binary for causal networks
+          disc_mdlp[config.source_mapping[self.settings['distribution']]] = data[config.source_mapping[self.settings['distribution']]]
+
+      return disc_mdlp
     
+    def construct_prior(self):
+        "Get informative priors based on MLE"
+        model_struct_prior = self.model_struct.copy()
+        model_struct_prior.fit(self.disc_data)
+        disc_probs =[model_struct_prior.get_cpds(col).values for col in self.disc_data.columns]
+        prior = dict(zip(self.disc_data.columns,disc_probs))
+        for col in self.disc_data.columns:
+            if col == config.sink_mapping[self.settings['distribution']]:
+                prior[col] = np.array(np.array_split(prior[col].flatten(), self.disc_data[config.sink_mapping[self.settings['distribution']]].unique().size))
+                prior[col][prior[col]==0]=0.0001
+            elif col == config.source_mapping[self.settings['distribution']]:
+                prior[col] = np.array(np.array_split(prior[col].flatten(),self.disc_data[config.source_mapping[self.settings['distribution']]].unique().size))
+                prior[col][prior[col]==0]=0.0001
+            elif col == 'D':
+                prior[col] = np.array(np.array_split(prior[col].flatten(),self.disc_data['D'].unique().size))
+            elif self.disc_data[col].isin([0,1]).all():
+                prior[col] = (prior[col]).reshape(2,1)
+            else:
+                prior[col] = (prior[col]).reshape(len(prior[col]),1)
+        return prior
+
     def create_disc_network(self):
         "Write the generated data as csv"
         # Fit Equal Values Bayesian Network
-        self.model_struct.fit(self.disc_data)
+        if self.cpt_fit_method == 'MLE':
+            self.model_struct.fit(self.disc_data)
+        elif self.cpt_fit_method == 'Bayes':
+            self.model_struct.fit(self.disc_data, estimator=BayesianEstimator, prior_type="dirichlet", pseudo_counts=1)
+        elif self.cpt_fit_method == 'Bayespriors':
+            prior = self.construct_prior()
+            self.model_struct.fit(self.disc_data, estimator=BayesianEstimator, prior_type="dirichlet", pseudo_counts=prior)
 
         # Compute the weighted average of the discretized bins
         merged_frame = self.data.merge(self.disc_data, left_index=True,right_index=True, suffixes=['_raw','_disc'])
@@ -136,7 +164,7 @@ class Discretizer:
             self.filename = f"data_{self.settings['distribution']}_{self.settings['disc_method']}{self.settings['bins']}"
         else:
             self.filename = f"data_{self.settings['distribution']}_{self.settings['disc_method']}"
-        self.model_path = os.path.join(os.getcwd(), "models/"+config.dist_mapping[self.settings['distribution']]+str(self.exp)+"/")
+        self.model_path = os.path.join(os.getcwd(), "models/"+config.dist_mapping[self.settings['distribution']]+str(self.exp)+str(self.cpt_fit_method)+"/")
 
         # write BN
         if write_as == 'xmlbif':
@@ -160,26 +188,21 @@ class Discretizer:
     
     def return_error_files(self):
        "returns the necessary files to compute the errors"
-       return self.disc_data, self.values_dict, self.prob_dict, self.dicts, self.model_struct, self.json_name
-
-
-
+       return self.disc_data, self.values_dict, self.prob_dict, self.dicts, self.model_struct, self.json_name, self.settings
 
 class Error_computer:
     """
-    Computing errors
+    Computing errors of the discretized distributions based on the Wasserstein distance between discretized and original distribution and errors computed from inference results
     """
 
-    def __init__(self, filename, disc_data, model_struct, values_dict, prob_dict, dicts, json_name):
+    def __init__(self, filename, disc_data, model_struct, values_dict, prob_dict, dicts, json_name, settings):
 
             # Create logger
         log_format = '%(asctime)s - %(name)s - %(levelname)s - %(funcName)s - %(message)s'
         logging.basicConfig(format=log_format, level=logging.INFO, stream=sys.stdout)
         self.logger = logging.getLogger(__name__)
         self.data = pd.read_csv(filename+'.csv')
-
-        with open(filename+'settings.json') as json_file:
-            self.settings = json.load(json_file)
+        self.settings = settings
         self.columns = self.data.columns
         self.disc_data = disc_data
         self.prob_dict = prob_dict
@@ -188,24 +211,27 @@ class Error_computer:
         self.values_dict = values_dict
         self.json_name=json_name
 
-        disc_EV = self.compute_discretized_EV(config.sink_mapping[self.settings['distribution']])
-        exact_EV =  self.compute_exact_EV(config.sink_mapping[self.settings['distribution']])
-        discretized_solutions = self.compute_discretized_conditionals(config.sink_mapping[self.settings['distribution']],
-                                                                      config.source_mapping[self.settings['distribution']])
-        exact_solutions = self.compute_exact_conditionals(config.sink_mapping[self.settings['distribution']],
-                                                                      config.source_mapping[self.settings['distribution']])
-        if self.settings['distribution']!='tb':
+        if config.sort_mapping[self.settings['distribution']]=='synthetic':
+            disc_EV = self.compute_discretized_EV(config.sink_mapping[self.settings['distribution']])
+            exact_EV =  self.compute_exact_EV(config.sink_mapping[self.settings['distribution']])
+            discretized_solutions = self.compute_discretized_conditionals(config.sink_mapping[self.settings['distribution']],
+                                                                        config.source_mapping[self.settings['distribution']])
+            exact_solutions = self.compute_exact_conditionals(config.sink_mapping[self.settings['distribution']],
+                                                                        config.source_mapping[self.settings['distribution']])
+            self.inference_timing(config.sink_mapping[self.settings['distribution']])
             self.compute_RMSE(discretized_solutions,exact_solutions)
             self.compute_WRMSE(discretized_solutions,exact_solutions)
             self.compute_MAE(discretized_solutions,exact_solutions)
             self.compute_PE(disc_EV,exact_EV)
+        if config.sort_mapping[self.settings['distribution']]=='causal':
+            ATE = self.compute_ATE(int_col=config.source_mapping[self.settings['distribution']],
+                                   outcome_col=config.sink_mapping[self.settings['distribution']])
+            self.compute_PE(ATE, settings['ate'])
 
         time_wass= timeit.default_timer()
         self.scale_data()
         self.compute_scaled_multivariate_wasserstein()
         self.compute_multivariate_wasserstein()
-        self.inference_timing(config.sink_mapping[self.settings['distribution']])
-
         self.settings['time_wass'] = timeit.default_timer()-time_wass
         # Get json:
         self.create_json()
@@ -220,16 +246,26 @@ class Error_computer:
         self.settings['time_VE'] = timeit.default_timer()-time_VE
         return expected_value
 
+    def compute_ATE(self, int_col, outcome_col):
+        "Compute P(inference_col) with the discretized values, time Variable Elimination and Belief Propagation"
+        infer = CausalInference(model_struct)
+        time_CI = timeit.default_timer()
+        intervention1 = infer.query([outcome_col], do={int_col: 1},inference_algo='bp')
+        self.settings['time_BP'] = timeit.default_timer()-time_CI
+        time_BP = timeit.default_timer()
+        intervention1 = infer.query([outcome_col], do={int_col: 1},inference_algo='ve')
+        self.settings['time_VE'] = timeit.default_timer()-time_BP
+        intervention0 = infer.query([outcome_col], do={int_col: 0},inference_algo='ve')
+        outcome_variables = [x for x in self.values_dict[outcome_col] if str(x) != 'nan'] #remove nans from outcome list
+        ate =sum(outcome_variables*intervention1.values) - sum(outcome_variables*intervention0.values)
+        return ate
+
     def inference_timing(self, inference_col):
         "Compute P(inference_col) with the discretized values"
         time_BP= timeit.default_timer()
         infer = BeliefPropagation(self.model_struct)
         infer_result = infer.query(variables=[inference_col], evidence=None)
         self.settings['time_BP'] = timeit.default_timer()-time_BP
-        time_CI= timeit.default_timer()
-        infer = CausalInference(self.model_struct)
-        infer_result = infer.query(variables=[inference_col], evidence=None)
-        self.settings['time_CI'] = timeit.default_timer()-time_CI
 
     def compute_discretized_conditionals(self, inference_col, conditional_col):
         "Compute P(inference_col|conditional_col) with the discretized values"
@@ -280,7 +316,7 @@ class Error_computer:
 
     def compute_PE(self, disc_EV, exact_EV):
         "Compute RMSE"
-        pe = abs(exact_EV-disc_EV)/disc_EV*100
+        pe = abs(exact_EV-disc_EV)/exact_EV*100
         self.settings['PE'], self.settings['exact_EV'], self.settings['disc_EV']  = pe, exact_EV, disc_EV
 
     def compute_RMSE(self, disc_sol, exact_sol):
@@ -337,8 +373,9 @@ if __name__ == '__main__':
     disc_method = args.disc_method
     bins = args.bins
     target_col = args.target_variable
+    cpt_fit_method = args.CPT_method
     model_path = os.path.join(os.getcwd(), "models/undiscretized_models/")
-    Discretization = Discretizer(model_path+filename, disc_method, bins, target_col)
+    Discretization = Discretizer(model_path+filename, disc_method, bins, target_col, cpt_fit_method)
     Discretization.create_discretization(args.output_type)
-    disc_data, values_dict, prob_dict, dicts, model_struct, json_name  = Discretization.return_error_files()
-    Errors = Error_computer(model_path+filename, disc_data, model_struct, values_dict, prob_dict, dicts, json_name)
+    disc_data, values_dict, prob_dict, dicts, model_struct, json_name, settings  = Discretization.return_error_files()
+    Errors = Error_computer(model_path+filename, disc_data, model_struct, values_dict, prob_dict, dicts, json_name, settings)
