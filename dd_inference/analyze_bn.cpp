@@ -46,7 +46,7 @@ void write_stats(std::string output_file)
     f <<    "\t\"peaknodes\" : " << stats.peaknodes << "," << std::endl;
     f <<    "\t\"total_load_time\" : " << stats.load_time << "," << std::endl;
     f <<    "\t\"build_time\" : " << stats.build_time << "," << std::endl;
-    f <<    "\t\"wmc_time\" : "  << stats.wmc_time  << std::endl;
+    f <<    "\t\"wmc_time\" : "  << stats.wmc_time  << "," << std::endl;
     f <<    "\t\"bn_to_cnf_time\" : " << stats.bn2cnf_time << std::endl;
     f << "}" << std::endl;
     f.close();
