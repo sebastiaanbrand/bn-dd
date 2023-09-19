@@ -1,3 +1,4 @@
+from pathlib import Path
 from pgmpy.models import BayesianNetwork
 from pgmpy.factors.discrete import TabularCPD
 from pgmpy.readwrite import XMLBIFWriter
@@ -78,31 +79,28 @@ def main():
     """'
     Generate toy networks and write to XMLBIF.
     """
+    folder = "models/toy_networks"
+    Path(folder).mkdir(parents=True, exist_ok=True)
 
     # write toy BN 1
     model, name = toy_network_1()
     writer = XMLBIFWriter(model)
-    writer.write_xmlbif(f"models/{name}.xmlbif")
+    writer.write_xmlbif(f"{folder}/{name}.xmlbif")
 
     # write toy BN 2
     model, name = toy_network_2()
     writer = XMLBIFWriter(model)
-    writer.write_xmlbif(f"models/{name}.xmlbif")
-
-    # copy of BN 2 with different name
-    model, _ = toy_network_2()
-    writer = XMLBIFWriter(model)
-    writer.write_xmlbif("models/line3.xmlbif")
+    writer.write_xmlbif(f"{folder}/{name}.xmlbif")
 
     # write toy BN 2
     model, name = toy_network_3()
     writer = XMLBIFWriter(model)
-    writer.write_xmlbif(f"models/{name}.xmlbif")
+    writer.write_xmlbif(f"{folder}/{name}.xmlbif")
 
     # write paper example
     model, name = paper_example()
     writer = XMLBIFWriter(model)
-    writer.write_xmlbif(f"models/{name}.xmlbif")
+    writer.write_xmlbif(f"{folder}/{name}.xmlbif")
 
 
 if __name__ == '__main__':

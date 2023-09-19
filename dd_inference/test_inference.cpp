@@ -12,6 +12,20 @@ WpBdd wpbdd;
 
 #define assert_close(a,b) assert(std::abs(a - b) < 1e-6)
 
+
+int test_total_wmc()
+{
+    double p;
+
+    // test the unconstrained Pr(), i.e. the probability that _something_ happens
+    p = wpbdd_marginalize(wpbdd, {});
+    assert_close(p, 1.0);
+
+    printf("Total WMC:                              OK\n");
+    return 0;
+}
+
+
 int test_marginals_line()
 {
     double p;
@@ -217,21 +231,21 @@ int main(int argc, char** argv)
     sylvan::sylvan_init_bdd();
 
     // test line BN
-    wpbdd = wpbdd_from_files("models/line");
+    wpbdd = wpbdd_from_files("models/toy_networks/line");
+    if (test_total_wmc()) return 1;
     if (test_marginals_line()) return 1;
     if (test_conditionals_line()) return 1;
     if (test_do_operator_line()) return 1;
 
     // test line BD where there are duplicate probabilities are merged
-    wpbdd = wpbdd_from_files("models/line2");
+    wpbdd = wpbdd_from_files("models/toy_networks/line2");
+    if (test_total_wmc()) return 1;
     if (test_marginals_line2()) return 1;
     if (test_conditionals_line2()) return 1;
 
-    // same as previous but with probs interleaved
-    wpbdd = wpbdd_from_files("models/line3");
-    if (test_marginals_line3()) return 1;
-    if (test_conditionals_line3()) return 1;
-
+    // test slightly bigger network
+    wpbdd = wpbdd_from_files("models/toy_networks/student");
+    if (test_total_wmc()) return 1;
 
     sylvan::sylvan_quit();
     lace_stop();
