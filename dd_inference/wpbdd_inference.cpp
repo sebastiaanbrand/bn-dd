@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 #include <bits/stdc++.h>
 #include <stdlib.h>
 #include <sys/time.h>
@@ -322,6 +323,7 @@ std::vector<int> rv_vars_from_file(std::string filepath)
         std::cerr << "unable to open " << filepath << std::endl;
     }
 
+    std::sort(rv_vars.begin(), rv_vars.end());
     return rv_vars;
 }
 
