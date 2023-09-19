@@ -31,6 +31,7 @@ typedef struct stats {
     double load_time; // time from file reading to DD
     double build_time; // only includes loaded CNF --> DD
     double wmc_time;
+    double wmc_value;
     double bn2cnf_time; // time from BN --> CNF (should be much less than build_time)
 } stats_t;
 stats_t stats = {0};
@@ -47,6 +48,7 @@ void write_stats(std::string output_file)
     f <<    "\t\"total_load_time\" : " << stats.load_time << "," << std::endl;
     f <<    "\t\"build_time\" : " << stats.build_time << "," << std::endl;
     f <<    "\t\"wmc_time\" : "  << stats.wmc_time  << "," << std::endl;
+    f <<    "\t\"wmc_value\" : "  << stats.wmc_value  << "," << std::endl;
     f <<    "\t\"bn_to_cnf_time\" : " << stats.bn2cnf_time << std::endl;
     f << "}" << std::endl;
     f.close();
@@ -217,8 +219,9 @@ int main(int argc, char** argv)
 
     // time WMC
     t_start = wctime();
-    double count = wpbdd_marginalize(wpbdd, {});
+    stats.wmc_value = wpbdd_marginalize(wpbdd, {});
     stats.wmc_time = wctime() - t_start;
+    INFO("WMC value = %lf\n", stats.wmc_value);
 
     // write stats to JSON file
     std::string stats_file = path + "_ddinfo.json";
