@@ -11,3 +11,8 @@ experiments/
 
 #
 *.cnf
+
+venv/
+*egg-info*
+.vscode
+ddcpp*

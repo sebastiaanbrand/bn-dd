@@ -46,7 +46,7 @@ TASK_IMPL_5(double, wpbdd_modelcount, sylvan::BDD, dd, int *, meta, ProbMap *, p
 
 
     // RV var has been skipped
-    if (i < rv_vars->size() && var > (*rv_vars)[i]) {
+    if (i < static_cast<int>(rv_vars->size()) && static_cast<int>(var) > (*rv_vars)[i]) {
         // reinsert skipped var
         var = (*rv_vars)[i];
         low = dd;
@@ -136,6 +136,7 @@ double wpbdd_do(WpBdd wpbdd, Constraint x, Constraint t, std::set<int> pt)
             ptx.insert(x_i);
         }
     }
+
     double denom = wpbdd_condition(wpbdd, t, ptx);  // Pr( T=t | pa(T)_{X=x}) )
 
     return num/denom;
