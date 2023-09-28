@@ -14,10 +14,10 @@ sylvan_cpp = glob("extern/sylvan/src/*.c*")
 sylvan_so = "/home/jacob/code/bn-dd/dd_inference/sylvan_build/src/libsylvan.so"
 
 ext = Pybind11Extension(
-    "dd_inf.ddcpp", 
+    "dd_inference.ddcpp", 
     [
         "dd_inference/wpbdd_inference.cpp", 
-        "dd_inf/interface.cpp"
+        "dd_inference/interface.cpp"
     ], 
     include_dirs=[
         "include",

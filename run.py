@@ -8,7 +8,7 @@ Setup instuctions:
 
 TODO: Objective function
 """
-import dd_inf as dd
+import dd_inference as dd
 
 TEST_MODEL_PATH  = "./models/toy_networks/line"
 
