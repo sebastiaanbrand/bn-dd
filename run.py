@@ -15,7 +15,6 @@ TEST_MODEL_PATH  = "./models/toy_networks/line"
 if __name__ == "__main__":
     tracepeak = True
     verbose = True
-    parent_node_index = 1
 
     with dd.SylvanRunnable():
         wpbdd = dd.wpbdd_from_files(TEST_MODEL_PATH, tracepeak, verbose)
