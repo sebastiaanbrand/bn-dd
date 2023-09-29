@@ -3,15 +3,20 @@
 
 import os
 import platform
-from glob import glob
 
 import setuptools
 from pybind11.setup_helpers import Pybind11Extension, build_ext
 
-__version__ = "1.0.0"
+assert platform.system() in ("Linux", "Darwin")
 
-sylvan_cpp = glob("extern/sylvan/src/*.c*")
-sylvan_so = "/home/jacob/code/bn-dd/dd_inference/sylvan_build/src/libsylvan.so"
+__version__ = "1.0.0"
+os.environ["CC"] = "g++"
+os.environ["CXX"] = "g++"
+
+base_dir = os.path.realpath(os.path.dirname(__file__))
+sylvan_so = os.path.join(
+    base_dir, "dd_inference/sylvan_build/src/libsylvan.so"
+)
 
 ext = Pybind11Extension(
     "dd_inference.ddcpp", 
@@ -26,20 +31,13 @@ ext = Pybind11Extension(
     ],
     cxx_std=17
 )
-if platform.system() in ("Linux", "Darwin"):
-    os.environ["CC"] = "g++"
-    os.environ["CXX"] = "g++"
-    ext._add_cflags(["-O2"])
-    ext._add_ldflags([f"-L{os.path.dirname(sylvan_so)}", f"-lsylvan"])
-else:
-    ext._add_cflags(["/O2"])
 
+ext._add_cflags(["-O2"])
+ext._add_ldflags([f"-L{os.path.dirname(sylvan_so)}", f"-lsylvan"])
 
 setuptools.setup(
-    name='dd_inf',
+    name='dd_inference',
     version=__version__,
-    author="Jacob de Nobel",
-    author_email="jacobdenobel@gmail.com",
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
     cmdclass={"build_ext": build_ext},
