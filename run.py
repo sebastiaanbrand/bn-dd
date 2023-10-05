@@ -1,7 +1,7 @@
 """
 Setup instuctions:
     $ ./compile_sources.sh    
-    $ pip install pybind11 
+    $ pip install pybind11 ioh
     $ python setup.py develop
     $ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/dd_inference/sylvan_build/src 
     $ python run.py
@@ -63,7 +63,7 @@ class Node:
 
     def int_to_binary(self, value: int) -> Set[Tuple[int, bool]]:
         binary = np.binary_repr(value, self.n_idx)
-        return set(zip(self.node_ids[::-1], map(int, binary)))
+        return set(zip(self.node_ids, map(int, binary)))
 
 
 class Objective:
