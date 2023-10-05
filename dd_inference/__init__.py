@@ -11,7 +11,8 @@ from .ddcpp import (
     print_probmap,
     print_rv_vars,
     init_system,
-    shutdown_system
+    shutdown_system, 
+    WpBdd
 )
 
 class SylvanRunnable:

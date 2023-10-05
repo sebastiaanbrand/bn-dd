@@ -16,3 +16,4 @@ venv/
 *egg-info*
 .vscode
 ddcpp*
+optimization
