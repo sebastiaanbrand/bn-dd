@@ -219,9 +219,48 @@ int test_conditionals_line3()
     return 0;
 }
 
-int main(int argc, char** argv)
-{
 
+// test causal quadratic EV30
+int test_causal_quadratic_EV30()
+{
+    printf("\nTesting causal quadratic EV30\n");
+    std::string path = "optimisation/causal_quadratic_EV30/data_causal_quadratic_EV30";
+    wpbdd = wpbdd_from_files(path);
+    printf("\tnodecount = %ld\n", wpbdd.dd.NodeCount());
+    printf("\ttotal WMC = %lf\n", wpbdd_marginalize(wpbdd, {}));
+
+    return 0;
+}
+
+
+// test linear gaussian EV30
+int test_linear_gaussian_EV30()
+{
+    printf("\nTesting linear gaussian EV30\n");
+    std::string path = "optimisation/lg_EV30/data_lg_EV30";
+    wpbdd = wpbdd_from_files(path);
+    printf("\tnodecount = %ld\n", wpbdd.dd.NodeCount());
+    printf("\ttotal WMC = %lf\n", wpbdd_marginalize(wpbdd, {}));
+
+    return 0;
+}
+
+
+// test normal mixture model EB30
+int test_normal_mixture_model_EB30()
+{
+    printf("\nTesting normal mixture model EB30\n");
+    std::string path = "optimisation/nm_EB30/data_nm_EB30";
+    wpbdd = wpbdd_from_files(path);
+    printf("\tnodecount = %ld\n", wpbdd.dd.NodeCount());
+    printf("\ttotal WMC = %lf\n", wpbdd_marginalize(wpbdd, {}));
+
+    return 0;
+}
+
+
+int test_toy()
+{
     // Standard Lace initialization with 1 worker
     lace_start(1, 0);
 
@@ -231,6 +270,7 @@ int main(int argc, char** argv)
     sylvan::sylvan_init_bdd();
 
     // test line BN
+    printf("Testing toy networks:\n");
     wpbdd = wpbdd_from_files("models/toy_networks/line");
     if (test_total_wmc()) return 1;
     if (test_marginals_line()) return 1;
@@ -251,4 +291,33 @@ int main(int argc, char** argv)
     lace_stop();
 
     return 0;
+}
+
+
+int test_bigger()
+{
+    // Standard Lace initialization with 1 worker
+    lace_start(1, 0);
+
+    // Simple Sylvan initialization, also initialize BDD support
+    sylvan::sylvan_set_sizes(1LL<<23, 1LL<<23, 1LL<<16, 1LL<<16);
+    sylvan::sylvan_init_package();
+    sylvan::sylvan_init_bdd();
+
+    // test bigger networks
+    test_causal_quadratic_EV30();
+    test_linear_gaussian_EV30();
+    test_normal_mixture_model_EB30();
+
+    sylvan::sylvan_quit();
+    lace_stop();
+
+    return 0;
+}
+
+
+int main(int argc, char** argv)
+{
+    test_toy();
+    test_bigger();
 }
