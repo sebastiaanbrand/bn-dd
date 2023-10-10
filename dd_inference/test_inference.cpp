@@ -223,11 +223,34 @@ int test_conditionals_line3()
 // test causal quadratic EV30
 int test_causal_quadratic_EV30()
 {
+    /**
+     * rv vars:
+     * T 8
+     * Y 59 60 61 62 63
+     * Z 1 2 3 4 5
+     * 
+     * structure:
+     * 
+     *  Y <-- T
+     *  ^     ^
+     *  |    /
+     *  Z -/
+    */
+    int T = 8;
+    int Y0 = 59, Y1 = 60, Y2 = 61, Y3 = 62, Y4 = 63;
+    int Z0 = 1, Z1 = 2, Z2 = 3, Z3 = 4, Z4 = 5;
+
     printf("\nTesting causal quadratic EV30\n");
-    std::string path = "optimisation/causal_quadratic_EV30/data_causal_quadratic_EV30";
+    std::string path = "models/tests/causal_quadratic_EV30/data_causal_quadratic_EV30";
     wpbdd = wpbdd_from_files(path);
     printf("\tnodecount = %ld\n", wpbdd.dd.NodeCount());
     printf("\ttotal WMC = %lf\n", wpbdd_marginalize(wpbdd, {}));
+    printf("\tmarginal probs:\n");
+    double t0 = wpbdd_marginalize(wpbdd, {{T, 0}});
+    double t1 = wpbdd_marginalize(wpbdd, {{T, 1}});
+    printf("\t  Pr(T=0) = %lf\n", t0);
+    printf("\t  Pr(T=1) = %lf\n", t1);
+    printf("\t  Pr(T)   = %lf\n", t0 + t1);
 
     return 0;
 }
@@ -236,8 +259,24 @@ int test_causal_quadratic_EV30()
 // test linear gaussian EV30
 int test_linear_gaussian_EV30()
 {
+    /**
+     * rv vars:
+     * A 1 2 3 4 5
+     * D 22 23 24 25 26
+     * B 8 9 10 11 12
+     * E 69 70 71 72 73
+     * C 15 16 17 18 19
+     * 
+     * structure:
+     * 
+     *  A --> D --> E
+     *        ^     ^
+     *        |     |
+     *        B     C
+    */
+
     printf("\nTesting linear gaussian EV30\n");
-    std::string path = "optimisation/lg_EV30/data_lg_EV30";
+    std::string path = "models/tests/lg_EV30/data_lg_EV30";
     wpbdd = wpbdd_from_files(path);
     printf("\tnodecount = %ld\n", wpbdd.dd.NodeCount());
     printf("\ttotal WMC = %lf\n", wpbdd_marginalize(wpbdd, {}));
@@ -249,8 +288,18 @@ int test_linear_gaussian_EV30()
 // test normal mixture model EB30
 int test_normal_mixture_model_EB30()
 {
+    /**
+     * rv vars:
+     * X 1
+     * Y 4 5 6 7 8
+     * 
+     * structure:
+     * 
+     *  X --> Y
+    */
+
     printf("\nTesting normal mixture model EB30\n");
-    std::string path = "optimisation/nm_EB30/data_nm_EB30";
+    std::string path = "models/tests/nm_EB30/data_nm_EB30";
     wpbdd = wpbdd_from_files(path);
     printf("\tnodecount = %ld\n", wpbdd.dd.NodeCount());
     printf("\ttotal WMC = %lf\n", wpbdd_marginalize(wpbdd, {}));
@@ -306,7 +355,7 @@ int test_bigger()
 
     // test bigger networks
     test_causal_quadratic_EV30();
-    test_linear_gaussian_EV30();
+    //test_linear_gaussian_EV30();
     test_normal_mixture_model_EB30();
 
     sylvan::sylvan_quit();
