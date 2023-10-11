@@ -292,12 +292,20 @@ int test_linear_gaussian_EV30()
      *        |     |
      *        B     C
     */
+   int A4 = 1, A3 = 2, A2 = 3, A1 = 4, A0 = 5;
 
     printf("\nTesting linear gaussian EV30\n");
     std::string path = "models/tests/lg_EV30/data_lg_EV30";
     wpbdd = wpbdd_from_files(path);
-    printf("\tnodecount = %ld\n", wpbdd.dd.NodeCount());
-    printf("\ttotal WMC = %lf\n", wpbdd_marginalize(wpbdd, {}));
+    printf("\tnodecount   = %ld\n", wpbdd.dd.NodeCount());
+    printf("\ttotal WMC   = %lf\n", wpbdd_marginalize(wpbdd, {}));
+
+    // Compute sum_{a} Pr(A=a) (should be 1.0)
+    double PrA = 0;
+    for (int a = 0; a < 1<<5; a++) {
+        PrA += wpbdd_marginalize(wpbdd, constrain({A4, A3, A2, A1, A0}, a));
+    }
+    printf("\tsum Pr(A=a) = %lf\n", PrA);
 
     return 0;
 }
@@ -376,7 +384,7 @@ int test_bigger()
 
     // test bigger networks
     test_causal_quadratic_EV30();
-    //test_linear_gaussian_EV30();
+    test_linear_gaussian_EV30();
     test_normal_mixture_model_EB30();
 
     sylvan::sylvan_quit();
