@@ -32,7 +32,7 @@ TASK_IMPL_5(double, wpbdd_modelcount, sylvan::BDD, dd, int *, meta, ProbMap *, p
     union { double d; uint64_t s; } hack;
     int cachenow = 1;
     if (cachenow) {
-        if (sylvan::cache_get3(CACHE_WPBDD_MODELCOUNT, dd, 0, 0, &hack.s)) {
+        if (sylvan::cache_get3(CACHE_WPBDD_MODELCOUNT, dd, i, 0, &hack.s)) {
             return hack.d;
         }
     }
@@ -90,7 +90,7 @@ TASK_IMPL_5(double, wpbdd_modelcount, sylvan::BDD, dd, int *, meta, ProbMap *, p
 
     /* Put in cache */
     if (cachenow) {
-        sylvan::cache_put3(CACHE_WPBDD_MODELCOUNT, dd, 0, 0, hack.s);
+        sylvan::cache_put3(CACHE_WPBDD_MODELCOUNT, dd, i, 0, hack.s);
     }
 
     return hack.d;
