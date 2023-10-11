@@ -142,6 +142,24 @@ double wpbdd_do(WpBdd wpbdd, Constraint x, Constraint t, std::set<int> pt)
     return num/denom;
 }
 
+Constraint constrain(std::vector<int> vars, int val)
+{
+    Constraint res;
+
+    int _val = val;
+    for (int i = vars.size() - 1; i >= 0; i--) {
+        res.insert({vars[i], _val % 2});
+        _val = _val >> 1;
+    }
+
+    if (_val != 0) {
+        std::cerr << "Warning: " << val << " cannot be encoded in " 
+                  << vars.size() << " Boolean variables" << std::endl;
+    }
+
+    return res;
+}
+
 /*********************</Weighted model counting>*******************************/
 
 

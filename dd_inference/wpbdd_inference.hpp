@@ -61,6 +61,14 @@ double wpbdd_condition(WpBdd wpbdd, Constraint x, Constraint y);
  */
 double wpbdd_do(WpBdd wpbdd, Constraint x, Constraint t, std::set<int> pt);
 
+
+/**
+ * Returns Boolean constraint for vars = val
+ * NOTE: assuming vars[0] is the most significant bit
+ */
+Constraint constrain(std::vector<int> vars, int val);
+
+
 /*********************</Weighted model counting>*******************************/
 
 

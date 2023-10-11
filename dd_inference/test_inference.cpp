@@ -7,10 +7,11 @@
 #include <stdlib.h>
 
 #include <wpbdd_inference.hpp>
+#include "test_assert.h"
 
 WpBdd wpbdd;
 
-#define assert_close(a,b) assert(std::abs(a - b) < 1e-6)
+#define assert_close(a,b) test_assert(std::abs(a - b) < 1e-6)
 
 
 int test_total_wmc()
@@ -22,6 +23,23 @@ int test_total_wmc()
     assert_close(p, 1.0);
 
     printf("Total WMC:                              OK\n");
+    return 0;
+}
+
+
+int test_constrain()
+{
+    int x4 = 4, x3 = 3, x2 = 2;
+
+    Constraint x_is_5 = constrain({x4, x3, x2}, 5); // 5 = 101 = true,false,true
+    test_assert(x_is_5.size() == 3);
+    for (auto c : x_is_5) {
+        if (c.first == 4) test_assert(c.second == true);
+        if (c.first == 3) test_assert(c.second == false);
+        if (c.first == 2) test_assert(c.second == true);
+    }
+
+    printf("Test constrain(bool_vars, int_val):     OK\n");
     return 0;
 }
 
@@ -318,8 +336,11 @@ int test_toy()
     sylvan::sylvan_init_package();
     sylvan::sylvan_init_bdd();
 
+    // test constrain function
+    if (test_constrain()) return 1;
+
     // test line BN
-    printf("Testing toy networks:\n");
+    printf("\nTesting toy networks:\n");
     wpbdd = wpbdd_from_files("models/toy_networks/line");
     if (test_total_wmc()) return 1;
     if (test_marginals_line()) return 1;
