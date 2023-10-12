@@ -17,12 +17,14 @@ TODO: Objective function
 """
 import json
 import os
-import itertools
+from itertools import chain
 from time import perf_counter
 from dataclasses import dataclass, field
 from typing import List, Set, Tuple
+from functools import cached_property
 import ioh
 import numpy as np
+
 
 import dd_inference as dd
 
@@ -35,9 +37,13 @@ class Node:
     name: str
     n_idx: int
     node_ids: List[int] = field(default_factory=list, repr=None)
-    parents: List["Node"] = field(default_factory=list)
+    parents: List["Node"] = field(default_factory=list, repr=None)
     bins: List[float] = field(default_factory=list, repr=None)
     n_bins: int = None
+
+    @cached_property
+    def parent_ids(self):
+        return set(chain.from_iterable([node.node_ids for node in self.parents]))
 
     @staticmethod
     def read(model_name):
@@ -64,66 +70,79 @@ class Node:
     def int_to_binary(self, value: int) -> Set[Tuple[int, bool]]:
         binary = np.binary_repr(value, self.n_idx)
         return set(zip(self.node_ids, map(int, binary)))
-
+   
 
 class Objective:
     def __init__(self, nodes: List[Node], diagram: dd.WpBdd, condition_node: Node):
         self.nodes = [node for node in nodes if node != condition_node]
-        self.all_parent_nodes = set(
-            itertools.chain.from_iterable([node.node_ids for node in self.nodes])
-        )
         self.diagram = diagram
         self.dimension = len(self.nodes)
         self.lb = np.zeros(len(self.nodes)) - 1
         self.ub = np.array([node.n_bins for node in self.nodes])
         self.condition_node = condition_node
-        self.min_y = min(self.condition_node.bins)
+        self.max_y = max(self.condition_node.bins)
+        self.condition_node_ops = [
+            (self.condition_node.int_to_binary(bin_id), bin_value)
+            for bin_id, bin_value in enumerate(self.condition_node.bins)
+        ]
 
-    def get_do_ops(self, x: List[int]):
-        do_ops = set()
-        for xi, node in zip(x, self.nodes):
-            if xi == -1:
-                continue
-            do_ops.update(node.int_to_binary(xi))
-        return do_ops
+    def filter_do_ops(self, do_ops, ids):
+        """Filter a set of do-ops such that only the ops in ids remain"""
+        return set([x for x in do_ops if x[0] in ids])
 
-    def get_parent_nodes(self, do_nodes: List[Node]):
-        # TODO: Who is a parent?
-        # return self.parent_nodes.copy()
-        parents = set()
-        for node in do_nodes:
-            for parent in node.parents:
-                parents.update(parent.node_ids)
-        return parents
+    def get_do_nodes(self, x):
+        """Get the list of do nodes, filter only those that are not -1"""
+        return [
+            (node, node.int_to_binary(xi))
+            for node, xi in zip(self.nodes, x)
+            if xi != -1
+        ]
+    
+    def get_do_ops(self, do_nodes):
+        """Combine all the do ops for all do_nodes in a single set"""
+        return set(chain.from_iterable(do_op for _, do_op in do_nodes))
+    
+    def remap_do_nodes(self, do_ops, do_nodes):
+        """Add the set of do_ops for the parents nodes for a given do_node (caching)"""
+        return [
+            (do_node, do_node_ops, self.filter_do_ops(do_ops, do_node.parent_ids))
+            for do_node, do_node_ops in do_nodes
+        ]
 
     def calc_expected_value(self, x: List[int]):
-        do_ops = self.get_do_ops(x)
-        do_nodes = [node for node, xi in zip(self.nodes, x) if xi != -1]
-        parent_nodes = self.get_parent_nodes(do_nodes)
+        do_nodes = self.get_do_nodes(x)
+        do_ops = self.get_do_ops(do_nodes)
+        do_nodes = self.remap_do_nodes(do_ops, do_nodes)
 
         expectation = 0
         sum_prob = 0
-        print("parent_nodes", parent_nodes)
-        for bin_id, bin_value in enumerate(self.condition_node.bins):
-            condition = self.condition_node.int_to_binary(bin_id)
 
-            pr_condition = dd.wpbdd_do(self.diagram, condition, do_ops, parent_nodes)
-            sum_prob += pr_condition
-            print(pr_condition, bin_value)
-            expectation += pr_condition * bin_value
-        print("Sum probabilties", sum_prob)
+        for condition, bin_value in self.condition_node_ops:
+            pr_marginal = dd.wpbdd_marginalize(self.diagram, condition.union(do_ops))
+            pr_total = 0
+            if pr_marginal == 0:
+                continue
+
+            pr_do = 1.0
+            for do_node, do_node_ops, do_ops_with_parent in do_nodes:
+                pdo = dd.wpbdd_condition(self.diagram, do_node_ops, do_ops_with_parent)
+                pr_do *= pdo
+            pr_total = pr_marginal / pr_do
+            sum_prob += pr_total
+            expectation += pr_total * bin_value
+        assert sum_prob == 0 or np.isclose(sum_prob, 1.0)
         return expectation
 
     def __call__(self, x: List[int]):
         expectation = self.calc_expected_value(x)
-        return expectation  # - self.min_y
+        return self.max_y - expectation
 
 
 if __name__ == "__main__":
     tracepeak = True
     verbose = False
     nodes = Node.read(MODEL_PATH)
-
+    np.random.seed(1)
     with dd.SylvanRunnable():
         print("loading model...", end=" ")
         start = perf_counter()
@@ -142,41 +161,17 @@ if __name__ == "__main__":
             max(obj.ub),
         )
 
-        print("Applying a single do operator")
-        x0 = [1, -1, -1, -1]
-        f0 = problem(x0)
-        print(x0, f0)
-        print()
-
-        print("Applying two do operators")
-        x0 = [1, -1, 1, -1]
-        f0 = problem(x0)
-        print(x0, f0)
-        print()
-
-        print("Applying three do operators")
-        x0 = [1, -1, 1, 1]
-        f0 = problem(x0)
-        print(x0, f0)
-        print()
-
-        print("Applying four do operators")
-        x0 = [1, 1, 1, 1]
-        f0 = problem(x0)
-        print(x0, f0)
-        print()
-
         print("Random search multiple ops")
-        for _ in range(10):
-            x0 = np.random.randint(-1, 30, 4)
-            f0 = problem(x0)
-            print(x0, f0)
-            print()
+        x_best = None
+        f_best = np.inf
 
-        print("Random search single op")
-        for _ in range(10):
-            x0 = np.zeros(4, dtype=int) - 1
-            x0[np.random.randint(0, 4)] = np.random.randint(0, 30)
+        for _ in range(1000):
+            x0 = np.random.randint(-1, obj.ub, problem.meta_data.n_variables)
             f0 = problem(x0)
+
             print(x0, f0)
-            print()
+            if f0 < f_best:
+                f_best = f0
+                x_best = x0
+        print(x_best, f_best)
+        print()
