@@ -70,10 +70,10 @@ class Node:
     def int_to_binary(self, value: int) -> Set[Tuple[int, bool]]:
         binary = np.binary_repr(value, self.n_idx)
         return set(zip(self.node_ids, map(int, binary)))
-   
+
 
 class Objective:
-    def __init__(self, nodes: List[Node], diagram: dd.WpBdd, condition_node: Node):
+    def __init__(self, nodes: List[Node], diagram: dd.BnBdd, condition_node: Node):
         self.nodes = [node for node in nodes if node != condition_node]
         self.diagram = diagram
         self.dimension = len(self.nodes)
@@ -118,14 +118,14 @@ class Objective:
         sum_prob = 0
 
         for condition, bin_value in self.condition_node_ops:
-            pr_marginal = dd.wpbdd_marginalize(self.diagram, condition.union(do_ops))
+            pr_marginal = dd.bnbdd_marginalize(self.diagram, condition.union(do_ops))
             pr_total = 0
             if pr_marginal == 0:
                 continue
 
             pr_do = 1.0
             for do_node, do_node_ops, do_ops_with_parent in do_nodes:
-                pdo = dd.wpbdd_condition(self.diagram, do_node_ops, do_ops_with_parent)
+                pdo = dd.bnbdd_condition(self.diagram, do_node_ops, do_ops_with_parent)
                 pr_do *= pdo
             pr_total = pr_marginal / pr_do
             sum_prob += pr_total
@@ -146,10 +146,10 @@ if __name__ == "__main__":
     with dd.SylvanRunnable():
         print("loading model...", end=" ")
         start = perf_counter()
-        wpbdd = dd.wpbdd_from_files(MODEL_PATH, tracepeak, verbose)
+        bnbdd = dd.bnbdd_from_files(MODEL_PATH, tracepeak, verbose)
         print("time elapsed: ", perf_counter() - start, "s")
 
-        obj = Objective(list(nodes.values()), wpbdd, nodes["E"])
+        obj = Objective(list(nodes.values()), bnbdd, nodes["E"])
         problem = ioh.wrap_problem(
             obj,
             f"{os.path.basename(MODEL_PATH)}_objective",
