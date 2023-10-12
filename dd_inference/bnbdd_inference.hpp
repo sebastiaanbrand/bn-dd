@@ -14,8 +14,8 @@ typedef std::set<int> Clause;
 typedef std::set<Clause> Cnf;
 typedef std::map<int, int> VarConstraint; // var -> var_meta
 
-// container for WPBDD info (dd + prob info + rv info)
-struct WpBdd {
+// container for BN-BDD info (dd + prob info + rv info)
+struct BnBdd {
     sylvan::Bdd dd;
     ProbMap pm;
     std::vector<int> rv_vars;
@@ -42,24 +42,24 @@ enum var_meta {
 
 static const uint64_t CACHE_WPBDD_MODELCOUNT = (200LL<<40);
 
-TASK_DECL_5(double, wpbdd_modelcount, sylvan::BDD, int *, ProbMap *, std::vector<int> *, int);
-#define wpbdd_modelcount(dd, meta, pm, rv_vars) RUN(wpbdd_modelcount, dd, meta, pm, rv_vars, 0)
+TASK_DECL_5(double, bnbdd_modelcount, sylvan::BDD, int *, ProbMap *, std::vector<int> *, int);
+#define bnbdd_modelcount(dd, meta, pm, rv_vars) RUN(bnbdd_modelcount, dd, meta, pm, rv_vars, 0)
 
 /**
  * Compute Pr ( x1, x2, ... )
  */
-double wpbdd_marginalize(WpBdd wpbdd, Constraint x);
+double bnbdd_marginalize(BnBdd bnbdd, Constraint x);
 
 /**
  * Compute Pr( x1, x2, ... | y1, y2, ... )
  */
-double wpbdd_condition(WpBdd wpbdd, Constraint x, Constraint y);
+double bnbdd_condition(BnBdd bnbdd, Constraint x, Constraint y);
 
 /**
  * Compute Pr ( x1, x2, ..., | do(t) ), where pt are the parents of t
  * (For now, assume t only contains a single variable )
  */
-double wpbdd_do(WpBdd wpbdd, Constraint x, Constraint t, std::set<int> pt);
+double bnbdd_do(BnBdd bnbdd, Constraint x, Constraint t, std::set<int> pt);
 
 
 /**
@@ -85,7 +85,7 @@ Constraint constrain(std::vector<int> vars, int val);
  * 
  *  trackpeak = true does a nodecount every #clauses/100 clauses (i.e. 100 times)
  */
-WpBdd wpbdd_from_files(std::string filepath, bool trackpeak=false, bool verbose=false);
+BnBdd bnbdd_from_files(std::string filepath, bool trackpeak=false, bool verbose=false);
 
 Cnf cnf_from_file(std::string filepath, double *bn_to_cnf_time);
 

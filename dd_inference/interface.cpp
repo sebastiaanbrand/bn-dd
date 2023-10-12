@@ -5,7 +5,7 @@
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 
-#include "wpbdd_inference.hpp"
+#include "bnbdd_inference.hpp"
 
 namespace py = pybind11;
 
@@ -30,25 +30,25 @@ PYBIND11_MODULE(ddcpp, m)
         
     py::class_<sylvan::Bdd>(m, "Bdd");
 
-    py::class_<WpBdd>(m, "WpBdd")
-        .def_readwrite("dd", &WpBdd::dd)
-        .def_readwrite("pm", &WpBdd::pm)
-        .def_readwrite("rv_vars", &WpBdd::rv_vars)
-        .def_readwrite("nvars", &WpBdd::nvars)
-        .def_readwrite("peaknodes", &WpBdd::peaknodes)
-        .def_readwrite("build_time", &WpBdd::build_time)
-        .def_readwrite("bn2cnf_time", &WpBdd::bn2cnf_time); 
+    py::class_<BnBdd>(m, "BnBdd")
+        .def_readwrite("dd", &BnBdd::dd)
+        .def_readwrite("pm", &BnBdd::pm)
+        .def_readwrite("rv_vars", &BnBdd::rv_vars)
+        .def_readwrite("nvars", &BnBdd::nvars)
+        .def_readwrite("peaknodes", &BnBdd::peaknodes)
+        .def_readwrite("build_time", &BnBdd::build_time)
+        .def_readwrite("bn2cnf_time", &BnBdd::bn2cnf_time); 
 
-    m.def("wpbdd_marginalize", &wpbdd_marginalize,
-          py::arg("wpbdd"), py::arg("constraint_x"));
+    m.def("bnbdd_marginalize", &bnbdd_marginalize,
+          py::arg("bnbdd"), py::arg("constraint_x"));
 
-    m.def("wpbdd_condition", &wpbdd_condition,
-          py::arg("wpbdd"), py::arg("constraint_x"), py::arg("constraint_y"));
+    m.def("bnbdd_condition", &bnbdd_condition,
+          py::arg("bnbdd"), py::arg("constraint_x"), py::arg("constraint_y"));
 
-    m.def("wpbdd_do", &wpbdd_do,
-          py::arg("wpbdd"), py::arg("constraint_x"), py::arg("constraint_t"), py::arg("pt"));
+    m.def("bnbdd_do", &bnbdd_do,
+          py::arg("bnbdd"), py::arg("constraint_x"), py::arg("constraint_t"), py::arg("pt"));
 
-    m.def("wpbdd_from_files", &wpbdd_from_files,
+    m.def("bnbdd_from_files", &bnbdd_from_files,
           py::arg("filepath"), py::arg("tracepeak") = false, py::arg("verbose") = false);
 
     m.def("cnf_from_file", &cnf_from_file,

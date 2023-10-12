@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <sys/time.h>
 
-#include <wpbdd_inference.hpp>
+#include <bnbdd_inference.hpp>
 
 /**
  * Obtain current wallclock time
@@ -70,16 +70,16 @@ void printMeta(int *meta, int n)
 }
 
 
-double wpbdd_marginals(WpBdd wpbdd, VarConstraint part_constraint)
+double bnbdd_marginals(BnBdd bnbdd, VarConstraint part_constraint)
 {
-    int meta[wpbdd.nvars];
+    int meta[bnbdd.nvars];
     // by default marginalize vars out
-    for (int i = 0; i < wpbdd.nvars; i++) {
+    for (int i = 0; i < bnbdd.nvars; i++) {
         meta[i] = marg_out;
     }
 
     // mark probability vars as no_rv_vars
-    for (auto const& v : wpbdd.pm) {
+    for (auto const& v : bnbdd.pm) {
         meta[v.first] = no_rv_var;
     }
 
@@ -88,10 +88,10 @@ double wpbdd_marginals(WpBdd wpbdd, VarConstraint part_constraint)
         meta[a.first] = a.second;
     }
 
-    printMeta(meta, wpbdd.nvars);
+    printMeta(meta, bnbdd.nvars);
     std::cout << std::endl;
 
-    return wpbdd_modelcount(wpbdd.dd.GetBDD(), meta, &(wpbdd.pm), &(wpbdd.rv_vars));
+    return bnbdd_modelcount(bnbdd.dd.GetBDD(), meta, &(bnbdd.pm), &(bnbdd.rv_vars));
 }
 
 
@@ -116,59 +116,59 @@ void small_example()
 }
 
 
-void _computeAllProbsRec(WpBdd wpbdd, int *meta, int i)
+void _computeAllProbsRec(BnBdd bnbdd, int *meta, int i)
 {
-    if (i == wpbdd.nvars) {
+    if (i == bnbdd.nvars) {
         // call modelcount here
-        double count = wpbdd_modelcount(wpbdd.dd.GetBDD(), meta, &(wpbdd.pm), &(wpbdd.rv_vars));
+        double count = bnbdd_modelcount(bnbdd.dd.GetBDD(), meta, &(bnbdd.pm), &(bnbdd.rv_vars));
         sylvan::cache_clear(); // temp, since  meta is not part of the cache key
-        printMeta(meta, wpbdd.nvars);
+        printMeta(meta, bnbdd.nvars);
         std::cout << " = " << count << std::endl;
         return;
     }
 
-    if ( std::find(wpbdd.rv_vars.begin(), wpbdd.rv_vars.end(), i) != wpbdd.rv_vars.end() ){
+    if ( std::find(bnbdd.rv_vars.begin(), bnbdd.rv_vars.end(), i) != bnbdd.rv_vars.end() ){
         meta[i] = marg_0;
-        _computeAllProbsRec(wpbdd, meta, i + 1);
+        _computeAllProbsRec(bnbdd, meta, i + 1);
     
         meta[i] = marg_1;
-        _computeAllProbsRec(wpbdd, meta, i + 1);
+        _computeAllProbsRec(bnbdd, meta, i + 1);
     }
     else {
         meta[i] = 0;
-        _computeAllProbsRec(wpbdd, meta, i + 1);
+        _computeAllProbsRec(bnbdd, meta, i + 1);
     }
     
 }
 
 
-void computeAllProbs(WpBdd wpbdd)
+void computeAllProbs(BnBdd bnbdd)
 {
-    int meta[wpbdd.nvars];
-    _computeAllProbsRec(wpbdd, meta, 0);
+    int meta[bnbdd.nvars];
+    _computeAllProbsRec(bnbdd, meta, 0);
 }
 
-void marinalizeIndividual(WpBdd wpbdd)
+void marinalizeIndividual(BnBdd bnbdd)
 {
     double prob0, prob1;
-    for (int var : wpbdd.rv_vars) {
-        prob0 = wpbdd_marginalize(wpbdd, {{var, 0}});
-        prob1 = wpbdd_marginalize(wpbdd, {{var, 1}});
+    for (int var : bnbdd.rv_vars) {
+        prob0 = bnbdd_marginalize(bnbdd, {{var, 0}});
+        prob1 = bnbdd_marginalize(bnbdd, {{var, 1}});
         std::cout << "Pr( x" << var << "=0 ) = " << prob0 << std::endl;
         std::cout << "Pr( x" << var << "=1 ) = " << prob1 << std::endl;
     }
 }
 
-void conditionPairs(WpBdd wpbdd)
+void conditionPairs(BnBdd bnbdd)
 {
     double prob00, prob01, prob10, prob11;
-    for (int x : wpbdd.rv_vars) {
-        for (int y : wpbdd.rv_vars) {
+    for (int x : bnbdd.rv_vars) {
+        for (int y : bnbdd.rv_vars) {
             if (x != y) {
-                prob00 = wpbdd_condition(wpbdd, {{x, 0}}, {{y, 0}});
-                prob01 = wpbdd_condition(wpbdd, {{x, 0}}, {{y, 1}});
-                prob10 = wpbdd_condition(wpbdd, {{x, 1}}, {{y, 0}});
-                prob11 = wpbdd_condition(wpbdd, {{x, 1}}, {{y, 1}});
+                prob00 = bnbdd_condition(bnbdd, {{x, 0}}, {{y, 0}});
+                prob01 = bnbdd_condition(bnbdd, {{x, 0}}, {{y, 1}});
+                prob10 = bnbdd_condition(bnbdd, {{x, 1}}, {{y, 0}});
+                prob11 = bnbdd_condition(bnbdd, {{x, 1}}, {{y, 1}});
                 std::cout << "Pr( x" << x << "=0 | x" << y << "=0 ) = " << prob00 << std::endl;
                 std::cout << "Pr( x" << x << "=0 | x" << y << "=1 ) = " << prob01 << std::endl;
                 std::cout << "Pr( x" << x << "=1 | x" << y << "=0 ) = " << prob10 << std::endl;
@@ -208,18 +208,18 @@ int main(int argc, char** argv)
     //small_example();
 
     INFO("Loading %s\n", path.c_str());
-    WpBdd wpbdd = wpbdd_from_files(path, trackpeak);;
+    BnBdd bnbdd = bnbdd_from_files(path, trackpeak);;
     stats.load_time = wctime() - t_start;
-    stats.build_time = wpbdd.build_time;
-    stats.bn2cnf_time = wpbdd.bn2cnf_time;
-    stats.nodecount = sylvan::sylvan_nodecount(wpbdd.dd.GetBDD());
-    stats.peaknodes = std::max(wpbdd.peaknodes, stats.nodecount);
-    uint64_t full = 1LL<<wpbdd.rv_vars.size();
+    stats.build_time = bnbdd.build_time;
+    stats.bn2cnf_time = bnbdd.bn2cnf_time;
+    stats.nodecount = sylvan::sylvan_nodecount(bnbdd.dd.GetBDD());
+    stats.peaknodes = std::max(bnbdd.peaknodes, stats.nodecount);
+    uint64_t full = 1LL<<bnbdd.rv_vars.size();
     INFO("WPBDD nodecount = %ld / %ld = %lf\n", stats.nodecount, full, (double)stats.nodecount / (double)full);
 
     // time WMC
     t_start = wctime();
-    stats.wmc_value = wpbdd_marginalize(wpbdd, {});
+    stats.wmc_value = bnbdd_marginalize(bnbdd, {});
     stats.wmc_time = wctime() - t_start;
     INFO("WMC value = %lf\n", stats.wmc_value);
 
@@ -230,13 +230,13 @@ int main(int argc, char** argv)
 
 
     /*
-    FILE *fp = fopen("wpbdd.dot", "w");
-    wpbdd.dd.PrintDot(fp);
+    FILE *fp = fopen("bnbdd.dot", "w");
+    bnbdd.dd.PrintDot(fp);
     fclose(fp);
 
-    computeAllProbs(wpbdd);
-    marinalizeIndividual(wpbdd);
-    conditionPairs(wpbdd);
+    computeAllProbs(bnbdd);
+    marinalizeIndividual(bnbdd);
+    conditionPairs(bnbdd);
     */
 
     sylvan::sylvan_quit();

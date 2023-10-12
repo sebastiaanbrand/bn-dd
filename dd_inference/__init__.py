@@ -1,9 +1,9 @@
 from time import perf_counter
 from .ddcpp import (
-    wpbdd_marginalize,
-    wpbdd_condition,
-    wpbdd_do,
-    wpbdd_from_files,
+    bnbdd_marginalize,
+    bnbdd_condition,
+    bnbdd_do,
+    bnbdd_from_files,
     cnf_from_file,
     print_cnf,
     probs_from_file,
@@ -12,7 +12,7 @@ from .ddcpp import (
     print_rv_vars,
     init_system,
     shutdown_system, 
-    WpBdd
+    BnBdd
 )
 
 class SylvanRunnable:
