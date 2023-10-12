@@ -1,11 +1,6 @@
 # BN inference with DDs
 
-**TODO:**
-- Verify WMC with no constraint on all networks.
-
-
 ## Dependencies
-
 
 * Dependencies of [Sylvan](https://github.com/trolando/sylvan).
 * [Graphviz](https://graphviz.org/) for visualization of BNs
@@ -77,7 +72,7 @@ To turn a Bayesian network in `.xmlbif` format into a CNF formula, run
 $ python scripts/bn_to_cnf.py models/model_name.xmlbif
 ```
 
-To run run inference (**TODO:** add cl options to run specific queries? We can also do the entire optimization in C++.)
+To measure build and inference time for a given BN encoded in CNF
 ```shell
 $ ./dd_inference/build/analyze_bn models/model_name
 ```
