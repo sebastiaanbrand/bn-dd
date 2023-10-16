@@ -14,8 +14,6 @@ exp_id = datetime.now().strftime("%Y%m%d%H%M%S")
 parser = argparse.ArgumentParser(description='Generate bash script with experiments.')
 parser.add_argument('distribution', type=str, choices=['lg','tb','nm'], help='Distribution to use')
 parser.add_argument('experiment', type=str, help='Experiment to use')
-parser.add_argument('--ace', action='store_true', dest='ace', default=False,
-                    help='Generate bash scripts which use Ace for WMC instead of DDs.')
 dist_mapping = {'lg':'linear_gaussian',
                 'tb':'tuebingen',
                 'nm':'normal_mixture'}
@@ -36,17 +34,11 @@ def generate_bns(dist, exp):
         outfile.write("\n")
 
 
-def discretize_BNs(dist, exp, ace):
+def discretize_BNs(dist, exp):
     """
     For a given distribution and experiment, generate all the .xmlbif and settings file for all discretizations
     """
-
-    # for now, let's use xmlbif for Ace, which is then converted to NET/HUGIN
-    # (writing NET output directly using pgmpy appeard to give some issues)
-    # (writing XMLBIF and converting those to NET _also_ gives issues, but fewer...)
     bn_format = '--output_type cnf'
-    if ace:
-        bn_format = '--output_type xmlbif'
 
     command = "python scripts/discretize_bn.py {} {} {} {} 2>&1 | tee -a experiments/log_{}.txt\n"
     with open(output_file.format(dist, exp, exp_id), 'a', encoding='utf-8') as outfile:
@@ -95,20 +87,6 @@ def all_cnf_to_dd(dist, exp, folder):
         outfile.write("\n")
 
 
-def wmc_with_ace(dist, exp, folder):
-    """
-    Generate the bash commands to run WMC with Ace on all .net files in folder.
-    """
-    command = "python include/Ace/ace.py --network {} --overwrite 2>&1 | tee -a experiments/log_{}.txt\n"
-    with open(output_file.format(dist, exp, exp_id), 'a', encoding='utf-8') as outfile:
-        outfile.write("# run Ace on .xmlbif files\n")
-        for filename in os.listdir(folder):
-            if filename.endswith('.xmlbif'):
-                filepath = os.path.join(folder, filename)
-                outfile.write(command.format(filepath, exp_id))
-        outfile.write("\n")
-
-
 def draw_pareto(dist, exp):
     """
     For a given distribution and experiment, generate all the BN data and settings json
@@ -140,17 +118,14 @@ def main():
     generate_bns(distribution, experiment)
 
     # 2. discretize using different methods
-    discretize_BNs(distribution, experiment, args.ace)
+    discretize_BNs(distribution, experiment)
 
     # 3. translate discretized BN to CNF
     # By default, the discretize_bn script now outputs cnf directly
     #all_bn_to_cnf(distribution, experiment, folder)
 
     # 4. construct DD/d-DNNF from CNF (and measure inference time)
-    if args.ace:
-        wmc_with_ace(distribution, experiment, folder)
-    else:
-        all_cnf_to_dd(distribution, experiment, folder)
+    all_cnf_to_dd(distribution, experiment, folder)
 
     # 5. plot pareto front for different distance metrics
     draw_pareto(distribution,experiment)
