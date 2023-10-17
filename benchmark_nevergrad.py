@@ -1,44 +1,50 @@
-"""
-Setup instuctions:
-    $ ./compile_sources.sh    
-    $ pip install pybind11 ioh
-    $ python setup.py develop
-    $ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/dd_inference/sylvan_build/src 
-    $ python run.py
+import ioh
+from itertools import product
+from functools import partial
+from multiprocessing import Pool, cpu_count
 
-# Networks are like this
-D 1
-G 7 8 -> this means there are two boolean variables encoding G
-I 4
-L 24
-S 19
+import sys
+import argparse
+import warnings
+import os
 
-TODO: Objective function
-"""
+import pandas as pd
 
 import json
-import os
-from itertools import chain,product
+from itertools import chain
 from time import perf_counter
 from dataclasses import dataclass, field
 from typing import List, Set, Tuple
 from functools import cached_property
 import ioh
 import numpy as np
+
+
 import dd_inference as dd
 
-from algorithms import UnboundedIntegerEA 
+import time
 
-TEST_MODEL_PATH = "./models/toy_networks/line"
-MODELS = (
-    "data_lg_EV30",
-    "data_causal_quadratic_EV30",
-    "data_lalonde_EV12"
+import nevergrad as ng
+import nevergrad.common.typing as tp
+
+from nevergrad.optimization.optimizerlib import (
+    RCobyla,
+    DiagonalCMA,
+    RandomSearch, 
+    PSO, 
+    OnePlusOne, 
+    Powell, 
+    MultiBFGS,
+    DE, 
+    DiscreteLenglerOnePlusOne, 
+    OptimisticDiscreteOnePlusOne, 
+    RSLSQP,
+    NGOpt39,
+    #NgIoh
 )
 
-MODEL_IDX = 0
-MODEL_PATH = "./optimization/" + MODELS[MODEL_IDX]
-
+DATA_ROOT = "./"
+MODEL_ROOT = "./optimization"
 
 @dataclass
 class Node:
@@ -63,11 +69,8 @@ class Node:
 
         with open(f"{model_name}settings.json") as f:
             data = json.load(f)
-            target_var, *_ = data["target_var"]
-            search_vars = data["search_vars"]
             for source, target in data["edges"]:
                 nodes[target].parents.append(nodes[source])
-            
 
         with open(f"{model_name}_value_dict.json") as f:
             data = json.load(f)
@@ -76,25 +79,20 @@ class Node:
                     map(lambda x: x[1], sorted(value.items(), key=lambda x: int(x[0])))
                 )
                 nodes[key].n_bins = len(nodes[key].bins)
-        return nodes, target_var, search_vars
+        return nodes
 
     def int_to_binary(self, value: int) -> Set[Tuple[int, bool]]:
         binary = np.binary_repr(value, self.n_idx)
         return set(zip(self.node_ids, map(int, binary)))
-
+   
 
 class Objective:
-<<<<<<< HEAD
-    def __init__(self, nodes: List[Node], diagram: dd.WpBdd, condition_node: Node, search_nodes: List[str]):
-        self.nodes = [node for node in nodes if node.name in search_nodes]
-=======
-    def __init__(self, nodes: List[Node], diagram: dd.BnBdd, condition_node: Node):
+    def __init__(self, nodes: List[Node], diagram: dd.WpBdd, condition_node: Node):
         self.nodes = [node for node in nodes if node != condition_node]
->>>>>>> ecca3a7ba075aef6ad5c17518ad1e2fa885fbaf2
         self.diagram = diagram
         self.dimension = len(self.nodes)
-        self.lb = np.zeros(len(self.nodes), dtype=int) - 1
-        self.ub = np.array([node.n_bins - 1 for node in self.nodes], dtype=int)
+        self.lb = np.zeros(len(self.nodes)) - 1
+        self.ub = np.array([node.n_bins for node in self.nodes])
         self.condition_node = condition_node
         self.max_y = max(self.condition_node.bins)
         self.condition_node_ops = [
@@ -134,14 +132,14 @@ class Objective:
         sum_prob = 0
 
         for condition, bin_value in self.condition_node_ops:
-            pr_marginal = dd.bnbdd_marginalize(self.diagram, condition.union(do_ops))
+            pr_marginal = dd.wpbdd_marginalize(self.diagram, condition.union(do_ops))
             pr_total = 0
             if pr_marginal == 0:
                 continue
 
             pr_do = 1.0
             for do_node, do_node_ops, do_ops_with_parent in do_nodes:
-                pdo = dd.bnbdd_condition(self.diagram, do_node_ops, do_ops_with_parent)
+                pdo = dd.wpbdd_condition(self.diagram, do_node_ops, do_ops_with_parent)
                 pr_do *= pdo
             pr_total = pr_marginal / pr_do
             sum_prob += pr_total
@@ -153,84 +151,106 @@ class Objective:
         expectation = self.calc_expected_value(x)
         return self.max_y - expectation
 
-def set_objective(dim: int, iid: int):
-    return [float("nan")] * dim, 0.0
+def runParallelFunction(runFunction, arguments):
+    """
+        Return the output of runFunction for each set of arguments,
+        making use of as much parallelization as possible on this system
 
-
-def brute_force(problem, limit=1000):
-    obj = problem.bounds
-    possible_solutions = list(product(*map(lambda x: range(*x), zip(obj.lb, obj.ub + 1))))
-    n_possible_solutions = len(possible_solutions)
+        :param runFunction: The function that can be executed in parallel
+        :param arguments:   List of tuples, where each tuple are the arguments
+                            to pass to the function
+        :return:
+    """
     
-    if n_possible_solutions > limit:
-        print(n_possible_solutions, " is too much to brute force, quitting...")
-        return 
-    
-    print(f"Brute force evaluating {n_possible_solutions} solutions")
-    ymin = float("inf")
-    xmin = None
-    for x in possible_solutions:
-        y = problem(x)
-        if y < ymin:
-            ymin = y
-            xmin = x
-    print("best found: (x, y)", xmin, ymin)
-    print()
-    return xmin, ymin
 
-if __name__ == "__main__":
-    tracepeak = True
-    verbose = False
-    budget = 5000
-    n_reps = 50
-    nodes, target_var, search_vars = Node.read(MODEL_PATH)
+    arguments = list(arguments)
+    p = Pool(min(2, len(arguments)))
+    results = p.map(runFunction, arguments)
+    p.close()
+    return results
+
+class Algorithm_Evaluator():
+    def __init__(self, optimizer, ubs, budget=5000):
+        self.alg = optimizer
+        self.budget = budget
+        self.param = ng.p.Instrumentation(*[ng.p.TransitionChoice(range(-1,ub)) for ub in ubs])
+        
+        # self.param_dict = {}
+        # for k,v in in_params:
+        #     p1 = {k : ng.p.TransitionChoice(range(-1,v))}
+        #     self.param_dict.update(p1)        
+        
+    def __call__(self, func, n_reps):
+
+        for seed in range(n_reps):
+            np.random.seed(int(seed))
+            
+            def func_interface(*args):
+                if func.state.optimum_found:
+                    return 0
+                return func(list(args))
+            
+            parametrization = self.param
+            optimizer = eval(f"{self.alg}")(
+                parametrization=parametrization, budget=int(self.budget)
+            )
+            optimizer.minimize(func_interface)
+            print(func.state)
+            func.reset()
+        
+def run_optimization(args, budget=5000, n_reps = 10):
+    alg, model_path = args
+    model_path = f"{MODEL_ROOT}/{model_path}"
+    nodes = Node.read(model_path)
     np.random.seed(1)
     with dd.SylvanRunnable():
         print("loading model...", end=" ")
         start = perf_counter()
-        bnbdd = dd.bnbdd_from_files(MODEL_PATH, tracepeak, verbose)
+        wpbdd = dd.wpbdd_from_files(model_path, False, False)
         print("time elapsed: ", perf_counter() - start, "s")
 
-<<<<<<< HEAD
-        obj = Objective(list(nodes.values()), wpbdd, nodes[target_var], search_vars)
-=======
-        obj = Objective(list(nodes.values()), bnbdd, nodes["E"])
->>>>>>> ecca3a7ba075aef6ad5c17518ad1e2fa885fbaf2
+        obj = Objective(list(nodes.values()), wpbdd, nodes["E"])
+        def calc_obj(x,y):
+            return [x*[0], 0]
         problem = ioh.wrap_problem(
             obj,
-            f"{os.path.basename(MODEL_PATH)}_objective",
+            f"{os.path.basename(model_path)}_objective",
             ioh.ProblemClass.INTEGER,
             obj.dimension,
             0,
             ioh.OptimizationType.MIN,
             min(obj.lb),
             max(obj.ub),
-            calculate_objective=set_objective
+            calculate_objective = calc_obj
         )
-        problem.bounds.ub = obj.ub
-        problem.enforce_bounds(float("inf"), how=ioh.ConstraintEnforcement.HARD)
+        logger = ioh.logger.Analyzer(root=DATA_ROOT, folder_name=f"{model_path}_")
+        alg = Algorithm_Evaluator(alg, obj.ub, budget)
+        alg(problem, n_reps)
 
-        brute_force(problem)
-        
+if __name__ == '__main__':
+    warnings.filterwarnings("ignore", category=RuntimeWarning) 
+    warnings.filterwarnings("ignore", category=FutureWarning)
 
-
-
-        # logger = ioh.logger.Analyzer(
-        #     algorithm_name="intEA",
-        #     store_positions=True,
-        #     folder_name="intEA"
-        # )
-        # problem.attach_logger(logger)
-
-        # for run in range(n_reps):
-        #     es = UnboundedIntegerEA(mu=5, lambda_=20, budget=budget, verbose=True)
-        #     best = es(problem)
-        #     print(run, problem.state.evaluations, best)
-        #     problem.reset()
-
-
-        # for i in range(-1, 2):
-        #     for j in range(-1, 30):
-        #         x = [i, j]
-        #         print(x, problem(x))
-
+    algnames = [    
+        # "RCobyla",
+        # "DiagonalCMA",
+        "RandomSearch", 
+        # "PSO", 
+        # "OnePlusOne", 
+        # "Powell", 
+        # "MultiBFGS",
+        # "DE", 
+        # "DiscreteLenglerOnePlusOne", 
+        # "OptimisticDiscreteOnePlusOne", 
+        # "RSLSQP",
+        # "NGOpt39",
+        #"NgIoh"
+    ]
+    
+    models = [
+        "data_lg_EV30"
+    ]
+    
+    args = product(algnames, models)
+    run_optimizer = partial(run_optimization, budget = 500, n_reps=10)
+    runParallelFunction(run_optimizer, args)

@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <sys/time.h>
 
-#include <wpbdd_inference.hpp>
+#include <bnbdd_inference.hpp>
 
 /**
  * Obtain current wallclock time
@@ -21,7 +21,7 @@ wctime()
 
 /**********************<Weighted model counting>*******************************/
 
-TASK_IMPL_5(double, wpbdd_modelcount, sylvan::BDD, dd, int *, meta, ProbMap *, pm, std::vector<int> *, rv_vars, int, i)
+TASK_IMPL_5(double, bnbdd_modelcount, sylvan::BDD, dd, int *, meta, ProbMap *, pm, std::vector<int> *, rv_vars, int, i)
 {
     if (dd == sylvan::sylvan_true) return 1.0;
     if (dd == sylvan::sylvan_false) return 0.0;
@@ -59,26 +59,26 @@ TASK_IMPL_5(double, wpbdd_modelcount, sylvan::BDD, dd, int *, meta, ProbMap *, p
     {
     case no_rv_var:
         // current var should correspond to a weight / prob
-        prob_low  = CALL(wpbdd_modelcount, low, meta, pm, rv_vars, i); // only used for assert
-        prob_high = CALL(wpbdd_modelcount, high, meta, pm, rv_vars, i);
+        prob_low  = CALL(bnbdd_modelcount, low, meta, pm, rv_vars, i); // only used for assert
+        prob_high = CALL(bnbdd_modelcount, high, meta, pm, rv_vars, i);
         assert(pm->count(var));
         assert(prob_low == 0);
         hack.d = (*pm)[var] * prob_high;
         break;
     case marg_out:
         // current var should be marginalized out
-        prob_low  = CALL(wpbdd_modelcount, low, meta, pm, rv_vars, i+1);
-        prob_high = CALL(wpbdd_modelcount, high, meta, pm, rv_vars, i+1);
+        prob_low  = CALL(bnbdd_modelcount, low, meta, pm, rv_vars, i+1);
+        prob_high = CALL(bnbdd_modelcount, high, meta, pm, rv_vars, i+1);
         hack.d = prob_low + prob_high;
         break;
     case marg_0:
         // compute prob for var = 0
-        prob_low  = CALL(wpbdd_modelcount, low, meta, pm, rv_vars, i+1);
+        prob_low  = CALL(bnbdd_modelcount, low, meta, pm, rv_vars, i+1);
         hack.d = prob_low;
         break;
     case marg_1:
         // compute prob for var = 1
-        prob_high = CALL(wpbdd_modelcount, high, meta, pm, rv_vars, i+1);
+        prob_high = CALL(bnbdd_modelcount, high, meta, pm, rv_vars, i+1);
         hack.d = prob_high;
         break;
     default:
@@ -96,11 +96,11 @@ TASK_IMPL_5(double, wpbdd_modelcount, sylvan::BDD, dd, int *, meta, ProbMap *, p
     return hack.d;
 }
 
-double wpbdd_marginalize(WpBdd wpbdd, Constraint x)
+double bnbdd_marginalize(BnBdd bnbdd, Constraint x)
 {
     // Construct meta which encodes computing Pr(var1=val1 ^ var2=val2 ^ ... )
-    int meta[wpbdd.nvars] = {0};
-    for (int i : wpbdd.rv_vars) {
+    int meta[bnbdd.nvars] = {0};
+    for (int i : bnbdd.rv_vars) {
         meta[i] = marg_out; // initially marginalize all (rv) vars out
     }
     for (std::pair<int,bool> x_i : x) {
@@ -110,25 +110,25 @@ double wpbdd_marginalize(WpBdd wpbdd, Constraint x)
 
     // Compute using model counting
     sylvan::cache_clear(); // new meta, need to reset cache
-    return wpbdd_modelcount(wpbdd.dd.GetBDD(), meta, &(wpbdd.pm), &(wpbdd.rv_vars));
+    return bnbdd_modelcount(bnbdd.dd.GetBDD(), meta, &(bnbdd.pm), &(bnbdd.rv_vars));
 }
 
-double wpbdd_condition(WpBdd wpbdd, Constraint x, Constraint y)
+double bnbdd_condition(BnBdd bnbdd, Constraint x, Constraint y)
 {
     // Pr( X=x | Y=y ) = Pr( X=x ^ Y=y ) / Pr( Y=y )
     Constraint x_and_y(x);
     x_and_y.insert(y.begin(), y.end());
-    double num = wpbdd_marginalize(wpbdd, x_and_y); // Pr( X=x ^ Y=y )
-    double denom = wpbdd_marginalize(wpbdd, y);     // Pr( Y=y )
+    double num = bnbdd_marginalize(bnbdd, x_and_y); // Pr( X=x ^ Y=y )
+    double denom = bnbdd_marginalize(bnbdd, y);     // Pr( Y=y )
     return num / denom;
 }
 
-double wpbdd_do(WpBdd wpbdd, Constraint x, Constraint t, std::set<int> pt)
+double bnbdd_do(BnBdd bnbdd, Constraint x, Constraint t, std::set<int> pt)
 {
     // Pr( X=x| do(T=t) ) = Pr( X=x ^ T=t ) / Pr( T=t | pa(T)_{|X=x} )
     Constraint x_and_t(x);
     x_and_t.insert(t.begin(), t.end());
-    double num = wpbdd_marginalize(wpbdd, x_and_t); // Pr( X=x ^ T=t )
+    double num = bnbdd_marginalize(bnbdd, x_and_t); // Pr( X=x ^ T=t )
 
     Constraint ptx;
     for (std::pair<int,bool> x_i : x) {
@@ -137,7 +137,7 @@ double wpbdd_do(WpBdd wpbdd, Constraint x, Constraint t, std::set<int> pt)
         }
     }
 
-    double denom = wpbdd_condition(wpbdd, t, ptx);  // Pr( T=t | pa(T)_{X=x}) )
+    double denom = bnbdd_condition(bnbdd, t, ptx);  // Pr( T=t | pa(T)_{X=x}) )
 
     return num/denom;
 }
@@ -170,32 +170,32 @@ Constraint constrain(std::vector<int> vars, int val)
 
 static int max_var;
 
-WpBdd wpbdd_from_files(std::string filepath, bool trackpeak, bool verbose)
+BnBdd bnbdd_from_files(std::string filepath, bool trackpeak, bool verbose)
 {
-    WpBdd wpbdd;
+    BnBdd bnbdd;
 
     // load cnf
     if (verbose) std::cout << "loading CNF from " << filepath << std::endl;
-    Cnf f = cnf_from_file(filepath + ".cnf", &(wpbdd.bn2cnf_time));
+    Cnf f = cnf_from_file(filepath + ".cnf", &(bnbdd.bn2cnf_time));
     if (verbose) print_cnf(f);
 
     // convert cnf to bdd
     if (verbose) std::cout << "converting CNF to BDD" << std::endl;
     double t_start = wctime();
-    wpbdd.dd = cnf_to_bdd(f, trackpeak, &wpbdd.peaknodes);
-    wpbdd.nvars = max_var + 1; // set by cnf_from_file(), not super clean
-    wpbdd.build_time = wctime() - t_start;
+    bnbdd.dd = cnf_to_bdd(f, trackpeak, &bnbdd.peaknodes);
+    bnbdd.nvars = max_var + 1; // set by cnf_from_file(), not super clean
+    bnbdd.build_time = wctime() - t_start;
 
     // load RV var information
-    wpbdd.rv_vars = rv_vars_from_file(filepath + ".cnf_rv_vars");
-    if (verbose) print_rv_vars(wpbdd.rv_vars);
+    bnbdd.rv_vars = rv_vars_from_file(filepath + ".cnf_rv_vars");
+    if (verbose) print_rv_vars(bnbdd.rv_vars);
 
     // load probabilities
     if (verbose) std::cout << "loading probs from " << filepath << std::endl;
-    wpbdd.pm = probs_from_file(filepath + ".cnf_probs");
-    if (verbose) print_probmap(wpbdd.pm);
+    bnbdd.pm = probs_from_file(filepath + ".cnf_probs");
+    if (verbose) print_probmap(bnbdd.pm);
 
-    return wpbdd;
+    return bnbdd;
 }
 
 Cnf cnf_from_file(std::string filepath, double *bn_to_cnf_time)

@@ -21,7 +21,7 @@ sylvan_so = os.path.join(
 ext = Pybind11Extension(
     "dd_inference.ddcpp", 
     [
-        "dd_inference/wpbdd_inference.cpp", 
+        "dd_inference/bnbdd_inference.cpp", 
         "dd_inference/interface.cpp"
     ], 
     include_dirs=[
