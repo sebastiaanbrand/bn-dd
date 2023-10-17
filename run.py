@@ -36,7 +36,7 @@ MODELS = (
     "data_lalonde_EV12"
 )
 
-MODEL_IDX = 0
+MODEL_IDX = 1
 MODEL_PATH = "./optimization/" + MODELS[MODEL_IDX]
 
 
@@ -84,13 +84,8 @@ class Node:
 
 
 class Objective:
-<<<<<<< HEAD
-    def __init__(self, nodes: List[Node], diagram: dd.WpBdd, condition_node: Node, search_nodes: List[str]):
+    def __init__(self, nodes: List[Node], diagram: dd.BnBdd, condition_node: Node, search_nodes: List[str]):
         self.nodes = [node for node in nodes if node.name in search_nodes]
-=======
-    def __init__(self, nodes: List[Node], diagram: dd.BnBdd, condition_node: Node):
-        self.nodes = [node for node in nodes if node != condition_node]
->>>>>>> ecca3a7ba075aef6ad5c17518ad1e2fa885fbaf2
         self.diagram = diagram
         self.dimension = len(self.nodes)
         self.lb = np.zeros(len(self.nodes), dtype=int) - 1
@@ -191,11 +186,7 @@ if __name__ == "__main__":
         bnbdd = dd.bnbdd_from_files(MODEL_PATH, tracepeak, verbose)
         print("time elapsed: ", perf_counter() - start, "s")
 
-<<<<<<< HEAD
-        obj = Objective(list(nodes.values()), wpbdd, nodes[target_var], search_vars)
-=======
-        obj = Objective(list(nodes.values()), bnbdd, nodes["E"])
->>>>>>> ecca3a7ba075aef6ad5c17518ad1e2fa885fbaf2
+        obj = Objective(list(nodes.values()), bnbdd, nodes[target_var], search_vars)
         problem = ioh.wrap_problem(
             obj,
             f"{os.path.basename(MODEL_PATH)}_objective",
