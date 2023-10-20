@@ -1,0 +1,231 @@
+2023-10-20 13:00:39,205 - __main__ - INFO - create_discretization - Sart Discretizing
+/mnt/c/Data/BN-DD/bn-dd/.venv/lib/python3.10/site-packages/pgmpy/estimators/base.py:170: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  data.groupby([variable] + parents).size().unstack(parents)
+/mnt/c/Data/BN-DD/bn-dd/.venv/lib/python3.10/site-packages/pgmpy/estimators/base.py:170: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  data.groupby([variable] + parents).size().unstack(parents)
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:152: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  values = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().values for col in self.columns]
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:156: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  self.dicts = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().to_dict() for col in self.data.columns]
+CNF formula has:
+  * 15 variables for BN random variables
+  * 81 variables for probabilities
+  * 280 clauses
+2023-10-20 13:00:44,180 - __main__ - INFO - create_discretization - Sart Discretizing
+/mnt/c/Data/BN-DD/bn-dd/.venv/lib/python3.10/site-packages/pgmpy/estimators/base.py:170: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  data.groupby([variable] + parents).size().unstack(parents)
+/mnt/c/Data/BN-DD/bn-dd/.venv/lib/python3.10/site-packages/pgmpy/estimators/base.py:170: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  data.groupby([variable] + parents).size().unstack(parents)
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:152: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  values = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().values for col in self.columns]
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:156: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  self.dicts = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().to_dict() for col in self.data.columns]
+CNF formula has:
+  * 15 variables for BN random variables
+  * 131 variables for probabilities
+  * 1048 clauses
+2023-10-20 13:00:49,005 - __main__ - INFO - create_discretization - Sart Discretizing
+/mnt/c/Data/BN-DD/bn-dd/.venv/lib/python3.10/site-packages/pgmpy/estimators/base.py:170: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  data.groupby([variable] + parents).size().unstack(parents)
+/mnt/c/Data/BN-DD/bn-dd/.venv/lib/python3.10/site-packages/pgmpy/estimators/base.py:170: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  data.groupby([variable] + parents).size().unstack(parents)
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:152: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  values = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().values for col in self.columns]
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:156: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  self.dicts = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().to_dict() for col in self.data.columns]
+CNF formula has:
+  * 20 variables for BN random variables
+  * 139 variables for probabilities
+  * 2060 clauses
+2023-10-20 13:00:53,878 - __main__ - INFO - create_discretization - Sart Discretizing
+/mnt/c/Data/BN-DD/bn-dd/.venv/lib/python3.10/site-packages/pgmpy/estimators/base.py:170: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  data.groupby([variable] + parents).size().unstack(parents)
+/mnt/c/Data/BN-DD/bn-dd/.venv/lib/python3.10/site-packages/pgmpy/estimators/base.py:170: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  data.groupby([variable] + parents).size().unstack(parents)
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:152: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  values = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().values for col in self.columns]
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:156: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  self.dicts = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().to_dict() for col in self.data.columns]
+CNF formula has:
+  * 20 variables for BN random variables
+  * 147 variables for probabilities
+  * 3512 clauses
+2023-10-20 13:00:58,955 - __main__ - INFO - create_discretization - Sart Discretizing
+/mnt/c/Data/BN-DD/bn-dd/.venv/lib/python3.10/site-packages/pgmpy/estimators/base.py:170: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  data.groupby([variable] + parents).size().unstack(parents)
+/mnt/c/Data/BN-DD/bn-dd/.venv/lib/python3.10/site-packages/pgmpy/estimators/base.py:170: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  data.groupby([variable] + parents).size().unstack(parents)
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:152: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  values = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().values for col in self.columns]
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:156: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  self.dicts = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().to_dict() for col in self.data.columns]
+CNF formula has:
+  * 20 variables for BN random variables
+  * 132 variables for probabilities
+  * 5540 clauses
+2023-10-20 13:01:03,890 - __main__ - INFO - create_discretization - Sart Discretizing
+/mnt/c/Data/BN-DD/bn-dd/.venv/lib/python3.10/site-packages/pgmpy/estimators/base.py:170: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  data.groupby([variable] + parents).size().unstack(parents)
+/mnt/c/Data/BN-DD/bn-dd/.venv/lib/python3.10/site-packages/pgmpy/estimators/base.py:170: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  data.groupby([variable] + parents).size().unstack(parents)
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:152: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  values = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().values for col in self.columns]
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:156: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  self.dicts = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().to_dict() for col in self.data.columns]
+CNF formula has:
+  * 24 variables for BN random variables
+  * 141 variables for probabilities
+  * 9647 clauses
+2023-10-20 13:01:09,740 - __main__ - INFO - create_discretization - Sart Discretizing
+/mnt/c/Data/BN-DD/bn-dd/.venv/lib/python3.10/site-packages/pgmpy/estimators/base.py:170: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  data.groupby([variable] + parents).size().unstack(parents)
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:152: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  values = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().values for col in self.columns]
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:156: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  self.dicts = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().to_dict() for col in self.data.columns]
+CNF formula has:
+  * 25 variables for BN random variables
+  * 120 variables for probabilities
+  * 15720 clauses
+2023-10-20 13:01:14,811 - __main__ - INFO - create_discretization - Sart Discretizing
+/mnt/c/Data/BN-DD/bn-dd/.venv/lib/python3.10/site-packages/pgmpy/estimators/base.py:170: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  data.groupby([variable] + parents).size().unstack(parents)
+/mnt/c/Data/BN-DD/bn-dd/.venv/lib/python3.10/site-packages/pgmpy/estimators/base.py:170: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  data.groupby([variable] + parents).size().unstack(parents)
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:152: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  values = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().values for col in self.columns]
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:156: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  self.dicts = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().to_dict() for col in self.data.columns]
+CNF formula has:
+  * 25 variables for BN random variables
+  * 108 variables for probabilities
+  * 30110 clauses
+2023-10-20 13:01:20,228 - __main__ - INFO - create_discretization - Sart Discretizing
+/mnt/c/Data/BN-DD/bn-dd/.venv/lib/python3.10/site-packages/pgmpy/estimators/base.py:170: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  data.groupby([variable] + parents).size().unstack(parents)
+/mnt/c/Data/BN-DD/bn-dd/.venv/lib/python3.10/site-packages/pgmpy/estimators/base.py:170: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  data.groupby([variable] + parents).size().unstack(parents)
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:152: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  values = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().values for col in self.columns]
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:156: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  self.dicts = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().to_dict() for col in self.data.columns]
+CNF formula has:
+  * 25 variables for BN random variables
+  * 99 variables for probabilities
+  * 49691 clauses
+2023-10-20 13:01:25,765 - __main__ - INFO - create_discretization - Sart Discretizing
+/mnt/c/Data/BN-DD/bn-dd/.venv/lib/python3.10/site-packages/pgmpy/estimators/base.py:170: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  data.groupby([variable] + parents).size().unstack(parents)
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:152: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  values = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().values for col in self.columns]
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:156: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  self.dicts = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().to_dict() for col in self.data.columns]
+CNF formula has:
+  * 15 variables for BN random variables
+  * 109 variables for probabilities
+  * 280 clauses
+2023-10-20 13:01:30,544 - __main__ - INFO - create_discretization - Sart Discretizing
+/mnt/c/Data/BN-DD/bn-dd/.venv/lib/python3.10/site-packages/pgmpy/estimators/base.py:170: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  data.groupby([variable] + parents).size().unstack(parents)
+/mnt/c/Data/BN-DD/bn-dd/.venv/lib/python3.10/site-packages/pgmpy/estimators/base.py:170: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  data.groupby([variable] + parents).size().unstack(parents)
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:152: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  values = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().values for col in self.columns]
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:156: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  self.dicts = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().to_dict() for col in self.data.columns]
+CNF formula has:
+  * 15 variables for BN random variables
+  * 99 variables for probabilities
+  * 1048 clauses
+2023-10-20 13:01:35,310 - __main__ - INFO - create_discretization - Sart Discretizing
+/mnt/c/Data/BN-DD/bn-dd/.venv/lib/python3.10/site-packages/pgmpy/estimators/base.py:170: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  data.groupby([variable] + parents).size().unstack(parents)
+/mnt/c/Data/BN-DD/bn-dd/.venv/lib/python3.10/site-packages/pgmpy/estimators/base.py:170: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  data.groupby([variable] + parents).size().unstack(parents)
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:152: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  values = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().values for col in self.columns]
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:156: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  self.dicts = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().to_dict() for col in self.data.columns]
+CNF formula has:
+  * 20 variables for BN random variables
+  * 73 variables for probabilities
+  * 2060 clauses
+2023-10-20 13:01:41,388 - __main__ - INFO - create_discretization - Sart Discretizing
+/mnt/c/Data/BN-DD/bn-dd/.venv/lib/python3.10/site-packages/pgmpy/estimators/base.py:170: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  data.groupby([variable] + parents).size().unstack(parents)
+/mnt/c/Data/BN-DD/bn-dd/.venv/lib/python3.10/site-packages/pgmpy/estimators/base.py:170: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  data.groupby([variable] + parents).size().unstack(parents)
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:152: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  values = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().values for col in self.columns]
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:156: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  self.dicts = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().to_dict() for col in self.data.columns]
+CNF formula has:
+  * 20 variables for BN random variables
+  * 55 variables for probabilities
+  * 3512 clauses
+2023-10-20 13:01:47,882 - __main__ - INFO - create_discretization - Sart Discretizing
+/mnt/c/Data/BN-DD/bn-dd/.venv/lib/python3.10/site-packages/pgmpy/estimators/base.py:170: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  data.groupby([variable] + parents).size().unstack(parents)
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:152: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  values = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().values for col in self.columns]
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:156: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  self.dicts = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().to_dict() for col in self.data.columns]
+CNF formula has:
+  * 20 variables for BN random variables
+  * 43 variables for probabilities
+  * 5540 clauses
+2023-10-20 13:01:53,774 - __main__ - INFO - create_discretization - Sart Discretizing
+/mnt/c/Data/BN-DD/bn-dd/.venv/lib/python3.10/site-packages/pgmpy/estimators/base.py:170: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  data.groupby([variable] + parents).size().unstack(parents)
+/mnt/c/Data/BN-DD/bn-dd/.venv/lib/python3.10/site-packages/pgmpy/estimators/base.py:170: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  data.groupby([variable] + parents).size().unstack(parents)
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:152: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  values = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().values for col in self.columns]
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:156: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  self.dicts = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().to_dict() for col in self.data.columns]
+CNF formula has:
+  * 25 variables for BN random variables
+  * 37 variables for probabilities
+  * 9952 clauses
+2023-10-20 13:02:00,068 - __main__ - INFO - create_discretization - Sart Discretizing
+/mnt/c/Data/BN-DD/bn-dd/.venv/lib/python3.10/site-packages/pgmpy/estimators/base.py:170: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  data.groupby([variable] + parents).size().unstack(parents)
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:152: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  values = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().values for col in self.columns]
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:156: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  self.dicts = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().to_dict() for col in self.data.columns]
+CNF formula has:
+  * 25 variables for BN random variables
+  * 24 variables for probabilities
+  * 16120 clauses
+2023-10-20 13:02:08,596 - __main__ - INFO - create_discretization - Sart Discretizing
+/mnt/c/Data/BN-DD/bn-dd/.venv/lib/python3.10/site-packages/pgmpy/estimators/base.py:170: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  data.groupby([variable] + parents).size().unstack(parents)
+/mnt/c/Data/BN-DD/bn-dd/.venv/lib/python3.10/site-packages/pgmpy/estimators/base.py:170: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  data.groupby([variable] + parents).size().unstack(parents)
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:152: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  values = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().values for col in self.columns]
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:156: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  self.dicts = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().to_dict() for col in self.data.columns]
+CNF formula has:
+  * 25 variables for BN random variables
+  * 20 variables for probabilities
+  * 31360 clauses
+2023-10-20 13:02:15,564 - __main__ - INFO - create_discretization - Sart Discretizing
+/mnt/c/Data/BN-DD/bn-dd/.venv/lib/python3.10/site-packages/pgmpy/estimators/base.py:170: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  data.groupby([variable] + parents).size().unstack(parents)
+/mnt/c/Data/BN-DD/bn-dd/.venv/lib/python3.10/site-packages/pgmpy/estimators/base.py:170: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  data.groupby([variable] + parents).size().unstack(parents)
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:152: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  values = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().values for col in self.columns]
+/mnt/c/Data/BN-DD/bn-dd/scripts/discretize_bn.py:156: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  self.dicts = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().to_dict() for col in self.data.columns]
+CNF formula has:
+  * 25 variables for BN random variables
+  * 20 variables for probabilities
+  * 54100 clauses
+2023-10-20 13:02:21,975 - __main__ - INFO - create_discretization - Sart Discretizing
+CNF formula has:
+  * 16 variables for BN random variables
+  * 122 variables for probabilities
+  * 2653 clauses

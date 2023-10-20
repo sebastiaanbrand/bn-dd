@@ -23,8 +23,8 @@ sampler = qmc.Sobol(d=2, scramble=False)
 sample = sampler.random_base2(m=5)
 l_bounds = [100, 1] #sample size, variance
 u_bounds = [2000, 10]
-samples_sobolt = qmc.scale(sample, l_bounds, u_bounds)    
-print(samples_sobolt)
+samples_sobolt = qmc.scale(sample, l_bounds, u_bounds)[0:25]    
+
 #Normal Mixture configurations
 nm_edges = [('X', 'Y')]
 nm_source = nm_edges[0][0]
@@ -46,7 +46,6 @@ tb_sink = tb_edges[0][1]
 #Total Sample sizes
 total_sample_size = [y for x in [sample_sizes, samples_sobolt.T[0][0:25], sample_sizes_nm] for y in x]
 total_sample_size = [round(x) for x in total_sample_size]
-print(total_sample_size)
 
 #Causal Bayesian Network Configuration
 causal_edges = [('T', 'Y'), ('Z1', 'T'), ('Z1', 'Y')]
@@ -70,7 +69,7 @@ dgp_q = pd.DataFrame(z, columns=['Z1'])
 dgp_q['Y']=y
 dgp_q['T']=t
 ate_q = np.mean([y1-y0])
-print(ate_q)
+
 
 #Synthetic Datasets
 causal_edges_f = [('T', 'Y'), ('Z1', 'T'), ('Z1', 'Y'), ('Z2', 'T'), ('Z2', 'Y'), ('Z3', 'T'), ('Z3', 'Y'), ('Z4', 'T'), ('Z4', 'Y')

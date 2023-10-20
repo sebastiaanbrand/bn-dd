@@ -15,7 +15,7 @@ sys.path.insert(1,os.path.join(os.getcwd(), "conf/"))
 import generate_config as config
 
 parser = argparse.ArgumentParser(description='Generate Bayesian Network')
-parser.add_argument('distribution', type=str, choices=['lg','tb','nm', 'lgS', 'causal'], help='Sort of distribution to consider')
+parser.add_argument('distribution', type=str, choices=['lg','tb','nm', 'lgS', 'causalq', 'lalonde'], help='Sort of distribution to consider')
 
 class LG_generator:
     """
@@ -316,6 +316,111 @@ class Causal_generator:
         with open(self.model_path+self.filename+"settings.json", "w") as outfile:
             json.dump(self.settings, outfile)
 
+class Lalonde_generator:
+    """generate tuebingen dataset
+    """
+
+    def __init__(self):
+
+            # Create logger
+        log_format = '%(asctime)s - %(name)s - %(levelname)s - %(funcName)s - %(message)s'
+        logging.basicConfig(format=log_format, level=logging.INFO, stream=sys.stdout)
+        logger = logging.getLogger()
+        self.logger = logging.getLogger(__name__)
+        self.edges = config.causal_edges
+        self.nodes = sorted(set([i for sub in self.edges for i in sub]))
+        self.data = pd.DataFrame(columns=self.nodes)
+
+    def create_bn_file(self):
+        """
+        This functions runs all the scripts to construct the Normal Mixture BN.
+        :return (pd.Dataframe): preprocessed data
+        """
+        self.logger.info("Sart Constructing Network")
+        #Generate data
+        self.generate_data()
+        #Create file name
+        self.create_file_name()
+        #Write csv
+        self.write_data()
+        #Write json
+        self.create_json()
+
+    def generate_data(self):
+        "Generate the set"
+        lalonde_treated, lalonde_controls = config.lalonde_treated, config.lalonde_controls
+        psid_controls = pd.read_csv("data/"+lalonde_controls, delimiter='  ', names=config.lalonde_cols)
+        nwsre74_treated = pd.read_csv("data/"+lalonde_treated, delimiter='  ', names=config.lalonde_cols)
+        self.data = pd.concat([nwsre74_treated, psid_controls])
+        #lg_data = lg_data.convert_dtypes()
+        self.lalonde_edges = config.lalonde_edges
+        print(len(self.data))
+
+    def create_file_name(self):
+        "create name and json specifics of network"
+        self.settings = {'distribution':'lalonde','edges': self.lalonde_edges, 'ate': 1794.34}
+
+    def write_data(self):
+        "Write the generated data as csv"
+        self.filename = f"{self.settings['distribution']}1"
+        self.model_path = os.path.join(os.getcwd(), "models/undiscretized_models/")
+        self.data.to_csv(self.model_path + self.filename+'.csv', index=False)
+    
+    def create_json(self):
+        "Write the specification of data as json"
+        with open(self.model_path+self.filename+"settings.json", "w") as outfile:
+            json.dump(self.settings, outfile)
+
+class CSQ_generator:
+    """generate synthetic causal dataset quadratic
+    """
+
+    def __init__(self):
+
+            # Create logger
+        log_format = '%(asctime)s - %(name)s - %(levelname)s - %(funcName)s - %(message)s'
+        logging.basicConfig(format=log_format, level=logging.INFO, stream=sys.stdout)
+        logger = logging.getLogger()
+        self.logger = logging.getLogger(__name__)
+        self.edges = config.causal_edges_q
+        self.nodes = sorted(set([i for sub in self.edges for i in sub]))
+        self.data = pd.DataFrame(columns=self.nodes)
+
+    def create_bn_file(self):
+        """
+        This functions runs all the scripts to construct the Normal Mixture BN.
+        :return (pd.Dataframe): preprocessed data
+        """
+        self.logger.info("Sart Constructing Network")
+        #Generate data
+        self.generate_data()
+        #Create file name
+        self.create_file_name()
+        #Write csv
+        self.write_data()
+        #Write json
+        self.create_json()
+
+    def generate_data(self):
+        "Generate the set"
+        self.N = config.N
+        self.data = config.dgp_q  #pd.DataFrame({'Z': config.z, 'T': config.t, 'Y': config.y})
+        print(self.data)
+
+    def create_file_name(self):
+        "create name and json specifics of network"
+        self.settings = {'distribution':'causal_quadratic','edges': self.edges,'sample_size': self.N, 'ate':config.ate_q}
+
+    def write_data(self):
+        "Write the generated data as csv"
+        self.filename = f"{self.settings['distribution']}1"
+        self.model_path = os.path.join(os.getcwd(), "models/undiscretized_models/")
+        self.data.to_csv(self.model_path + self.filename+'.csv', index=False)
+    
+    def create_json(self):
+        "Write the specification of data as json"
+        with open(self.model_path+self.filename+"settings.json", "w") as outfile:
+            json.dump(self.settings, outfile)
 
 
 if __name__ == '__main__':
@@ -329,7 +434,7 @@ if __name__ == '__main__':
             LG.create_bn_file()
     elif distribution == 'lgS':
         samples = config.samples_sobolt        
-        for count, sample in enumerate(samples):
+        for count, sample in enumerate(samples): 
             LG = LG_generator(config.experiment_count_sobolt + count, sample) #experiments from 101-125 onwards
             LG.create_bn_file()
     elif distribution == 'nm':
@@ -341,9 +446,12 @@ if __name__ == '__main__':
         for exp in range(1, len(config.continuous_pairs)+1):
             TB = tb_generator(exp)
             TB.create_bn_file()
-    elif distribution == 'causal':
-        Causal = Causal_generator()
-        Causal.create_bn_file()    
+    elif distribution == 'lalonde':
+        Lalonde = Lalonde_generator()
+        Lalonde.create_bn_file()  
+    elif distribution == 'causalq':
+        Causal = CSQ_generator()
+        Causal.create_bn_file() 
     else:
         raise ValueError(f"Unrecognized distribution '{distribution}'")
 
