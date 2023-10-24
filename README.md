@@ -90,3 +90,5 @@ $ bash experiments/experiments_nm.sh
 $ bash experiments/experiments_causalq.sh
 $ bash experiments/experiments_lalonde.sh
 ```
+
+All intermediates files for experiments are stored on GitHub except for some extremely large files resulting from the Lalonde distribution. These are stored on Zenodo: https://zenodo.org/records/10036198.
