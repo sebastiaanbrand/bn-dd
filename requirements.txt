@@ -8,4 +8,4 @@ POT==0.8.2
 mdlp-discretization==0.3.3
 numpy==1.23.1
 seaborn==0.12.2
-LGNpy=1.0.0
+LGNpy==1.0.0

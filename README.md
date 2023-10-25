@@ -3,8 +3,10 @@
 ## Dependencies
 
 - Dependencies of [Sylvan](https://github.com/trolando/sylvan).
-- [Graphviz](https://graphviz.org/) for visualization of BNs
+- [Graphviz](https://graphviz.org/) for visualization of BNs (optional)
 - Python + packages in [requirements.txt](requirements.txt)
+
+On Ubuntu these can be installed with:
 
 ```bash
 # install Sylvan dependencies
@@ -22,7 +24,6 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Some notes on version numbers of packages:
 
 ## Installation (Linux)
 
