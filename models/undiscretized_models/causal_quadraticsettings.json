@@ -1,0 +1,1 @@
+{"distribution": "causal_quadratic", "edges": [["T", "Y"], ["Z1", "T"], ["Z1", "Y"]], "sample_size": 2500, "ate": 1.3695126287956354}
