@@ -24,7 +24,7 @@ sample = sampler.random_base2(m=5)
 l_bounds = [100, 1] #sample size, variance
 u_bounds = [2000, 10]
 samples_sobolt = qmc.scale(sample, l_bounds, u_bounds)    
-print(samples_sobolt)
+
 #Normal Mixture configurations
 nm_edges = [('X', 'Y')]
 nm_source = nm_edges[0][0]
@@ -46,7 +46,7 @@ tb_sink = tb_edges[0][1]
 #Total Sample sizes
 total_sample_size = [y for x in [sample_sizes, samples_sobolt.T[0][0:25], sample_sizes_nm] for y in x]
 total_sample_size = [round(x) for x in total_sample_size]
-print(total_sample_size)
+
 
 #Causal Bayesian Network Configuration
 causal_edges = [('T', 'Y'), ('Z1', 'T'), ('Z1', 'Y')]
@@ -70,7 +70,6 @@ dgp_q = pd.DataFrame(z, columns=['Z1'])
 dgp_q['Y']=y
 dgp_q['T']=t
 ate_q = np.mean([y1-y0])
-print(ate_q)
 
 #Synthetic Datasets
 causal_edges_f = [('T', 'Y'), ('Z1', 'T'), ('Z1', 'Y'), ('Z2', 'T'), ('Z2', 'Y'), ('Z3', 'T'), ('Z3', 'Y'), ('Z4', 'T'), ('Z4', 'Y')
@@ -88,10 +87,20 @@ dgp_f['T']=t
 ate_f = np.mean([y1-y0])
 
 #Distribution Folders Folders:
-dist_mapping = {'lg':'linear_gaussian','nm':'normal_mixture', 'tb':'tuebingen', 'lalonde':'lalonde','causal_friedman':'causal_friedman','causal_quadratic':'causal_quadratic' }
+dist_mapping = {'lg':'linear_gaussian','nm':'normal_mixture', 'tb':'tuebingen', 'lalonde':'lalonde','causal_friedman':'causal_friedman','causal_quadratic':'causal_quadratic'
+                ,'causalpaper':'causalpaper', 'climategraph':'climategraph', 'aglietti':'aglietti', 'toy_aglietti':'toy_aglietti'}
 sort_mapping = {'lg':'synthetic','nm':'synthetic', 'tb':'pair', 'lalonde':'causal','causal_friedman':'causal','causal_quadratic':'causal'}
-source_mapping = {'lg':'A','nm':'X', 'tb':'A','lalonde':'treat','causal_friedman':'T','causal_quadratic':'T'}
-sink_mapping = {'lg':'E','nm':'Y', 'tb':'B','lalonde':'re78','causal_friedman':'Y','causal_quadratic':'Y'}
+source_mapping = {'lg':['A'],'nm':'X', 'tb':'A','lalonde':'treat','causal_friedman':'T','causal_quadratic':'T', 'causalpaper':["ECMWF_ERA5_LAND_MONTHLY_soil_temperature_level_1_sum_sum",
+                                                                                                                               "NASA_FLDAS_NOAH01_C_GL_M_V001_Qle_tavg_max_std",
+                                                                                                                               "NASA_GPM_L3_IMERG_MONTHLY_V06_precipitationQualityIndex_max_max"
+                                                                                                                                        ],
+                                                                                                                 'climategraph':["Cropland2000_mean_percent_s",
+                                                                                                                                 "spi_1_f1_m"
+                                                                                                                                        ],
+                                                                                                                'aglietti':["U1","U2"],
+                                                                                                                'toy_aglietti':["X"]}
+sink_mapping = {'lg':'E','nm':'Y', 'tb':'B','lalonde':'re78','causal_friedman':'Y','causal_quadratic':'Y','causalpaper':'ACLED_fatalities_total', 'climategraph': 'acl_sum_evnt_m','aglietti':'Y'
+                ,'toy_aglietti':'Y'}
 
 lalonde_treated, lalonde_controls = "nswre74_treated.txt", "psid_controls.txt"
 lalonde_cols =  ['treat', 'age', 'educ', 'black', 'hisp', 'married', 'nodegr','re74','re75', 're78']
