@@ -38,13 +38,23 @@ from nevergrad.optimization.optimizerlib import (
     DE, 
     DiscreteLenglerOnePlusOne, 
     OptimisticDiscreteOnePlusOne, 
-    RSLSQP,
+    SQP,
     NGOpt39,
-    #NgIoh
+    #GOMEA
 )
 
-DATA_ROOT = "./"
+DATA_ROOT = "/local/vermettendl/Maarten"
 MODEL_ROOT = "./optimization"
+
+model_ids = {
+        "data_mixed_confounding1_EV30" : 61, 
+        "data_mixed_confounding2_EV30": 62, 
+        "data_mixed_confounding3_EV30": 63, 
+        "data_mixed_confounding4_EV30": 64, 
+        "data_toy_aglietti_EV100": 65,
+        "data_causalpaper_EV30": 66,
+        "data_causalpaper_EB30": 67,
+}
 
 @dataclass
 class Node:
@@ -69,8 +79,12 @@ class Node:
 
         with open(f"{model_name}settings.json") as f:
             data = json.load(f)
+            target_var, *_ = data["target_var"]
+            search_vars = data["search_vars"]
+            target_type = data['target']
             for source, target in data["edges"]:
                 nodes[target].parents.append(nodes[source])
+            
 
         with open(f"{model_name}_value_dict.json") as f:
             data = json.load(f)
@@ -79,26 +93,28 @@ class Node:
                     map(lambda x: x[1], sorted(value.items(), key=lambda x: int(x[0])))
                 )
                 nodes[key].n_bins = len(nodes[key].bins)
-        return nodes
+        return nodes, target_var, search_vars, target_type
 
     def int_to_binary(self, value: int) -> Set[Tuple[int, bool]]:
         binary = np.binary_repr(value, self.n_idx)
         return set(zip(self.node_ids, map(int, binary)))
-   
+
 
 class Objective:
-    def __init__(self, nodes: List[Node], diagram: dd.WpBdd, condition_node: Node):
-        self.nodes = [node for node in nodes if node != condition_node]
+    def __init__(self, nodes: List[Node], diagram: dd.BnBdd, condition_node: Node, search_nodes: List[str], target_type: str):
+        self.nodes = [node for node in nodes if node.name in search_nodes]
         self.diagram = diagram
         self.dimension = len(self.nodes)
-        self.lb = np.zeros(len(self.nodes)) - 1
-        self.ub = np.array([node.n_bins for node in self.nodes])
+        self.lb = np.zeros(len(self.nodes), dtype=int) - 1
+        self.ub = np.array([node.n_bins - 1 for node in self.nodes], dtype=int)
         self.condition_node = condition_node
         self.max_y = max(self.condition_node.bins)
+        self.min_y = min(self.condition_node.bins)
         self.condition_node_ops = [
             (self.condition_node.int_to_binary(bin_id), bin_value)
             for bin_id, bin_value in enumerate(self.condition_node.bins)
         ]
+        self.minimize = (target_type == 'min')
 
     def filter_do_ops(self, do_ops, ids):
         """Filter a set of do-ops such that only the ops in ids remain"""
@@ -109,7 +125,7 @@ class Objective:
         return [
             (node, node.int_to_binary(xi))
             for node, xi in zip(self.nodes, x)
-            if xi != -1
+            if xi >= 0
         ]
     
     def get_do_ops(self, do_nodes):
@@ -132,24 +148,38 @@ class Objective:
         sum_prob = 0
 
         for condition, bin_value in self.condition_node_ops:
-            pr_marginal = dd.wpbdd_marginalize(self.diagram, condition.union(do_ops))
+            pr_marginal = dd.bnbdd_marginalize(self.diagram, condition.union(do_ops))
             pr_total = 0
             if pr_marginal == 0:
                 continue
 
             pr_do = 1.0
             for do_node, do_node_ops, do_ops_with_parent in do_nodes:
-                pdo = dd.wpbdd_condition(self.diagram, do_node_ops, do_ops_with_parent)
+                pdo = dd.bnbdd_condition(self.diagram, do_node_ops, do_ops_with_parent)
                 pr_do *= pdo
             pr_total = pr_marginal / pr_do
             sum_prob += pr_total
             expectation += pr_total * bin_value
-        assert sum_prob == 0 or np.isclose(sum_prob, 1.0)
+        # print(sum_prob, expectation)
+        # assert sum_prob == 0 or np.isclose(sum_prob, 1.0)
+        if sum_prob > 1.01 or sum_prob < 0.99:
+            print(f"Failure: probabilities sum to {sum_prob}")
+            if self.minimize:
+                expectation = self.max_y
+            else:
+                expectation = self.min_y
         return expectation
 
     def __call__(self, x: List[int]):
+        print(x)
         expectation = self.calc_expected_value(x)
-        return self.max_y - expectation
+        if self.minimize:
+            return (expectation - self.min_y) / np.abs(self.max_y - self.min_y)
+        else:
+            return (self.max_y - expectation) / np.abs(self.max_y - self.max_y)
+
+def set_objective(dim: int, iid: int):
+    return [float("nan")] * dim, 0.0
 
 def runParallelFunction(runFunction, arguments):
     """
@@ -164,7 +194,7 @@ def runParallelFunction(runFunction, arguments):
     
 
     arguments = list(arguments)
-    p = Pool(min(2, len(arguments)))
+    p = Pool(min(21, len(arguments)))
     results = p.map(runFunction, arguments)
     p.close()
     return results
@@ -173,7 +203,7 @@ class Algorithm_Evaluator():
     def __init__(self, optimizer, ubs, budget=5000):
         self.alg = optimizer
         self.budget = budget
-        self.param = ng.p.Instrumentation(*[ng.p.TransitionChoice(range(-1,ub)) for ub in ubs])
+        self.param = ng.p.Instrumentation(*[ng.p.TransitionChoice(np.append(range(-1,ub), -2)) for ub in ubs])
         
         # self.param_dict = {}
         # for k,v in in_params:
@@ -200,16 +230,18 @@ class Algorithm_Evaluator():
         
 def run_optimization(args, budget=5000, n_reps = 10):
     alg, model_path = args
+    model_name = model_path
+    model_id = model_ids[model_name]
     model_path = f"{MODEL_ROOT}/{model_path}"
-    nodes = Node.read(model_path)
+    nodes, target_var, search_vars, target_type = Node.read(model_path)
     np.random.seed(1)
     with dd.SylvanRunnable():
         print("loading model...", end=" ")
         start = perf_counter()
-        wpbdd = dd.wpbdd_from_files(model_path, False, False)
+        bnbdd = dd.bnbdd_from_files(model_path, False, False)
         print("time elapsed: ", perf_counter() - start, "s")
 
-        obj = Objective(list(nodes.values()), wpbdd, nodes["E"])
+        obj = Objective(list(nodes.values()), bnbdd, nodes[target_var], search_vars, target_type)
         def calc_obj(x,y):
             return [x*[0], 0]
         problem = ioh.wrap_problem(
@@ -221,9 +253,16 @@ def run_optimization(args, budget=5000, n_reps = 10):
             ioh.OptimizationType.MIN,
             min(obj.lb),
             max(obj.ub),
-            calculate_objective = calc_obj
+            calculate_objective = set_objective
         )
-        logger = ioh.logger.Analyzer(root=DATA_ROOT, folder_name=f"{model_path}_")
+        # problem.bounds.ub = obj.ub
+        # problem.enforce_bounds(float("inf"), how=ioh.ConstraintEnforcement.HARD)
+        print(obj.ub)
+        logger = ioh.logger.Analyzer(root=DATA_ROOT, folder_name=f"{model_name}_{alg}", 
+                                     triggers=[ioh.logger.trigger.ALWAYS], store_positions=True, 
+                                     algorithm_name=alg)
+        problem.set_id(model_id)
+        problem.attach_logger(logger)
         alg = Algorithm_Evaluator(alg, obj.ub, budget)
         alg(problem, n_reps)
 
@@ -232,25 +271,33 @@ if __name__ == '__main__':
     warnings.filterwarnings("ignore", category=FutureWarning)
 
     algnames = [    
-        # "RCobyla",
-        # "DiagonalCMA",
+        #"RCobyla",
+        #"DiagonalCMA",
         "RandomSearch", 
-        # "PSO", 
-        # "OnePlusOne", 
-        # "Powell", 
-        # "MultiBFGS",
-        # "DE", 
-        # "DiscreteLenglerOnePlusOne", 
-        # "OptimisticDiscreteOnePlusOne", 
-        # "RSLSQP",
-        # "NGOpt39",
+        "DE", 
+        "OnePlusOne", 
+        "Powell", 
+        "MultiBFGS",
+        #"GOMEA", 
+        #"DiscreteLenglerOnePlusOne", 
+        #"OptimisticDiscreteOnePlusOne", 
+        #"SQP",
+        "NGOpt39",
         #"NgIoh"
     ]
     
     models = [
-        "data_lg_EV30"
+            "data_mixed_confounding1_EV30", 
+            "data_mixed_confounding2_EV30", 
+            "data_mixed_confounding3_EV30", 
+            #"data_mixed_confounding4_EV30", 
+            "data_toy_aglietti_EV100",
+            "data_causalpaper_EV30",
+            #"data_causalpaper_EB30",
     ]
     
     args = product(algnames, models)
-    run_optimizer = partial(run_optimization, budget = 500, n_reps=10)
+    run_optimizer = partial(run_optimization, budget = 2000, n_reps=10)
     runParallelFunction(run_optimizer, args)
+    #print("starting...")
+    #run_optimizer(["RandomSearch", "data_toy_aglietti_EV100"])
