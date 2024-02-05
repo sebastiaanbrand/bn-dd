@@ -86,7 +86,7 @@ int test_conditionals_line()
     p = bnbdd_condition(bnbdd, {{B, 1}}, {{A, 0}}); assert_close(p, .7);
     p = bnbdd_condition(bnbdd, {{B, 1}}, {{A, 1}}); assert_close(p, .75);
 
-    // direct from CPT of A
+    // direct from CPT of C
     p = bnbdd_condition(bnbdd, {{C, 0}}, {{B, 0}}); assert_close(p, .1);
     p = bnbdd_condition(bnbdd, {{C, 0}}, {{B, 1}}); assert_close(p, .8);
     p = bnbdd_condition(bnbdd, {{C, 1}}, {{B, 0}}); assert_close(p, .9);
@@ -116,16 +116,22 @@ int test_do_operator_line()
     int C = bnbdd.rv_vars[2];
 
     // Pr(A|do(B)) = Pr(A) (last argument is parents of B)
-    p = bnbdd_do(bnbdd, {{A, 0}}, {{B, 0}}, {A});   assert_close(p, .2);
-    p = bnbdd_do(bnbdd, {{A, 0}}, {{B, 1}}, {A});   assert_close(p, .2);
-    p = bnbdd_do(bnbdd, {{A, 1}}, {{B, 0}}, {A});   assert_close(p, .8);
-    p = bnbdd_do(bnbdd, {{A, 1}}, {{B, 1}}, {A});   assert_close(p, .8);
+    p = bnbdd_do_naive(bnbdd, {{A, 0}}, {{B, 0}}, {A});   assert_close(p, .2);
+    p = bnbdd_do_naive(bnbdd, {{A, 0}}, {{B, 1}}, {A});   assert_close(p, .2);
+    p = bnbdd_do_naive(bnbdd, {{A, 1}}, {{B, 0}}, {A});   assert_close(p, .8);
+    p = bnbdd_do_naive(bnbdd, {{A, 1}}, {{B, 1}}, {A});   assert_close(p, .8);
 
     // Pr(B|do(A)) = Pr(B|A)
-    p = bnbdd_do(bnbdd, {{B, 0}}, {{A, 0}}, {A});   assert_close(p, .3);
-    p = bnbdd_do(bnbdd, {{B, 0}}, {{A, 1}}, {A});   assert_close(p, .25);
-    p = bnbdd_do(bnbdd, {{B, 1}}, {{A, 0}}, {A});   assert_close(p, .7);
-    p = bnbdd_do(bnbdd, {{B, 1}}, {{A, 1}}, {A});   assert_close(p, .75);
+    p = bnbdd_do_naive(bnbdd, {{B, 0}}, {{A, 0}}, {});   assert_close(p, .3);
+    p = bnbdd_do_naive(bnbdd, {{B, 0}}, {{A, 1}}, {});   assert_close(p, .25);
+    p = bnbdd_do_naive(bnbdd, {{B, 1}}, {{A, 0}}, {});   assert_close(p, .7);
+    p = bnbdd_do_naive(bnbdd, {{B, 1}}, {{A, 1}}, {});   assert_close(p, .75);
+
+    // Pr(C|do(B)) = Pr(C|B)
+    p = bnbdd_do_naive(bnbdd, {{C, 0}}, {{B, 0}}, {A});   assert_close(p, .1);
+    p = bnbdd_do_naive(bnbdd, {{C, 0}}, {{B, 1}}, {A});   assert_close(p, .8);
+    p = bnbdd_do_naive(bnbdd, {{C, 1}}, {{B, 0}}, {A});   assert_close(p, .9);
+    p = bnbdd_do_naive(bnbdd, {{C, 1}}, {{B, 1}}, {A});   assert_close(p, .2);
 
     // TODO: more
 

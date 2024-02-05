@@ -99,7 +99,7 @@ TASK_IMPL_5(double, bnbdd_modelcount, sylvan::BDD, dd, int *, meta, ProbMap *, p
 double bnbdd_marginalize(BnBdd bnbdd, Constraint x)
 {
     // Construct meta which encodes computing Pr(var1=val1 ^ var2=val2 ^ ... )
-    int meta[bnbdd.nvars] = {0};
+    int meta[bnbdd.nvars] = {0}; // NOTE: works w/ g++ but technically against C++ standard
     for (int i : bnbdd.rv_vars) {
         meta[i] = marg_out; // initially marginalize all (rv) vars out
     }
@@ -123,7 +123,7 @@ double bnbdd_condition(BnBdd bnbdd, Constraint x, Constraint y)
     return num / denom;
 }
 
-double bnbdd_do(BnBdd bnbdd, Constraint x, Constraint t, std::set<int> pt)
+double bnbdd_do_old(BnBdd bnbdd, Constraint x, Constraint t, std::set<int> pt)
 {
     // Pr( X=x| do(T=t) ) = Pr( X=x ^ T=t ) / Pr( T=t | pa(T)_{|X=x} )
     Constraint x_and_t(x);
@@ -142,6 +142,54 @@ double bnbdd_do(BnBdd bnbdd, Constraint x, Constraint t, std::set<int> pt)
     return num/denom;
 }
 
+double bnbdd_do_naive(BnBdd bnbdd, Constraint x, Constraint t, std::set<int> pt)
+{
+    //                               Pr( pa(T)=z ^ X=x ^ T=t )
+    // Pr( X=x | do(T=t)) = sum_{z} ------------------------
+    //                                Pr( T = t | pa(T)=z )
+    // where z are all assignments to free parents of T
+
+    // Create constraint (X=x ^ T=t)
+    Constraint x_and_t(x);
+    x_and_t.insert(t.begin(), t.end());
+
+    // Separate pa(T) into variables constrained by x (ptz_constrained)
+    // and free variables (free_parents)
+    std::set<int> free_parents(pt);
+    Constraint ptz_constrained;
+    for (std::pair<int,bool> x_i : x) {
+        free_parents.erase(x_i.first);
+        if (pt.find(x_i.first) != pt.end()) { // if x \in pt
+            ptz_constrained.insert(x_i);
+        }
+    }
+    std::vector<int> free_parents_vec(free_parents.begin(), free_parents.end());
+
+    // Sum over all possible assignments to free variables
+    double sum = 0;
+    for (int val = 0; val < 1<<free_parents.size(); val++) {
+        Constraint ptz(ptz_constrained);
+        Constraint ptz_free = constrain(free_parents_vec, val);
+        ptz.insert(ptz_free.begin(), ptz_free.end()); // single constraint pa(t) = z,
+                                                      // including constrained vars and 
+                                                      // free vars (which are constrained 
+                                                      // differently in each loop iteration)
+        Constraint x_and_t_and_ptz(x_and_t);
+        x_and_t_and_ptz.insert(ptz.begin(), ptz.end());
+
+        // Pr( X=x ^ T=t ^  pa(T)=z )
+        double num = bnbdd_marginalize(bnbdd, x_and_t_and_ptz);
+
+        // Pr( T = t | pa(T)=z )
+        double denom = bnbdd_condition(bnbdd, t, ptz);
+
+        // sum_z
+        sum += (num/denom);
+    }
+
+    return sum;
+}
+
 Constraint constrain(std::vector<int> vars, int val)
 {
     Constraint res;
@@ -158,6 +206,17 @@ Constraint constrain(std::vector<int> vars, int val)
     }
 
     return res;
+}
+
+std::string constraint_to_str(Constraint x)
+{
+    std::stringstream ss;
+    ss << "{";
+    for (std::pair<int,bool> x_i : x) {
+        ss << "{" << x_i.first << "=" << x_i.second << "},";
+    }
+    ss << "}";
+    return ss.str();
 }
 
 /*********************</Weighted model counting>*******************************/
