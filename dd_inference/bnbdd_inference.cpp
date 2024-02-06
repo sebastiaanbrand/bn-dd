@@ -96,7 +96,7 @@ TASK_IMPL_5(double, bnbdd_modelcount, sylvan::BDD, dd, int *, meta, ProbMap *, p
     return hack.d;
 }
 
-double bnbdd_marginalize(BnBdd bnbdd, Constraint x)
+double bnbdd_marginalize(BnBdd &bnbdd, Constraint x)
 {
     // Construct meta which encodes computing Pr(var1=val1 ^ var2=val2 ^ ... )
     int meta[bnbdd.nvars] = {0}; // NOTE: works w/ g++ but technically against C++ standard
@@ -113,7 +113,7 @@ double bnbdd_marginalize(BnBdd bnbdd, Constraint x)
     return bnbdd_modelcount(bnbdd.dd.GetBDD(), meta, &(bnbdd.pm), &(bnbdd.rv_vars));
 }
 
-double bnbdd_condition(BnBdd bnbdd, Constraint x, Constraint y)
+double bnbdd_condition(BnBdd &bnbdd, Constraint x, Constraint y)
 {
     // Pr( X=x | Y=y ) = Pr( X=x ^ Y=y ) / Pr( Y=y )
     Constraint x_and_y(x);
@@ -123,7 +123,7 @@ double bnbdd_condition(BnBdd bnbdd, Constraint x, Constraint y)
     return num / denom;
 }
 
-double bnbdd_do_old(BnBdd bnbdd, Constraint x, Constraint t, std::set<int> pt)
+double bnbdd_do_old(BnBdd &bnbdd, Constraint x, Constraint t, std::set<int> pt)
 {
     // Pr( X=x| do(T=t) ) = Pr( X=x ^ T=t ) / Pr( T=t | pa(T)_{|X=x} )
     Constraint x_and_t(x);
@@ -142,7 +142,7 @@ double bnbdd_do_old(BnBdd bnbdd, Constraint x, Constraint t, std::set<int> pt)
     return num/denom;
 }
 
-double bnbdd_do_naive(BnBdd bnbdd, Constraint x, Constraint t, std::set<int> pt)
+double bnbdd_do_naive(BnBdd &bnbdd, Constraint x, Constraint t, std::set<int> pt)
 {
     //                               Pr( pa(T)=z ^ X=x ^ T=t )
     // Pr( X=x | do(T=t)) = sum_{z} ------------------------
