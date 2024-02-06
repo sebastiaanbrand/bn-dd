@@ -42,7 +42,7 @@ PYBIND11_MODULE(ddcpp, m)
     m.def("bnbdd_marginalize", &bnbdd_marginalize,
           py::arg("bnbdd"), py::arg("constraint_x"));
 
-    m.def("bnbdd_do_naive", &bnbdd_do_naive,
+    m.def("bnbdd_do_naive", &bnbdd_do_naiv
         py::arg("bnbdd"), py::arg("constraint_x"), py::arg("constraint_t"), py::arg("pt")
     );
   
