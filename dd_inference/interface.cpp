@@ -49,9 +49,6 @@ PYBIND11_MODULE(ddcpp, m)
     m.def("bnbdd_condition", &bnbdd_condition,
           py::arg("bnbdd"), py::arg("constraint_x"), py::arg("constraint_y"));
 
-    m.def("bnbdd_do", &bnbdd_do,
-          py::arg("bnbdd"), py::arg("constraint_x"), py::arg("constraint_t"), py::arg("pt"));
-
     m.def("bnbdd_from_files", &bnbdd_from_files,
           py::arg("filepath"), py::arg("tracepeak") = false, py::arg("verbose") = false);
 
