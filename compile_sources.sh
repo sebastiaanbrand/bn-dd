@@ -1,5 +1,8 @@
 #!/bin/bash
 
+export CC=/usr/bin/gcc-10
+export CXX=/usr/bin/g++-10
+
 while getopts "r" opt; do
   case $opt in
     r) recompile=true

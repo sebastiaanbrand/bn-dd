@@ -10,8 +10,8 @@ from pybind11.setup_helpers import Pybind11Extension, build_ext
 assert platform.system() in ("Linux", "Darwin")
 
 __version__ = "1.0.0"
-os.environ["CC"] = "g++"
-os.environ["CXX"] = "g++"
+os.environ["CC"] = "gcc-10"
+os.environ["CXX"] = "g++-10"
 
 base_dir = os.path.realpath(os.path.dirname(__file__))
 sylvan_so = os.path.join(
