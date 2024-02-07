@@ -28,9 +28,7 @@ import numpy as np
 
 import dd_inference as dd
 
-TEST_MODEL_PATH = "./models/toy_networks/line"
-MODEL_PATH = "./optimization/data_lg_EV30"
-
+TEST_MODEL_PATH = "./models/tests/lg_EV30/data_lg_EV30"
 
 @dataclass
 class Node:
@@ -123,11 +121,18 @@ class Objective:
             if pr_marginal == 0:
                 continue
 
+            parents = set()
             pr_do = 1.0
             for do_node, do_node_ops, do_ops_with_parent in do_nodes:
                 pdo = dd.bnbdd_condition(self.diagram, do_node_ops, do_ops_with_parent)
                 pr_do *= pdo
+                parents = parents.union(do_node.parent_ids)
+
             pr_total = pr_marginal / pr_do
+            pr_total_new = dd.bnbdd_do_naive(self.diagram, do_ops, condition, parents)
+            print(pr_total, pr_total_new)
+            breakpoint()
+    
             sum_prob += pr_total
             expectation += pr_total * bin_value
         assert sum_prob == 0 or np.isclose(sum_prob, 1.0)
@@ -141,18 +146,18 @@ class Objective:
 if __name__ == "__main__":
     tracepeak = True
     verbose = False
-    nodes = Node.read(MODEL_PATH)
+    nodes = Node.read(TEST_MODEL_PATH)
     np.random.seed(1)
     with dd.SylvanRunnable():
         print("loading model...", end=" ")
         start = perf_counter()
-        bnbdd = dd.bnbdd_from_files(MODEL_PATH, tracepeak, verbose)
+        bnbdd = dd.bnbdd_from_files(TEST_MODEL_PATH, tracepeak, verbose)
         print("time elapsed: ", perf_counter() - start, "s")
 
         obj = Objective(list(nodes.values()), bnbdd, nodes["E"])
         problem = ioh.wrap_problem(
             obj,
-            f"{os.path.basename(MODEL_PATH)}_objective",
+            f"{os.path.basename(TEST_MODEL_PATH)}_objective",
             ioh.ProblemClass.INTEGER,
             obj.dimension,
             0,

@@ -120,6 +120,10 @@ double bnbdd_condition(BnBdd &bnbdd, Constraint x, Constraint y)
     x_and_y.insert(y.begin(), y.end());
     double num = bnbdd_marginalize(bnbdd, x_and_y); // Pr( X=x ^ Y=y )
     double denom = bnbdd_marginalize(bnbdd, y);     // Pr( Y=y )
+
+    if (denom == 0)
+        return 0;
+
     return num / denom;
 }
 
@@ -184,6 +188,9 @@ double bnbdd_do_naive(BnBdd &bnbdd, Constraint x, Constraint t, std::set<int> pt
         double denom = bnbdd_condition(bnbdd, t, ptz);
 
         // sum_z
+        if (denom == 0)
+            continue;
+            
         sum += (num/denom);
     }
 
