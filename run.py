@@ -27,7 +27,7 @@ import ioh
 import numpy as np
 import dd_inference as dd
 
-path = os.path.join(os.getcwd(), "models/do_test1MLE")
+path = os.path.join(os.getcwd(), "models/do_test6MLE")
 TEST_MODEL_PATH = "./models/toy_networks/line"
 MODELS = (
     "data_do_EV2",
@@ -177,12 +177,6 @@ if __name__ == "__main__":
         bnbdd = dd.bnbdd_from_files(MODEL_PATH, tracepeak, verbose)
         print("time elapsed: ", perf_counter() - start, "s")
         obj = Objective(list(nodes.values()), bnbdd, nodes[target_var], search_vars)
-        obj.calc_expected_value(x=[1,1])
-        sys.exit()
-        print(f'expectation{obj.calc_expected_value(x=[87])}')
-        print(f'expectation{obj.calc_expected_value(x=[1])}')
-        print(f'max_y{max(nodes[target_var].bins)}')
-        print(f'total{max(nodes[target_var].bins) - obj.calc_expected_value(x=[11, 7, 26])}')
         problem = ioh.wrap_problem(
             obj,
             f"{os.path.basename(MODEL_PATH)}_objective",
