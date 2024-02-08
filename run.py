@@ -38,6 +38,7 @@ MODEL_IDX = 1
 MODEL_PATH = path + '/' + MODELS[MODEL_IDX]
 
 
+
 @dataclass
 class Node:
     name: str
@@ -74,7 +75,6 @@ class Node:
                     map(lambda x: x[1], sorted(value.items(), key=lambda x: int(x[0])))
                 )
                 nodes[key].n_bins = len(nodes[key].bins)
-                print(nodes, nodes[key].bins)
         return nodes, target_var, search_vars
 
     def int_to_binary(self, value: int) -> Set[Tuple[int, bool]]:
@@ -191,7 +191,8 @@ if __name__ == "__main__":
         problem.bounds.ub = obj.ub
         problem.enforce_bounds(float("inf"), how=ioh.ConstraintEnforcement.HARD)
 
-        x, y = brute_force(problem)
+
+        brute_force(problem)
         
 
 
