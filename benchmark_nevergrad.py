@@ -54,6 +54,9 @@ model_ids = {
         "data_toy_aglietti_EV100": 65,
         "data_causalpaper_EV30": 66,
         "data_causalpaper_EB30": 67,
+        "data_mehra_EV3": 68,
+        "data_arth_EV8": 69,
+        "data_causalpaper_EV20": 70,
 }
 
 @dataclass
@@ -176,7 +179,7 @@ class Objective:
         if self.minimize:
             return (expectation - self.min_y) / np.abs(self.max_y - self.min_y)
         else:
-            return (self.max_y - expectation) / np.abs(self.max_y - self.max_y)
+            return (self.max_y - expectation) / np.abs(self.max_y - self.min_y)
 
 def set_objective(dim: int, iid: int):
     return [float("nan")] * dim, 0.0
@@ -194,7 +197,7 @@ def runParallelFunction(runFunction, arguments):
     
 
     arguments = list(arguments)
-    p = Pool(min(21, len(arguments)))
+    p = Pool(min(6, len(arguments)))
     results = p.map(runFunction, arguments)
     p.close()
     return results
@@ -287,13 +290,16 @@ if __name__ == '__main__':
     ]
     
     models = [
-            "data_mixed_confounding1_EV30", 
-            "data_mixed_confounding2_EV30", 
-            "data_mixed_confounding3_EV30", 
-            #"data_mixed_confounding4_EV30", 
-            "data_toy_aglietti_EV100",
-            "data_causalpaper_EV30",
-            #"data_causalpaper_EB30",
+            # "data_mixed_confounding1_EV30", 
+            # "data_mixed_confounding2_EV30", 
+            # "data_mixed_confounding3_EV30", 
+            # "data_mixed_confounding4_EV30", 
+            # "data_toy_aglietti_EV100",
+            # "data_causalpaper_EV30",
+            # "data_causalpaper_EB30",
+            "data_mehra_EV3",
+            "data_arth_EV8",
+            # "data_causalpaper_EV20",
     ]
     
     args = product(algnames, models)
