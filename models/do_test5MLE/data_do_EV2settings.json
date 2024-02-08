@@ -1,0 +1,1 @@
+{"distribution": "do", "edges": [["X", "Z"], ["Z", "Y"], ["Z", "T"], ["T", "Y"], ["Z", "T"], ["D", "T"]],"target_var": ["Y"], "search_vars": ["T"], "sample_size": 5000, "experiment": 14, "pair": 95, "disc_method": "EV", "bins": 2, "target_column": null, "CPT_method": "MLE", "time_disc": 0.1180478000005678, "time_cnf": 0.006360000000313448}

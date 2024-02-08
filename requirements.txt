@@ -1,12 +1,11 @@
-# package
-cdt
-matplotlib
-# mdlp
-mdlp-discretization
-networkx
-numpy
-pgmpy
-POT
-pygraphviz
-pyreadr
-python-sat
+matplotlib==3.6.3
+cdt==0.6.0
+torch==2.0.1
+pyreadr==0.4.7
+pgmpy==0.1.22
+python-sat==0.1.7.dev26
+POT==0.8.2
+mdlp-discretization==0.3.3
+numpy==1.23.1
+seaborn==0.12.2
+LGNpy==1.0.0

@@ -1,6 +1,6 @@
 import os
 import argparse
-from lgnpy import LinearGaussian
+from LinearGaussian import LinearGaussian
 import numpy as np
 import logging.config
 import sys
@@ -35,7 +35,6 @@ parser.add_argument('--CPT_method', type=str, choices=['MLE','Bayes','Bayesprior
 class Discretizer:
     """
     Discretize the network given the params.
-    TODO: fix MDLP environment install
     """
 
     def __init__(self, filename, disc_method, bins, target_column=None, cpt_fit_method=None):

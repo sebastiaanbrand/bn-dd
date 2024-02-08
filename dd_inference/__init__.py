@@ -2,7 +2,7 @@ from time import perf_counter
 from .ddcpp import (
     bnbdd_marginalize,
     bnbdd_condition,
-    bnbdd_do,
+    bnbdd_do_naive,
     bnbdd_from_files,
     cnf_from_file,
     print_cnf,

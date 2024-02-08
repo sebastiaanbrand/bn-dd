@@ -1,0 +1,9 @@
+{
+	"nodecount" : 1,
+	"peaknodes" : 1,
+	"total_load_time" : 0.0111008,
+	"build_time" : 4.19617e-05,
+	"wmc_time" : 5.6982e-05,
+	"wmc_value" : 1,
+	"bn_to_cnf_time" : 0
+}

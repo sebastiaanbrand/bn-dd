@@ -1,0 +1,49 @@
+<?xml version='1.0' encoding='utf-8'?>
+<BIF VERSION="0.3">
+  <NETWORK>
+    <NAME>UNTITLED</NAME>
+    <VARIABLE TYPE="nature">
+      <NAME>T</NAME>
+      <OUTCOME>0</OUTCOME>
+      <OUTCOME>1</OUTCOME>
+      <PROPERTY />
+    </VARIABLE>
+    <VARIABLE TYPE="nature">
+      <NAME>X</NAME>
+      <OUTCOME>1_0</OUTCOME>
+      <PROPERTY />
+    </VARIABLE>
+    <VARIABLE TYPE="nature">
+      <NAME>Y</NAME>
+      <OUTCOME>_0_214_4_743_</OUTCOME>
+      <OUTCOME>_4_743_6_196_</OUTCOME>
+      <PROPERTY />
+    </VARIABLE>
+    <VARIABLE TYPE="nature">
+      <NAME>Z</NAME>
+      <OUTCOME>_0_000892_0_506_</OUTCOME>
+      <OUTCOME>_0_506_1_0_</OUTCOME>
+      <PROPERTY />
+    </VARIABLE>
+    <DEFINITION>
+      <FOR>T</FOR>
+      <GIVEN>Z</GIVEN>
+      <TABLE>0.3724 0.6276 0.1844 0.8156 </TABLE>
+    </DEFINITION>
+    <DEFINITION>
+      <FOR>X</FOR>
+      <TABLE>1.0 </TABLE>
+    </DEFINITION>
+    <DEFINITION>
+      <FOR>Y</FOR>
+      <GIVEN>T</GIVEN>
+      <GIVEN>Z</GIVEN>
+      <TABLE>1.0 0.0 1.0 0.0 0.7061822817080943 0.29381771829190567 0.0 1.0 </TABLE>
+    </DEFINITION>
+    <DEFINITION>
+      <FOR>Z</FOR>
+      <GIVEN>X</GIVEN>
+      <TABLE>0.5 0.5 </TABLE>
+    </DEFINITION>
+  </NETWORK>
+</BIF>

@@ -2,7 +2,7 @@
 #include <pybind11/chrono.h>
 #include <pybind11/complex.h>
 #include <pybind11/functional.h>
-#include <pybind11/numpy.h>
+#include <pybind11/numpy.h> 
 #include <pybind11/stl.h>
 
 #include "bnbdd_inference.hpp"
@@ -42,11 +42,12 @@ PYBIND11_MODULE(ddcpp, m)
     m.def("bnbdd_marginalize", &bnbdd_marginalize,
           py::arg("bnbdd"), py::arg("constraint_x"));
 
+    m.def("bnbdd_do_naive", &bnbdd_do_naive,
+        py::arg("bnbdd"), py::arg("constraint_x"), py::arg("constraint_t"), py::arg("pt")
+    );
+  
     m.def("bnbdd_condition", &bnbdd_condition,
           py::arg("bnbdd"), py::arg("constraint_x"), py::arg("constraint_y"));
-
-    m.def("bnbdd_do", &bnbdd_do,
-          py::arg("bnbdd"), py::arg("constraint_x"), py::arg("constraint_t"), py::arg("pt"));
 
     m.def("bnbdd_from_files", &bnbdd_from_files,
           py::arg("filepath"), py::arg("tracepeak") = false, py::arg("verbose") = false);

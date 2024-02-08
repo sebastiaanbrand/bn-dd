@@ -48,19 +48,22 @@ TASK_DECL_5(double, bnbdd_modelcount, sylvan::BDD, int *, ProbMap *, std::vector
 /**
  * Compute Pr ( x1, x2, ... )
  */
-double bnbdd_marginalize(BnBdd bnbdd, Constraint x);
+double bnbdd_marginalize(BnBdd &bnbdd, Constraint x);
 
 /**
  * Compute Pr( x1, x2, ... | y1, y2, ... )
  */
-double bnbdd_condition(BnBdd bnbdd, Constraint x, Constraint y);
+double bnbdd_condition(BnBdd &bnbdd, Constraint x, Constraint y);
 
 /**
- * Compute Pr ( x1, x2, ..., | do(t) ), where pt are the parents of t
- * (For now, assume t only contains a single variable )
+ * TODO: incorrect, remove
  */
-double bnbdd_do(BnBdd bnbdd, Constraint x, Constraint t, std::set<int> pt);
+double bnbdd_do_old(BnBdd &bnbdd, Constraint x, Constraint t, std::set<int> pt);
 
+/**
+ * Compute Pr ( x1, x2, ..., | do(t) ), where pt are the parents of t 
+*/
+double bnbdd_do_naive(BnBdd &bnbdd, Constraint x, Constraint t, std::set<int> pt);
 
 /**
  * Returns Boolean constraint for vars = val
@@ -68,6 +71,11 @@ double bnbdd_do(BnBdd bnbdd, Constraint x, Constraint t, std::set<int> pt);
  */
 Constraint constrain(std::vector<int> vars, int val);
 
+
+/**
+ * Get string representation of constraint for printing.
+*/
+std::string constraint_to_str(Constraint x);
 
 /*********************</Weighted model counting>*******************************/
 

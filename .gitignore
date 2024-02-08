@@ -7,7 +7,7 @@ sylvan_build/
 __pycache__/
 
 # experiments
-experiments/
+#experiments/
 
 #
 # *.cnf

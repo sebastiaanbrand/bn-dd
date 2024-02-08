@@ -1,0 +1,76 @@
+[    0.01] Loading models/linear_gaussian114MLE/data_lg_EB5
+[    0.10] WPBDD nodecount = 1182 / 32768 = 0.036072
+[    0.00] WMC value = 1.000000
+[    0.00] Writing stats to models/linear_gaussian114MLE/data_lg_EB5_ddinfo.json
+[    0.01] Loading models/linear_gaussian114MLE/data_lg_EB8
+[    0.30] WPBDD nodecount = 3286 / 32768 = 0.100281
+[    0.00] WMC value = 1.000000
+[    0.00] Writing stats to models/linear_gaussian114MLE/data_lg_EB8_ddinfo.json
+[    0.01] Loading models/linear_gaussian114MLE/data_lg_EB10
+[    0.95] WPBDD nodecount = 6627 / 1048576 = 0.006320
+[    0.00] WMC value = 1.000000
+[    0.00] Writing stats to models/linear_gaussian114MLE/data_lg_EB10_ddinfo.json
+[    0.01] Loading models/linear_gaussian114MLE/data_lg_EB12
+[    1.38] WPBDD nodecount = 9624 / 1048576 = 0.009178
+[    0.00] WMC value = 1.000000
+[    0.00] Writing stats to models/linear_gaussian114MLE/data_lg_EB12_ddinfo.json
+[    0.01] Loading models/linear_gaussian114MLE/data_lg_EB14
+[    1.86] WPBDD nodecount = 13545 / 1048576 = 0.012918
+[    0.01] WMC value = 1.000000
+[    0.01] Writing stats to models/linear_gaussian114MLE/data_lg_EB14_ddinfo.json
+[    0.01] Loading models/linear_gaussian114MLE/data_lg_EB17
+[    3.64] WPBDD nodecount = 22495 / 33554432 = 0.000670
+[    0.01] WMC value = 1.000000
+[    0.01] Writing stats to models/linear_gaussian114MLE/data_lg_EB17_ddinfo.json
+[    0.01] Loading models/linear_gaussian114MLE/data_lg_EB20
+[    4.90] WPBDD nodecount = 29813 / 33554432 = 0.000888
+[    0.01] WMC value = 1.000000
+[    0.01] Writing stats to models/linear_gaussian114MLE/data_lg_EB20_ddinfo.json
+[    0.01] Loading models/linear_gaussian114MLE/data_lg_EB25
+[    7.09] WPBDD nodecount = 45208 / 33554432 = 0.001347
+[    0.01] WMC value = 1.000000
+[    0.01] Writing stats to models/linear_gaussian114MLE/data_lg_EB25_ddinfo.json
+[    0.01] Loading models/linear_gaussian114MLE/data_lg_EB30
+[   10.62] WPBDD nodecount = 57954 / 33554432 = 0.001727
+[    0.01] WMC value = 1.000000
+[    0.01] Writing stats to models/linear_gaussian114MLE/data_lg_EB30_ddinfo.json
+[    0.01] Loading models/linear_gaussian114MLE/data_lg_EV5
+[    0.14] WPBDD nodecount = 1397 / 32768 = 0.042633
+[    0.00] WMC value = 1.000000
+[    0.00] Writing stats to models/linear_gaussian114MLE/data_lg_EV5_ddinfo.json
+[    0.01] Loading models/linear_gaussian114MLE/data_lg_EV8
+[    0.56] WPBDD nodecount = 5489 / 32768 = 0.167511
+[    0.01] WMC value = 1.000000
+[    0.01] Writing stats to models/linear_gaussian114MLE/data_lg_EV8_ddinfo.json
+[    0.01] Loading models/linear_gaussian114MLE/data_lg_EV10
+[    1.05] WPBDD nodecount = 11738 / 1048576 = 0.011194
+[    0.00] WMC value = 1.000000
+[    0.00] Writing stats to models/linear_gaussian114MLE/data_lg_EV10_ddinfo.json
+[    0.01] Loading models/linear_gaussian114MLE/data_lg_EV12
+[    1.51] WPBDD nodecount = 17879 / 1048576 = 0.017051
+[    0.01] WMC value = 1.000000
+[    0.01] Writing stats to models/linear_gaussian114MLE/data_lg_EV12_ddinfo.json
+[    0.01] Loading models/linear_gaussian114MLE/data_lg_EV14
+[    2.13] WPBDD nodecount = 25590 / 1048576 = 0.024405
+[    0.01] WMC value = 1.000000
+[    0.01] Writing stats to models/linear_gaussian114MLE/data_lg_EV14_ddinfo.json
+[    0.01] Loading models/linear_gaussian114MLE/data_lg_EV17
+[    3.86] WPBDD nodecount = 41786 / 33554432 = 0.001245
+[    0.01] WMC value = 1.000000
+[    0.01] Writing stats to models/linear_gaussian114MLE/data_lg_EV17_ddinfo.json
+[    0.01] Loading models/linear_gaussian114MLE/data_lg_EV20
+[    5.88] WPBDD nodecount = 53211 / 33554432 = 0.001586
+[    0.01] WMC value = 1.000000
+[    0.01] Writing stats to models/linear_gaussian114MLE/data_lg_EV20_ddinfo.json
+[    0.02] Loading models/linear_gaussian114MLE/data_lg_EV25
+[   12.33] WPBDD nodecount = 65620 / 33554432 = 0.001956
+[    0.02] WMC value = 1.000000
+[    0.02] Writing stats to models/linear_gaussian114MLE/data_lg_EV25_ddinfo.json
+[    0.02] Loading models/linear_gaussian114MLE/data_lg_EV30
+[   11.43] WPBDD nodecount = 67682 / 33554432 = 0.002017
+[    0.01] WMC value = 1.000000
+[    0.01] Writing stats to models/linear_gaussian114MLE/data_lg_EV30_ddinfo.json
+[    0.01] Loading models/linear_gaussian114MLE/data_lg_MDLP
+[    1.51] WPBDD nodecount = 1535 / 131072 = 0.011711
+[    0.00] WMC value = 1.000000
+[    0.00] Writing stats to models/linear_gaussian114MLE/data_lg_MDLP_ddinfo.json

@@ -15,7 +15,7 @@ S 19
 
 TODO: Objective function
 """
-
+import time
 import json
 import os
 from itertools import chain,product
@@ -27,17 +27,16 @@ import ioh
 import numpy as np
 import dd_inference as dd
 
-from algorithms import UnboundedIntegerEA 
-
+path = os.path.join(os.getcwd(), "models/do_test6MLE")
 TEST_MODEL_PATH = "./models/toy_networks/line"
 MODELS = (
-    "data_lg_EV30",
-    "data_causal_quadratic_EV30",
-    "data_lalonde_EV12"
+    "data_do_EV2",
+    "data_do_EV2"
 )
 
 MODEL_IDX = 1
-MODEL_PATH = "./optimization/" + MODELS[MODEL_IDX]
+MODEL_PATH = path + '/' + MODELS[MODEL_IDX]
+
 
 
 @dataclass
@@ -124,24 +123,16 @@ class Objective:
         do_nodes = self.get_do_nodes(x)
         do_ops = self.get_do_ops(do_nodes)
         do_nodes = self.remap_do_nodes(do_ops, do_nodes)
-
         expectation = 0
         sum_prob = 0
-
         for condition, bin_value in self.condition_node_ops:
-            pr_marginal = dd.bnbdd_marginalize(self.diagram, condition.union(do_ops))
-            pr_total = 0
-            if pr_marginal == 0:
-                continue
-
-            pr_do = 1.0
+            parents = set()
             for do_node, do_node_ops, do_ops_with_parent in do_nodes:
-                pdo = dd.bnbdd_condition(self.diagram, do_node_ops, do_ops_with_parent)
-                pr_do *= pdo
-            pr_total = pr_marginal / pr_do
+                parents = parents.union(do_node.parent_ids)
+            pr_total = dd.bnbdd_do_naive(self.diagram, condition, do_ops, parents)
             sum_prob += pr_total
             expectation += pr_total * bin_value
-        assert sum_prob == 0 or np.isclose(sum_prob, 1.0)
+        assert sum_prob == 0 or np.isclose(sum_prob, 1.0)  
         return expectation
 
     def __call__(self, x: List[int]):
@@ -185,7 +176,6 @@ if __name__ == "__main__":
         start = perf_counter()
         bnbdd = dd.bnbdd_from_files(MODEL_PATH, tracepeak, verbose)
         print("time elapsed: ", perf_counter() - start, "s")
-
         obj = Objective(list(nodes.values()), bnbdd, nodes[target_var], search_vars)
         problem = ioh.wrap_problem(
             obj,
@@ -200,6 +190,7 @@ if __name__ == "__main__":
         )
         problem.bounds.ub = obj.ub
         problem.enforce_bounds(float("inf"), how=ioh.ConstraintEnforcement.HARD)
+
 
         brute_force(problem)
         

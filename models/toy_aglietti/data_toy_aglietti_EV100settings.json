@@ -1,0 +1,1 @@
+{"distribution": "toy_aglietti", "edges": [["X", "Z"], ["Z", "Y"]],"target_var": ["Y"], "search_vars": ["Z"], "target": "min", "sample_size": 1000, "disc_method": "EV", "bins": 100, "target_column": null, "CPT_method": "Bayespriors", "time_disc": 0.15476029999990715, "time_cnf": 0.29865269999982047}

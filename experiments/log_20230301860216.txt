@@ -1,0 +1,74 @@
+[    0.01] Loading models/linear_gaussian18MLE/data_lg_EB5
+[    0.10] WPBDD nodecount = 823 / 32768 = 0.025116
+[    0.00] WMC value = 1.000000
+[    0.00] Writing stats to models/linear_gaussian18MLE/data_lg_EB5_ddinfo.json
+[    0.01] Loading models/linear_gaussian18MLE/data_lg_EB8
+[    0.27] WPBDD nodecount = 1811 / 32768 = 0.055267
+[    0.00] WMC value = 1.000000
+[    0.00] Writing stats to models/linear_gaussian18MLE/data_lg_EB8_ddinfo.json
+[    0.01] Loading models/linear_gaussian18MLE/data_lg_EB10
+[    0.83] WPBDD nodecount = 2896 / 1048576 = 0.002762
+[    0.00] WMC value = 1.000000
+[    0.00] Writing stats to models/linear_gaussian18MLE/data_lg_EB10_ddinfo.json
+[    0.01] Loading models/linear_gaussian18MLE/data_lg_EB12
+[    1.19] WPBDD nodecount = 3454 / 1048576 = 0.003294
+[    0.00] WMC value = 1.000000
+[    0.00] Writing stats to models/linear_gaussian18MLE/data_lg_EB12_ddinfo.json
+[    0.01] Loading models/linear_gaussian18MLE/data_lg_EB14
+[    1.79] WPBDD nodecount = 4042 / 1048576 = 0.003855
+[    0.00] WMC value = 1.000000
+[    0.00] Writing stats to models/linear_gaussian18MLE/data_lg_EB14_ddinfo.json
+[    0.01] Loading models/linear_gaussian18MLE/data_lg_EB17
+[    3.18] WPBDD nodecount = 4945 / 16777216 = 0.000295
+[    0.00] WMC value = 1.000000
+[    0.00] Writing stats to models/linear_gaussian18MLE/data_lg_EB17_ddinfo.json
+[    0.02] Loading models/linear_gaussian18MLE/data_lg_EB20
+[    4.76] WPBDD nodecount = 5553 / 33554432 = 0.000165
+[    0.00] WMC value = 1.000000
+[    0.00] Writing stats to models/linear_gaussian18MLE/data_lg_EB20_ddinfo.json
+[    0.01] Loading models/linear_gaussian18MLE/data_lg_EB25
+[    7.20] WPBDD nodecount = 5990 / 33554432 = 0.000179
+[    0.00] WMC value = 1.000000
+[    0.00] Writing stats to models/linear_gaussian18MLE/data_lg_EB25_ddinfo.json
+[    0.01] Loading models/linear_gaussian18MLE/data_lg_EB30
+[    8.50] WPBDD nodecount = 5972 / 33554432 = 0.000178
+[    0.00] WMC value = 1.000000
+[    0.00] Writing stats to models/linear_gaussian18MLE/data_lg_EB30_ddinfo.json
+[    0.01] Loading models/linear_gaussian18MLE/data_lg_EV5
+[    0.16] WPBDD nodecount = 961 / 32768 = 0.029327
+[    0.00] WMC value = 1.000000
+[    0.00] Writing stats to models/linear_gaussian18MLE/data_lg_EV5_ddinfo.json
+[    0.01] Loading models/linear_gaussian18MLE/data_lg_EV8
+[    0.39] WPBDD nodecount = 2055 / 32768 = 0.062714
+[    0.00] WMC value = 1.000000
+[    0.00] Writing stats to models/linear_gaussian18MLE/data_lg_EV8_ddinfo.json
+[    0.01] Loading models/linear_gaussian18MLE/data_lg_EV10
+[    0.80] WPBDD nodecount = 3576 / 1048576 = 0.003410
+[    0.00] WMC value = 1.000000
+[    0.00] Writing stats to models/linear_gaussian18MLE/data_lg_EV10_ddinfo.json
+[    0.01] Loading models/linear_gaussian18MLE/data_lg_EV12
+[    1.14] WPBDD nodecount = 3579 / 1048576 = 0.003413
+[    0.00] WMC value = 1.000000
+[    0.00] Writing stats to models/linear_gaussian18MLE/data_lg_EV12_ddinfo.json
+[    0.02] Loading models/linear_gaussian18MLE/data_lg_EV14
+[    1.83] WPBDD nodecount = 3822 / 1048576 = 0.003645
+[    0.00] WMC value = 1.000000
+[    0.00] Writing stats to models/linear_gaussian18MLE/data_lg_EV14_ddinfo.json
+[    0.01] Loading models/linear_gaussian18MLE/data_lg_EV17
+[    3.32] WPBDD nodecount = 4210 / 33554432 = 0.000125
+[    0.00] WMC value = 1.000000
+[    0.00] Writing stats to models/linear_gaussian18MLE/data_lg_EV17_ddinfo.json
+[    0.01] Loading models/linear_gaussian18MLE/data_lg_EV20
+[    4.70] WPBDD nodecount = 3988 / 33554432 = 0.000119
+[    0.00] WMC value = 1.000000
+[    0.00] Writing stats to models/linear_gaussian18MLE/data_lg_EV20_ddinfo.json
+[    0.01] Loading models/linear_gaussian18MLE/data_lg_EV25
+[    7.90] WPBDD nodecount = 3817 / 33554432 = 0.000114
+[    0.00] WMC value = 1.000000
+[    0.00] Writing stats to models/linear_gaussian18MLE/data_lg_EV25_ddinfo.json
+[    0.01] Loading models/linear_gaussian18MLE/data_lg_EV30
+[   10.60] WPBDD nodecount = 3779 / 33554432 = 0.000113
+[    0.00] WMC value = 1.000000
+[    0.00] Writing stats to models/linear_gaussian18MLE/data_lg_EV30_ddinfo.json
+[    0.01] Loading models/linear_gaussian18MLE/data_lg_MDLP
+unable to open models/linear_gaussian18MLE/data_lg_MDLP.cnf

@@ -1,7 +1,9 @@
 {
 	"nodecount" : 13869,
 	"peaknodes" : 14743,
-	"total_load_time" : 1.97796,
-	"build_time" : 1.76415,
-	"wmc_time" : 0.0074389
+	"total_load_time" : 1.91888,
+	"build_time" : 1.82188,
+	"wmc_time" : 0.00569296,
+	"wmc_value" : 1,
+	"bn_to_cnf_time" : 0.0586245
 }
