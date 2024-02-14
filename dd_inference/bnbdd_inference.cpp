@@ -197,6 +197,33 @@ double bnbdd_do_naive(BnBdd &bnbdd, Constraint x, Constraint t, std::set<int> pt
     return sum;
 }
 
+double bnbdd_do_cov_adj(BnBdd &bnbdd, Constraint x, Constraint t, std::vector<int> Z)
+{
+    if (Z.size() == 0) {
+        // Pr(X = x | T = t)
+        return bnbdd_condition(bnbdd, x, t);
+    }
+    else {
+        // Sum over all possible assignments to variables Z
+        double sum = 0;
+        for (int z_val = 0; z_val < 1<<Z.size(); z_val++) {
+            Constraint z = constrain(Z, z_val);
+            Constraint t_and_z(t);
+            t_and_z.insert(z.begin(), z.end());
+
+            // Pr(X = x | T = t, Z = z)
+            double a = bnbdd_condition(bnbdd, x, t_and_z);
+
+            // Pr(Z = z)
+            double b = bnbdd_marginalize(bnbdd, z);
+
+            // sum_z
+            sum += (a * b);
+        }
+        return sum;
+    }
+}
+
 Constraint constrain(std::vector<int> vars, int val)
 {
     Constraint res;
