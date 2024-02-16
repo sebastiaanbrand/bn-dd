@@ -12,6 +12,7 @@ from .ddcpp import (
     print_rv_vars,
     init_system,
     shutdown_system, 
+    bnbdd_do_cov_adj,
     BnBdd
 )
 

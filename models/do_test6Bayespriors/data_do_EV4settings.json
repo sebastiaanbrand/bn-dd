@@ -1,0 +1,1 @@
+{"distribution": "do", "edges": [["X", "Y"], ["Z", "Y"], ["Z", "T"], ["T", "Y"], ["D", "T"], ["D", "Z"]], "target_var": ["Y"], "search_vars": ["T"], "sample_size": 5000, "experiment": 14, "pair": 95, "disc_method": "EV", "bins": 4, "target_column": null, "CPT_method": "Bayespriors", "time_disc": 0.17331349999994927, "time_cnf": 0.006098599999972976}
