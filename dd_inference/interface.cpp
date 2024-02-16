@@ -46,6 +46,10 @@ PYBIND11_MODULE(ddcpp, m)
         py::arg("bnbdd"), py::arg("constraint_x"), py::arg("constraint_t"), py::arg("pt")
     );
   
+    m.def("bnbdd_do_cov_adj", &bnbdd_do_cov_adj,
+        py::arg("bnbdd"), py::arg("constraint_x"), py::arg("constraint_t"), py::arg("Z")
+    );
+    
     m.def("bnbdd_condition", &bnbdd_condition,
           py::arg("bnbdd"), py::arg("constraint_x"), py::arg("constraint_y"));
 
