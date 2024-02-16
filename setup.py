@@ -32,7 +32,7 @@ ext = Pybind11Extension(
     cxx_std=17
 )
 
-ext._add_cflags(["-O2"])
+ext._add_cflags(["-O3"])
 ext._add_ldflags([f"-L{os.path.dirname(sylvan_so)}", f"-lsylvan"])
 
 setuptools.setup(

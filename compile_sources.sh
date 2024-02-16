@@ -17,7 +17,7 @@ cd dd_inference
 if [[ $recompile ]]; then rm -r -f sylvan_build; fi
 mkdir -p sylvan_build
 cd sylvan_build
-cmake ../../extern/sylvan
+cmake ../../extern/sylvan -DCMAKE_BUILD_TYPE=Release
 make
 cd ../..
 
@@ -26,7 +26,7 @@ cd dd_inference
 if [[ $recompile ]]; then rm -r -f build; fi
 mkdir -p build
 cd build
-cmake ..
+cmake .. -DCMAKE_BUILD_TYPE=Release
 make
 cd ../..
 

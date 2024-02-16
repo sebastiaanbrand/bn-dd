@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.1)
 
 project(BayesianNetworkInferenceDDs)
 
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+
 # use included version of Sylvan, not installed version
 include_directories(. ../extern/sylvan/src/)
 
