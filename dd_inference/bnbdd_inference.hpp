@@ -65,6 +65,13 @@ double bnbdd_do_old(BnBdd &bnbdd, Constraint x, Constraint t, std::set<int> pt);
 */
 double bnbdd_do_naive(BnBdd &bnbdd, Constraint x, Constraint t, std::set<int> pt);
 
+
+/**
+ * Compute Pr ( X = x | do(T = t) ), using the covariate adjustment operator,
+ * where z is the minimal adjustment set
+*/
+double bnbdd_do_cov_adj(BnBdd &bnbdd, Constraint x, Constraint t, std::vector<int> Z);
+
 /**
  * Returns Boolean constraint for vars = val
  * NOTE: assuming vars[0] is the most significant bit

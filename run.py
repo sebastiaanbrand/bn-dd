@@ -27,11 +27,11 @@ import ioh
 import numpy as np
 import dd_inference as dd
 
-path = os.path.join(os.getcwd(), "models/do_test6MLE")
+path = os.path.join(os.getcwd(), "models/mixed_confounding1Bayespriors")
 TEST_MODEL_PATH = "./models/toy_networks/line"
 MODELS = (
-    "data_do_EV2",
-    "data_do_EV2"
+    "data_mixed_confounding_EV5",
+    "data_mixed_confounding_EV5"
 )
 
 MODEL_IDX = 1
@@ -64,6 +64,7 @@ class Node:
             data = json.load(f)
             target_var, *_ = data["target_var"]
             search_vars = data["search_vars"]
+            adj_set = data["adjustment_set"]
             for source, target in data["edges"]:
                 nodes[target].parents.append(nodes[source])
             
@@ -75,7 +76,8 @@ class Node:
                     map(lambda x: x[1], sorted(value.items(), key=lambda x: int(x[0])))
                 )
                 nodes[key].n_bins = len(nodes[key].bins)
-        return nodes, target_var, search_vars
+        return nodes, target_var, search_vars, adj_set
+
 
     def int_to_binary(self, value: int) -> Set[Tuple[int, bool]]:
         binary = np.binary_repr(value, self.n_idx)
@@ -83,8 +85,11 @@ class Node:
 
 
 class Objective:
-    def __init__(self, nodes: List[Node], diagram: dd.BnBdd, condition_node: Node, search_nodes: List[str]):
+    def __init__(self, nodes: List[Node], diagram: dd.BnBdd, condition_node: Node, search_nodes: List[str], adj_set: List[str]):
         self.nodes = [node for node in nodes if node.name in search_nodes]
+        self.adj_set = [node for node in nodes if node.name in adj_set]
+        self.adj_set_ids = list(chain.from_iterable([node.node_ids for node in self.adj_set]))
+        self.all_nodes = nodes
         self.diagram = diagram
         self.dimension = len(self.nodes)
         self.lb = np.zeros(len(self.nodes), dtype=int) - 1
@@ -107,7 +112,19 @@ class Objective:
             for node, xi in zip(self.nodes, x)
             if xi != -1
         ]
+
+    def get_nodes_by_ids(self, ids):
+        ids = list(ids)        
+        nodes = []
+        while any(ids):
+            next_id = ids.pop()
+            for node in self.all_nodes:
+                if next_id in node.node_ids:
+                    nodes.append(node)
+                    ids = [i for i in ids if i not in node.node_ids]
+        return nodes
     
+
     def get_do_ops(self, do_nodes):
         """Combine all the do ops for all do_nodes in a single set"""
         return set(chain.from_iterable(do_op for _, do_op in do_nodes))
@@ -126,10 +143,7 @@ class Objective:
         expectation = 0
         sum_prob = 0
         for condition, bin_value in self.condition_node_ops:
-            parents = set()
-            for do_node, do_node_ops, do_ops_with_parent in do_nodes:
-                parents = parents.union(do_node.parent_ids)
-            pr_total = dd.bnbdd_do_naive(self.diagram, condition, do_ops, parents)
+            pr_total = dd.bnbdd_do_cov_adj(self.diagram, condition, do_ops, self.adj_set_ids)
             sum_prob += pr_total
             expectation += pr_total * bin_value
         assert sum_prob == 0 or np.isclose(sum_prob, 1.0)  
@@ -169,14 +183,14 @@ if __name__ == "__main__":
     verbose = False
     budget = 5000
     n_reps = 50
-    nodes, target_var, search_vars = Node.read(MODEL_PATH)
+    nodes, target_var, search_vars, adj_set = Node.read(MODEL_PATH)
     np.random.seed(1)
     with dd.SylvanRunnable():
         print("loading model...", end=" ")
         start = perf_counter()
         bnbdd = dd.bnbdd_from_files(MODEL_PATH, tracepeak, verbose)
         print("time elapsed: ", perf_counter() - start, "s")
-        obj = Objective(list(nodes.values()), bnbdd, nodes[target_var], search_vars)
+        obj = Objective(list(nodes.values()), bnbdd, nodes[target_var], search_vars, adj_set)
         problem = ioh.wrap_problem(
             obj,
             f"{os.path.basename(MODEL_PATH)}_objective",

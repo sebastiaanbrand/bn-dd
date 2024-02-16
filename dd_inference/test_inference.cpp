@@ -116,22 +116,40 @@ int test_do_operator_line()
     int C = bnbdd.rv_vars[2];
 
     // Pr(A|do(B)) = Pr(A) (last argument is parents of B)
+    // naive implementation
     p = bnbdd_do_naive(bnbdd, {{A, 0}}, {{B, 0}}, {A});   assert_close(p, .2);
     p = bnbdd_do_naive(bnbdd, {{A, 0}}, {{B, 1}}, {A});   assert_close(p, .2);
     p = bnbdd_do_naive(bnbdd, {{A, 1}}, {{B, 0}}, {A});   assert_close(p, .8);
     p = bnbdd_do_naive(bnbdd, {{A, 1}}, {{B, 1}}, {A});   assert_close(p, .8);
+    // covariate adjustment operator (what is the minimal adjustment set here?)
+    //p = bnbdd_do_cov_adj(bnbdd, {{A, 0}}, {{B, 0}}, {B});   assert_close(p, .2);
+    //p = bnbdd_do_cov_adj(bnbdd, {{A, 0}}, {{B, 1}}, {B});   assert_close(p, .2);
+    //p = bnbdd_do_cov_adj(bnbdd, {{A, 1}}, {{B, 0}}, {B});   assert_close(p, .8);
+    //p = bnbdd_do_cov_adj(bnbdd, {{A, 1}}, {{B, 1}}, {B});   assert_close(p, .8);
 
     // Pr(B|do(A)) = Pr(B|A)
+    // naive implementation
     p = bnbdd_do_naive(bnbdd, {{B, 0}}, {{A, 0}}, {});   assert_close(p, .3);
     p = bnbdd_do_naive(bnbdd, {{B, 0}}, {{A, 1}}, {});   assert_close(p, .25);
     p = bnbdd_do_naive(bnbdd, {{B, 1}}, {{A, 0}}, {});   assert_close(p, .7);
     p = bnbdd_do_naive(bnbdd, {{B, 1}}, {{A, 1}}, {});   assert_close(p, .75);
+    // covariate adjustment operator
+    p = bnbdd_do_cov_adj(bnbdd, {{B, 0}}, {{A, 0}}, {});   assert_close(p, .3);
+    p = bnbdd_do_cov_adj(bnbdd, {{B, 0}}, {{A, 1}}, {});   assert_close(p, .25);
+    p = bnbdd_do_cov_adj(bnbdd, {{B, 1}}, {{A, 0}}, {});   assert_close(p, .7);
+    p = bnbdd_do_cov_adj(bnbdd, {{B, 1}}, {{A, 1}}, {});   assert_close(p, .75);
 
     // Pr(C|do(B)) = Pr(C|B)
+    // naive implementation
     p = bnbdd_do_naive(bnbdd, {{C, 0}}, {{B, 0}}, {A});   assert_close(p, .1);
     p = bnbdd_do_naive(bnbdd, {{C, 0}}, {{B, 1}}, {A});   assert_close(p, .8);
     p = bnbdd_do_naive(bnbdd, {{C, 1}}, {{B, 0}}, {A});   assert_close(p, .9);
     p = bnbdd_do_naive(bnbdd, {{C, 1}}, {{B, 1}}, {A});   assert_close(p, .2);
+    // covariate adjustment operator
+    p = bnbdd_do_cov_adj(bnbdd, {{C, 0}}, {{B, 0}}, {A});   assert_close(p, .1);
+    p = bnbdd_do_cov_adj(bnbdd, {{C, 0}}, {{B, 1}}, {A});   assert_close(p, .8);
+    p = bnbdd_do_cov_adj(bnbdd, {{C, 1}}, {{B, 0}}, {A});   assert_close(p, .9);
+    p = bnbdd_do_cov_adj(bnbdd, {{C, 1}}, {{B, 1}}, {A});   assert_close(p, .2);
 
     // TODO: more
 
