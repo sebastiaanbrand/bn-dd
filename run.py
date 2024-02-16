@@ -86,7 +86,6 @@ class Objective:
     def __init__(self, nodes: List[Node], diagram: dd.BnBdd, condition_node: Node, search_nodes: List[str], adj_set: List[str]):
         self.nodes = [node for node in nodes if node.name in search_nodes]
         self.adj_set = [node for node in nodes if node.name in adj_set]
-        self.node2_set = [node.node_ids for node in self.adj_set] 
         self.adj_set_ids = list(chain.from_iterable([node.node_ids for node in self.adj_set]))
         self.all_nodes = nodes
         self.diagram = diagram
@@ -156,7 +155,7 @@ def set_objective(dim: int, iid: int):
     return [float("nan")] * dim, 0.0
 
 
-def brute_force(problem, limit=100):
+def brute_force(problem, limit=1000):
     obj = problem.bounds
     possible_solutions = list(product(*map(lambda x: range(*x), zip(obj.lb, obj.ub + 1))))
     n_possible_solutions = len(possible_solutions)
@@ -169,7 +168,6 @@ def brute_force(problem, limit=100):
     ymin = float("inf")
     xmin = None
     for x in possible_solutions:
-        print(f'exploring solution{x}')
         y = problem(x)
         if y < ymin:
             ymin = y
