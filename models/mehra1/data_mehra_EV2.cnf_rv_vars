@@ -1,24 +1,13 @@
-Region 1 2 3 4
-wd 907
-blh 1911
-CVD60 652
-pm2.5 1356
-Zone 14 15 16 17 18
-no2 2568
-o3 2259
-so2 1043
-co 82
-pm10 363
-Type 49 50 51
-Year 58
-t2m 1613
-ws 1678
-tp 2836
-Season 61 62
-Month 67
-Day 70
-Hour 73
-ssr 2783
-Latitude 76
-Longitude 78
-Altitude 80
+Zone 1 2 3 4 5
+o3 505
+Type 36 37 38
+Year 45
+t2m 78
+ws 143
+wd 61
+Month 48
+blh 376
+Day 51
+Hour 54
+Latitude 57
+Longitude 59

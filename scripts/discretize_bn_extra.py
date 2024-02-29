@@ -48,13 +48,19 @@ class Discretizer:
         self.logger = logging.getLogger(__name__)
         self.data = pd.read_csv(filename+'.csv')
         self.data = self.data.loc[:, ~self.data.columns.str.contains('Unnamed')]
+        with open(filename+'settings.json') as json_file:
+            self.settings = json.load(json_file)
+
+        if self.settings['distribution']=='arth' or self.settings['distribution']=='mehra':
+            self.data = self.data[config.restricted_nodes[self.settings['distribution']]]
+            self.settings['edges'] = [edge for edge in self.settings['edges'] if 
+                                edge[0] in config.restricted_nodes[self.settings['distribution']] 
+                                and edge[1] in config.restricted_nodes[self.settings['distribution']]]
+        
         self.data = self.data.iloc[:10000] #cap on 10000
         self.columns = self.data.columns
         self.exp = int(''.join(filter(str.isdigit, filename)))  
         self.disc_data = pd.DataFrame()
-
-        with open(filename+'settings.json') as json_file:
-            self.settings = json.load(json_file)
         self.settings['disc_method']  = self.disc_method = disc_method
         self.settings['bins'] = self.bins = bins
         self.settings['target_column'] = self.target_column = target_column
@@ -156,24 +162,29 @@ class Discretizer:
         incoming_nodes = set()
         # Iterate over the edges to fill the sets
         for edge in self.settings['edges']:
+            print(edge)
             outgoing_nodes.add(edge[0])
             incoming_nodes.add(edge[1])
         # Nodes that have both incoming and outgoing edges
         both_directions = outgoing_nodes.intersection(incoming_nodes)
+        print(both_directions)
         for col in self.disc_data.columns:
             print(col)
-            if col == config.sink_mapping[self.settings['distribution']] or col in config.sink_mapping[self.settings['distribution']]:
+            if col == config.sink_mapping2[self.settings['distribution']] or col in config.sink_mapping2[self.settings['distribution']]:
                 prior[col] = np.array(np.array_split(prior[col].flatten(),self.disc_data[col].unique().size))
                 prior[col][prior[col]==0]=0.000001
-            elif col == config.source_mapping[self.settings['distribution']] or col in config.source_mapping[self.settings['distribution']]:
+            elif col == config.source_mapping2[self.settings['distribution']] or col in config.source_mapping2[self.settings['distribution']]:
                 prior[col] = np.array(np.array_split(prior[col].flatten(),self.disc_data[col].unique().size))
                 prior[col][prior[col]==0]=0.000001
             elif col in both_directions:
                 prior[col] = np.array(np.array_split(prior[col].flatten(),self.disc_data[col].unique().size))
                 prior[col][prior[col]==0]=0.000001
+            elif self.disc_data[col].isin([1]).all():
+                    prior[col] = (prior[col]).reshape(1,1)
+                    prior[col][prior[col]==0]=0.000001
             elif self.disc_data[col].isin([0,1]).all():
-                prior[col] = (prior[col]).reshape(2,1)
-                prior[col][prior[col]==0]=0.000001
+                    prior[col] = (prior[col]).reshape(2,1)
+                    prior[col][prior[col]==0]=0.000001
             elif self.disc_data[col].isin([0,1,2]).all():
                 prior[col] = (prior[col]).reshape(3,1)
                 prior[col][prior[col]==0]=0.000001
@@ -202,11 +213,32 @@ class Discretizer:
         self.dicts = [merged_frame.groupby([col+'_disc'])[col+'_raw'].mean().to_dict() for col in self.data.columns]
         disc_probs =[self.model_struct.get_cpds(col).values for col in self.data.columns]
         self.prob_dict = dict(zip(self.columns,disc_probs))
-
-        #infer = VariableElimination(self.model_struct)
-        #infer_result = infer.query(variables=["ACLED_fatalities_total"]).values
-        #target_var_values = [x for x in self.values_dict["ACLED_fatalities_total"] if str(x) != 'nan']
-
+        infer = CausalInference(self.model_struct)
+    
+        #Save target, search vars and adjustment sets (if they exist)
+        self.settings['search_vars'] = config.search_vars[self.settings['distribution']]
+        self.settings['target_var'] = config.target_vars[self.settings['distribution']]
+        self.settings['target'] = "min"
+        # print(config.search_vars[self.settings['distribution']], 
+        #       config.target_vars[self.settings['distribution']],
+        #       config.adjustment_vars[self.settings['distribution']])
+        # print(self.model_struct.edges())
+        # print(infer.is_valid_backdoor_adjustment_set(X=config.search_vars[self.settings['distribution']][-1], 
+        #                                              Y=config.target_vars[self.settings['distribution']][0],
+        #                                              Z = config.adjustment_vars[self.settings['distribution']]))
+        # for i in self.columns:
+        #     print(i, infer.is_valid_adjustment_set(X=config.search_vars[self.settings['distribution']], 
+        #                                      Y=config.target_vars[self.settings['distribution']], 
+        #                                      adjustment_set=[i]))
+            
+        # if infer.is_valid_adjustment_set(X=config.search_vars[self.settings['distribution']], 
+        #                                      Y=config.target_vars[self.settings['distribution']], 
+        #                                      adjustment_set=config.adjustment_vars[self.settings['distribution']]):
+        #     self.settings['adjustment_set'] = config.adjustment_vars[self.settings['distribution']]
+            
+        #     print("Is valid adjustmentset")
+        # else:
+        #     print("Is no valid adjustmentset")
 
     def write_data(self, write_as : str):
         """Write the generated data as csv"""

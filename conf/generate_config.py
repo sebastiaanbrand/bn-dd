@@ -104,16 +104,87 @@ source_mapping = {'lg':['A'],'nm':'X', 'tb':'A','lalonde':'treat','causal_friedm
                                                                                                                 'mixed_confounding':["X2", "X3", "X4","X5", "X6","X7","X8"],
                                                                                                                 'arth': ['81', '100', '414', '422', '519', '738', '783'],
                                                                                                                 'mehra': ['Region', 'Zone', 'Type', 'Year', 'Season', 'Month', 'Day', 'Hour', 'Latitude', 'Longitude', 'Altitude'],
-                                                                                                                'do_test': 'Z'}
+                                                                                                                'do_test': 'Z',
+                                                                                                                'do': 'D'}
+
+source_mapping2 = {'lg':['A'],'nm':'X', 'tb':'A','lalonde':'treat','causal_friedman':'T','causal_quadratic':'T', 'causalpaper':["ECMWF_ERA5_LAND_MONTHLY_soil_temperature_level_1_sum_sum",
+                                                                                                                               "NASA_FLDAS_NOAH01_C_GL_M_V001_Qle_tavg_max_std",
+                                                                                                                               "NASA_GPM_L3_IMERG_MONTHLY_V06_precipitationQualityIndex_max_max"
+                                                                                                                                        ],
+                                                                                                                 'climategraph':["Cropland2000_mean_percent_s",
+                                                                                                                                 "spi_1_f1_m"
+                                                                                                                                        ],
+                                                                                                                'aglietti':["U1","U2"],
+                                                                                                                'toy_aglietti':["X"],
+                                                                                                                'mixed_confounding':["X2", "X3", "X4","X5", "X6","X7","X8"],
+                                                                                                                'arth': ['414','422'],
+                                                                                                                'mehra': ["Zone", "Type", "Year","Region" ,"Hour","Latitude","Longitude","Day","Month"],
+                                                                                                                'do_test': 'Z',
+                                                                                                                'do': 'D'}
+
+sink_mapping2 = {'lg':'E','nm':'Y', 'tb':'B','lalonde':'re78','causal_friedman':'Y','causal_quadratic':'Y','causalpaper':'ACLED_fatalities_total', 'climategraph': 'acl_sum_evnt_m','aglietti':'Y'
+                ,'toy_aglietti':'Y', 'mixed_confounding':["X9","X10","X11"], 'arth': ['714'],
+                'mehra': ['o3'],'do_test': 'Y','do': 'Y'}
+
+
 sink_mapping = {'lg':'E','nm':'Y', 'tb':'B','lalonde':'re78','causal_friedman':'Y','causal_quadratic':'Y','causalpaper':'ACLED_fatalities_total', 'climategraph': 'acl_sum_evnt_m','aglietti':'Y'
                 ,'toy_aglietti':'Y', 'mixed_confounding':["X9","X10","X11"], 'arth': ['4', '8', '13', '26', '38', '78', '93', '96', '101', '126', '135', '144', '155', '161', '181', '187', '197', '211', '219', '226', '234', '245', '248', '256', '269', '281', '296', '299', '328', '342', '360', '363', '368', '377', '378', '412', '454', '460', '464', '480', '496', '537', '540', '547', '554', '565', '576', '596', '598', '622', '623', '636', '640', '651', '661', '665', '666', '677', '686', '712', '736', '739', '758', '767', '778', '786', '798'],
-                'mehra': ['tp', 'CVD60', 'pm2.5'],'do_test': 'Y'}
+                'mehra': ['tp', 'CVD60', 'pm2.5'],'do_test': 'Y','do': 'Y'}
 
 
 lalonde_treated, lalonde_controls = "nswre74_treated.txt", "psid_controls.txt"
 lalonde_cols =  ['treat', 'age', 'educ', 'black', 'hisp', 'married', 'nodegr','re74','re75', 're78']
 lalonde_edges = [('treat', 're78'),('age', 'treat'), ('educ', 'treat'), ('black', 'treat'), ('hisp', 'treat'), ('married', 'treat'), ('nodegr', 'treat'), ('re74', 'treat'), ('re75', 'treat'),
             ('age', 're78'), ('educ', 're78'), ('black', 're78'), ('hisp', 're78'), ('married', 're78'), ('nodegr', 're78'), ('re74', 're78'), ('re75', 're78')]
+
+search_vars = {'lg':['A'],
+               'nm':['X'], 
+               'tb':['A'],
+               'lalonde':['treat'],
+               'causal_friedman':['T'],
+               'causal_quadratic':['T'], 
+               'causalpaper':["CIESIN_GPWv411_GPW_Population_Density_population_density_max", 
+                              "spam2010v2r0_global_prod_P_RICE_I_min",
+                              "NASA_GPM_L3_IMERG_MONTHLY_V06_precipitationQualityIndex_max_max", 
+                                ],
+                'toy_aglietti':["X"],
+                'mixed_confounding':["X2", "X3", "X4","X5", "X6","X7","X8"],
+                'arth': ["414","422","479","629","47"],
+                'mehra': ["Zone", "Type", "Year","Hour","Latitude","Longitude","Day","Month"],
+                'do_test': ['T'],
+                'do': ['T']}
+
+restricted_nodes={'arth': [ '414', '452', '629', '47', '714', '422', '479'],
+                  'mehra': ["o3","Zone", "Type", "Year","Hour","blh","ws","Latitude","Longitude","wd","t2m","Day","Month"]}
+
+target_vars = {'lg':['E'],
+               'nm':['Y'], 
+               'tb':['B'],
+               'lalonde':['re78'],
+               'causal_friedman':['Y'],
+               'causal_quadratic':['Y'], 
+               'causalpaper':["ACLED_fatalities_total"],
+               'toy_aglietti':["Y"],
+               'mixed_confounding':["X10"],
+               'arth': ['714'],
+               'mehra': ["o3"],
+               'do_test': ['Y'],
+               'do': ['Y']}
+
+adjustment_vars = {'lg':[],
+               'nm':[], 
+               'tb':[],
+               'lalonde':['age', 'educ', 'black', 'hisp', 'married', 'nodegr','re74','re75'],
+               'causal_friedman':['Z1', 'Z2', 'Z3', 'Z4', 'Z5'],
+               'causal_quadratic':['Z1'], 
+               'causalpaper':[],
+               'toy_aglietti':[],
+               'mixed_confounding':[],
+               'arth': [],
+               'mehra': [],
+               'do_test': ['Z'],
+               'do': ['Z']}
+
 
 namemap={'EB2': 'EW2',
          'EB3': 'EW3',
