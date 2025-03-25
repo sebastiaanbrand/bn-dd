@@ -1,6 +1,6 @@
 matplotlib==3.6.3
 cdt==0.6.0
-torch==2.2.0
+torch==2.6.0
 pyreadr==0.4.7
 pgmpy==0.1.22
 python-sat==0.1.7.dev26
